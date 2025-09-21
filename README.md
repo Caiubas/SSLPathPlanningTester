@@ -62,6 +62,17 @@ Tutorial de instalação da bilioteca Docker e de todos os softwares da SSL util
 
 	./install_packages.sh
 		
+Instale o nvm:
+
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+Feche e abra outro terminal
+
+Cheque as versões disponíveis:
+
+	nvm ls-remote
+instale as últimas versões LTS do Nodejs e npm
+
+	nvm install --lts
 
 ### Segundo(construir o framework):
 
