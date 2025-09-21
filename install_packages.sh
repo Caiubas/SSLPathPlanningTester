@@ -8,7 +8,7 @@ sudo apt install -qq liblcm-dev \
 g++ cmake \
 protobuf-compiler libprotobuf-dev \
 libsdl2-dev pkg-config build-essential \
-gnome-terminal cmdtest
+gnome-terminal cmdtest curl
 
 sudo apt-get install libboost-dev
 
