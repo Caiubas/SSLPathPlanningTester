@@ -199,7 +199,7 @@ Point WorldModel::getGoalPosition(Robot goalkeeper) {
     std::vector<Point> points = {};
     int num = 12;
     int k1 = 1;
-    int k2 = 1;
+    int k2 = 2;
     int k3 = 1;
 
     for (int i = 1; i < num; i++) {
@@ -210,12 +210,18 @@ Point WorldModel::getGoalPosition(Robot goalkeeper) {
     }
 
     int best_idx = 0;
+    Point goal_end = field.theirGoal.getEnd();
+    Point goal_start = field.theirGoal.getStart();
+    double score_best_id = 0;
+    double score_i_id = 0;
     for (int i = 1; i < points.size(); i++) {
-        if (points[best_idx].getDistanceTo(goalkeeper.getPosition()) < points[i].getDistanceTo(goalkeeper.getPosition())) { //TODO melhorar essa funcao
+        score_best_id = pow(points[best_idx].getDistanceTo(goalkeeper.getPosition()), 2)*k1/field.theirGoal.getLength() + pow(std::fabs(field.theirGoal.getLength()/2.0 - points[best_idx].getDistanceTo(field.theirGoal.getMiddle())), 2)*k2/field.theirGoal.getLength();
+        score_i_id = pow(points[i].getDistanceTo(goalkeeper.getPosition()), 2)*k1/field.theirGoal.getLength() + pow(std::fabs(field.theirGoal.getLength()/2.0 - points[i].getDistanceTo(field.theirGoal.getMiddle())), 2)*k2/field.theirGoal.getLength();
+        if (score_best_id > score_i_id) { //TODO melhorar essa funcao
             best_idx = i;
         }
     }
-    if (points.size() == 0) throw std::runtime_error("No goals found");
+        if (points.size() == 0) throw std::runtime_error("No goals found");
     return points[best_idx];
 }
 

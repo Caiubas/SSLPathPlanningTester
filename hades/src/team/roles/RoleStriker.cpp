@@ -54,6 +54,14 @@ namespace roles {
             std::cout << "no score position found" << std::endl;
             goal = robot.mWorld.field.theirGoal.getMiddle();
         }
+        bool theyHaveGoalKeeper = false;
+        Robot theirGoalKeeper(-1);
+        try {
+            theirGoalKeeper = robot.mTeam->getEnemyofRole(Robot::goal_keeper, robot.mWorld.enemies);
+            theyHaveGoalKeeper = true;
+        } catch (...) {}
+
+
         LineSegment robot_goal = {robot.mWorld.ball.getPosition(), goal};
         if (robot.mWorld.ball.isMoving() && robot.mWorld.ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/8)) {
             intercept.act(robot);
@@ -61,6 +69,8 @@ namespace roles {
         else if (robot.mWorld.ball.isMoving() || robot.mWorld.isPointOnOurArea(robot.mWorld.ball.getPosition())) {
             Point p = getSupportPosition(robot);
             keepLocation.act(robot, p);
+        } else if (robot.mWorld.isPointOnTheirArea(robot.mWorld.ball.getPosition()) && theyHaveGoalKeeper) {    ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
+            blockBall.act(robot, theirGoalKeeper, fabs(robot.mWorld.field.theirDefenseArea.getMajorPoint().getX() - robot.mWorld.field.theirDefenseArea.getMinorPoint().getX()));
         }
         else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance()) {
             positionAndKick.act(robot, goal);
