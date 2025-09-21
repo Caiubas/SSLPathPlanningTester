@@ -70,6 +70,7 @@ void recebe_dados_GC() {
                     my_gc_data.team_blue = false;
                 }
                 my_gc_data.current_command = referee.command(); // enum command
+                my_gc_data.blue_team_on_positive_half = referee.blue_team_on_positive_half();
             }
         }
         if(han.new_tartarus.iris_as_GC){
