@@ -20,11 +20,11 @@ namespace roles {
             double x = 0;
             double y = 0;
             try {
-                x = robot.mWorld.ball.getPosition().getX() + robot.mTeam->getRobotofRole(Robot::striker).getKickDistance() * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + robot.mTeam->getRobotofRole(Robot::striker).getKickDistance() * sin(angle);
+                x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
             } catch (...) { // no striker
-                x = robot.mWorld.ball.getPosition().getX() + robot.getKickDistance() * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + robot.getKickDistance() * sin(angle);
+                x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
             }
             Point p(x, y);
             if (!robot.mWorld.ball.isVisible(p)) continue;
@@ -48,6 +48,10 @@ namespace roles {
         //TODO continuar
         if (robot.mWorld.ball.isMoving() && robot.mWorld.isBallMovingRobotDirection(robot)) {
             intercept.act(robot);
+        } else if (robot.mWorld.isPointOnTheirArea(robot.mWorld.ball.getPosition())) { ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
+            try {
+                mark.act(robot, robot.mTeam->getEnemyofRole(Robot::striker, robot.mWorld.enemies));
+            } catch (...) { std::cout << "no enemy striker" << std::endl; moveTo.act(robot, {0, 0}, true);} //TODO melhorar
         } else {
             try {
                 Point p = getSupportPosition(robot);

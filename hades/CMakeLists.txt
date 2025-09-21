@@ -130,6 +130,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/tactics/TacticIntercept.cpp
         src/team/tactics/TacticMark.h
         src/team/tactics/TacticMark.cpp
+        src/team/tactics/TacticBlockBall.h
+        src/team/tactics/TacticBlockBall.cpp
         src/team/tactics/tactics.h
 
         src/team/skills/SkillBase.h
