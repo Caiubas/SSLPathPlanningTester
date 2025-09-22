@@ -64,7 +64,7 @@ void recebe_dados_GC() {
                 else{
                     my_gc_data.has_designated_position = false;
                 }
-                if(referee.blue().name() == "Cerberus"){
+                if(referee.blue().name() == "Test Team"){
                     my_gc_data.team_blue = true;
                 }else{
                     my_gc_data.team_blue = false;
@@ -96,7 +96,7 @@ void recebe_dados_GC() {
                 }
             }
         }
-        lcm.publish("GC", &my_gc_data);
+        lcm.publish("GC2", &my_gc_data);
         //std::cout << "iris_as_gc: " << int(han.new_tartarus.iris_as_GC) << std::endl;
         //std::cout << "Game command: " << my_gc_data.current_command << std::endl;
         //std::cout << "Game event: " << my_gc_data.game_event << std::endl;

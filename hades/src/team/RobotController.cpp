@@ -278,5 +278,5 @@ void RobotController::publish() {
         han.new_ia.robots[id].kick = false;
         han.new_ia.robots[id].kick_speed_x = mkicker_x;
     }
-    han.lc->publish("IA", &han.new_ia);
+    han.lc->publish("IA2", &han.new_ia);
 }

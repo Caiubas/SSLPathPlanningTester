@@ -11,7 +11,7 @@ export function useFetchLoop(reading: boolean, initialData: DataType): DataType 
 
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:5000/data');
+        const res = await fetch('http://localhost:5001/data');
         if (res.status === 204) return;
         const json = await res.json();
         console.log('Dados recebidos do backend:', json);

@@ -48,10 +48,10 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
             << ", goal_keeper_id recebido do LCM: " << msg->goalkeeper_id << std::endl;
 
     if (latest_data.goalkeeper_id) {
-        if (msg_GC.blue.name == "Cerberus") {
+        if (msg_GC.blue.name == "Test Team") {
             latest_data.team_blue_status = true;
             latest_data.blue.goalkeeper_id = msg->goalkeeper_id;
-        } else if (msg_GC.yellow.name == "Cerberus") {
+        } else if (msg_GC.yellow.name == "Test Team") {
             latest_data.team_blue_status = false;
             latest_data.yellow.goalkeeper_id = msg->goalkeeper_id;
         } else {

@@ -72,8 +72,8 @@ void vision_master::vision_main()
         std::cout << "Timestamp: " << my_vision_data.timestamp << std::endl;
         std::cout << "my_autoref_data.timestamp: " << my_autoref_data.timestamp << std::endl;
 
-        lcm.publish("vision", &my_vision_data);
-        lcm.publish("vision_tracked", &my_autoref_data);
+        lcm.publish("vision2", &my_vision_data);
+        lcm.publish("vision_tracked2", &my_autoref_data);
         
         memset(my_vision_data.robots_blue, 0, sizeof(my_vision_data.robots_blue));
         memset(my_vision_data.robots_yellow, 0, sizeof(my_vision_data.robots_yellow));

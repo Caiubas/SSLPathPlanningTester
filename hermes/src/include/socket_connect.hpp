@@ -8,7 +8,7 @@
 #include <cstring>
 
 #define PORT_GRSIM 20011
-#define PORT_CONTROL_GRSIM 10300
+#define PORT_CONTROL_GRSIM 10301
 #define IP_GRSIM "127.0.0.1"
 
 extern int sock_grsim, sock_control_grsim;

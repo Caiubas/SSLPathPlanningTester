@@ -17,9 +17,9 @@ int main(int argc, char** argv) {
     if (!lcm.good())
         return 1;
 
-    lcm.subscribe("IA", &handler::handleIA, &han);
-    lcm.subscribe("tartarus", &handler::handletartarus, &han);
-    lcm.subscribe("GC", &handler::handleGC, &han);
+    lcm.subscribe("IA2", &handler::handleIA, &han);
+    lcm.subscribe("tartarus2", &handler::handletartarus, &han);
+    lcm.subscribe("GC2", &handler::handleGC, &han);
 
     std::thread t1([&]() { 
         sender.send_control(); 

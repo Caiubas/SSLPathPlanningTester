@@ -26,10 +26,10 @@ void lcm_thread_func()
     }
 
     Handler handler;
-    lc.subscribe("GC", &Handler::handleGC, &handler);
-    lc.subscribe("vision", &Handler::handleVision, &handler);
-    lc.subscribe("tartarus", &Handler::handleTartarus, &handler);
-    lc.subscribe("IA", &Handler::handleIA, &handler);
+    lc.subscribe("GC2", &Handler::handleGC, &handler);
+    lc.subscribe("vision2", &Handler::handleVision, &handler);
+    lc.subscribe("tartarus2", &Handler::handleTartarus, &handler);
+    lc.subscribe("IA2", &Handler::handleIA, &handler);
 
     while (lc.handle() == 0)
     {
@@ -353,8 +353,8 @@ int main()
             msg.iris_gc.designated_position_y = latest_data.designated_position_y;
             msg.iris_gc.current_command = latest_data.current_command;
 
-            global_lcm.publish("tartarus", &msg);
-            std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";
+            global_lcm.publish("tartarus2", &msg);
+            std::cout << "[POST] Mensagem publicada no canal 'tartarus2'\n";
         }
         catch (const std::exception &e)
         {
@@ -367,7 +367,7 @@ int main()
         res.add_header("Content-Type", "application/json");
         return res; });
 
-    app.port(5000).multithreaded().run();
+    app.port(5001).multithreaded().run();
     lcm_thread.join();
     return 0;
 }

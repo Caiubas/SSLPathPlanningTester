@@ -66,7 +66,7 @@ export const toggleLocal = async (
     const newValue = !value;
     setValue(newValue);
 
-    const success = await sendPost('http://localhost:5000/command', {
+    const success = await sendPost('http://localhost:5001/command', {
       [key]: newValue,
     });
 
@@ -97,7 +97,7 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
         payload = { [key]: !currentValue };
       }
 
-      const success = await sendPost('http://localhost:5000/command', payload);
+      const success = await sendPost('http://localhost:5001/command', payload);
 
       if (!success) {
         console.error(`Erro ao alternar ${key}`);
@@ -108,7 +108,7 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
   };
 
   export const updateNumber = async (key: string, value: number) => {
-      const success = await sendPost('http://localhost:5000/command', {
+      const success = await sendPost('http://localhost:5001/command', {
         [key]: value,
       });
       if (!success) {
