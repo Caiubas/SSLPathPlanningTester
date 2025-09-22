@@ -345,6 +345,7 @@ void Leader::receive_gamecontroller() {
     //TODO implementar maquina de estados dos estados do jogo
     team.current_command = TeamInfo::Command(han.new_GC.current_command);
 
+    team.ball_placement_spot = {han.new_GC.designated_position_x, han.new_GC.designated_position_y};
     int is_team_blue = int(han.new_GC.team_blue);
     if (is_team_blue == 1) {
         team.color = TeamInfo::blue;

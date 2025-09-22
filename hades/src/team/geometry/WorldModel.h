@@ -16,7 +16,7 @@
 class WorldModel {
 public:
     WorldModel() : field() {}
-    
+
     Field field;
 
     std::array<Robot, 16> allies = {

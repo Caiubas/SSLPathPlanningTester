@@ -128,6 +128,7 @@ public:
     };
 
 
+    Point ball_placement_spot = {0, 0};
 
     int goal_keeper_id = 0;
     sides our_side = right;

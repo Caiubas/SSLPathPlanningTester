@@ -26,6 +26,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/c_trajectory/geometry/Circle.h
         src/c_trajectory/geometry/Rectangle.cpp
         src/c_trajectory/geometry/Rectangle.h
+        src/c_trajectory/geometry/TiltedRectangle.cpp
+        src/c_trajectory/geometry/TiltedRectangle.h
         src/team/Robot.cpp
         src/team/Robot.h
         src/include/handlers.cpp
