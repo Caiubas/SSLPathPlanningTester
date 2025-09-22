@@ -131,7 +131,6 @@ public:
 
     int goal_keeper_id = 0;
     sides our_side = right;
-    int our_side_sign = +1;
 
     bool debug = false;
     enum Command current_command = HALT;
@@ -141,10 +140,6 @@ public:
     std::array<Robot::role, 16> roles = {Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown};
     std::array<Robot::role, 16> enemy_roles = {Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown};
     //std::map<role, int> enemy_roles;
-
-    double striker_max_dislocation = 1500;
-    double mid_field_max_dislocation = 0;
-    double defender_min_dislocation = 1500;
 
     RobotController robots[16] = {
         RobotController(0), RobotController(1), RobotController(2), RobotController(3),

@@ -1,28 +1,23 @@
 //
-// Created by caiu on 15/04/25.
+// Created by caiu on 21/09/25.
 //
 
-#include "PlayDefense.h"
+#include "PlayOnTheirGoal.h"
 
 #include <iostream>
 #include <math.h>
 
-int PlayDefense::calc_score(WorldModel world, TeamInfo team) {
+int PlayOnTheirGoal::calc_score(WorldModel world, TeamInfo team) {
     int score = 50;
-    if (team.event == TeamInfo::run && world.ball.getPosition().getX() < 0 && team.our_side == TeamInfo::left) {
-        score += 100;
+    if (team.event == TeamInfo::run && world.field.theirDefenseArea.detectIfContains(world.ball.getPosition())) {
+        score += 300;
     }
-    if (team.event == TeamInfo::run && world.ball.getPosition().getX() > 0 && team.our_side == TeamInfo::right) {
-        score += 100;
-    }
-    if (team.event == TeamInfo::theirFreeKick) {
-        score += 1000;
-    }
+
     this->score = score;
     return score;
 }
 
-std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
+std::array<Robot::role, 16> PlayOnTheirGoal::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
     std::vector<Robot*> avaiable_robots = {};
     for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
         if (team.active_robots[i] == 1) {
@@ -50,7 +45,7 @@ std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo
             avaiable_robots.erase(avaiable_robots.begin() + team.goal_keeper_id);
         }
 
-        if (selected_role == Robot::striker) {
+        if (selected_role == Robot::retaker) { //Mais proximo da bola
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
@@ -58,34 +53,24 @@ std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo
                 }
             }
             int closest_id = avaiable_robots[closest_idx]->getId();
-            avaiable_robots[closest_idx]->setRole(Robot::striker);
-            roles[closest_id] = Robot::striker;
+            avaiable_robots[closest_idx]->setRole(selected_role);
+            roles[closest_id] = selected_role;
             avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
         }
-
-        if (selected_role == Robot::defender) {
+        if (selected_role == Robot::retaker) { //Mais longe da bola
             int closest_idx = 0;
-            if (world.ball.isStopped()) {
-                for (int idx = 0; idx < avaiable_robots.size(); idx++) {
-                    if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
-                        closest_idx = idx;
-                    }
-                }
-            }
-            else {
-                Robot interceptor = world.getClosestAllyToPoint(world.ball.getStopPosition());
-                for (int idx = 0; idx < avaiable_robots.size(); idx++) {
-                    if (avaiable_robots[idx]->getId() == interceptor.getId()) {
-                        closest_idx = idx;
-                        break;
-                    }
+            for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) > avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
+                    closest_idx = idx;
                 }
             }
             int closest_id = avaiable_robots[closest_idx]->getId();
-            avaiable_robots[closest_idx]->setRole(Robot::defender);
-            roles[closest_id] = Robot::defender;
+            avaiable_robots[closest_idx]->setRole(selected_role);
+            roles[closest_id] = selected_role;
             avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
         }
+
+
     }
 
     return roles;

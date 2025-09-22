@@ -54,6 +54,7 @@ public:
     Robot getClosestEnemyToPoint(Point p);
     bool isBallHittingTheGoal();
     Point getGoalPosition(Robot goalkeeper = {0});
+    Robot getBallOwner();
 };
 
 

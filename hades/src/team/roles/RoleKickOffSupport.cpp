@@ -8,7 +8,9 @@
 
 namespace roles {
     void RoleKickOffSupport::act(RobotController& robot) {
-        Point goal = {robot.mTeam->our_side_sign*robot.mRadius, 1000};
+        Point goal(0, 0);
+        if (robot.mTeam->our_side == TeamInfo::left) goal = {-robot.mRadius, 1000};
+        else goal = {robot.mRadius, 1000};
         moveTo.act(robot, goal, true);
         turnTo.act(robot, robot.mWorld.ball.getPosition());
     }

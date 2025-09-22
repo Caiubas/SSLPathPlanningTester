@@ -123,6 +123,7 @@ void RobotController::receive_vision() {
             }
             mWorld.allies[rb_id].setYaw(new_yaw);
             mWorld.allies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
+            mWorld.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
@@ -144,6 +145,7 @@ void RobotController::receive_vision() {
             mWorld.enemies[rb_id].setYaw(new_yaw);
             mWorld.enemies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
             enemies_detected.insert(rb_id);
+            mWorld.enemies[rb_id].setAlly(false);
         }
     }
 
@@ -168,6 +170,7 @@ void RobotController::receive_vision() {
             }
             mWorld.allies[rb_id].setYaw(new_yaw);
             mWorld.allies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
+            mWorld.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
@@ -189,6 +192,7 @@ void RobotController::receive_vision() {
             }
             mWorld.enemies[rb_id].setYaw(new_yaw);
             mWorld.enemies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
+            mWorld.enemies[rb_id].setAlly(false);
             enemies_detected.insert(rb_id);
         }
     }

@@ -15,6 +15,8 @@ namespace roles {
         int k1 = 1;
         std::vector<Point> points;
         points.reserve(N);
+        Point goal = robot.mWorld.getGoalPosition();
+        LineSegment ball_goal(robot.mWorld.ball.getPosition(), goal);
         for (int i = 0; i < N; i++) {
             double angle = 2.0 * M_PI * i / N;
             double x = 0;
@@ -31,6 +33,7 @@ namespace roles {
             if (!robot.mWorld.field.inside_dimensions.getResized(-distance_to_edge).detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
             if (robot.mWorld.field.theirDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
             if (robot.mWorld.field.ourDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
+            if (AreaCircular(p, robot.getRadius()).detectIfIntercepts(ball_goal)) continue;
             points.push_back(p);
         }
 
@@ -57,7 +60,7 @@ namespace roles {
                 Point p = getSupportPosition(robot);
                 keepLocation.act(robot, p);
             } catch (...) {
-                std::cout << "No support position found" << std::endl;
+                //std::cout << "No support position found" << std::endl;
                 keepLocation.act(robot, Point(0, 0));
             }
         }
