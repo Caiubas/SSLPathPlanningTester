@@ -23,7 +23,9 @@ namespace roles {
 			positionAndKick.act(robot, goal);
 		}
 		else {
-			blockBall.act(robot);
+			try {
+				blockBall.act(robot, robot.mWorld.getClosestEnemyToPoint(robot.mWorld.ball.getPosition()), 200);
+			} catch (...) {stop.act(robot); std::cout << "no enemies" << std::endl;}
 		}
     }
 } // roles

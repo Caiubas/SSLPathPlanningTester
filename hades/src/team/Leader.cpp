@@ -83,6 +83,7 @@ void Leader::receive_vision() {
             }
             world.allies[rb_id].setYaw(new_yaw);
             world.allies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
+            world.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
@@ -104,6 +105,7 @@ void Leader::receive_vision() {
             }
             world.enemies[rb_id].setYaw(new_yaw);
             world.enemies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
+            world.enemies[rb_id].setAlly(false);
             enemies_detected.insert(rb_id);
         }
     }
@@ -133,6 +135,7 @@ void Leader::receive_vision() {
             }
             world.allies[rb_id].setYaw(new_yaw);
             world.allies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
+            world.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
@@ -180,22 +183,30 @@ void Leader::receive_field_geometry() {
     world.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
     world.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
 
-    AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_width/2, -han.new_vision.field.defense_area_height/2},{-han.new_vision.field.field_width/2 + han.new_vision.field.defense_area_width, han.new_vision.field.defense_area_height/2}};
-    AreaRectangular rightDefenseArea = {{han.new_vision.field.field_width/2 - han.new_vision.field.defense_area_width, -han.new_vision.field.defense_area_height/2}, {han.new_vision.field.field_width/2, han.new_vision.field.defense_area_height/2}};
+    AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2 - han.new_vision.field.goal_height, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
+    AreaRectangular rightDefenseArea = {{han.new_vision.field.field_length/2 - han.new_vision.field.defense_area_height, -han.new_vision.field.defense_area_width/2}, {han.new_vision.field.field_length/2 + han.new_vision.field.goal_height, han.new_vision.field.defense_area_width/2}};
 
-    LineSegment leftGoal = {Point(-han.new_vision.field.field_width/2 , -han.new_vision.field.goal_height/2), Point(-han.new_vision.field.field_width/2 , han.new_vision.field.goal_height/2)};
-    LineSegment rightGoal = {Point(han.new_vision.field.field_width/2 , -han.new_vision.field.goal_height/2), Point(han.new_vision.field.field_width/2 , han.new_vision.field.goal_height/2)};
+    LineSegment leftGoal = {Point(-han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(-han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
+    LineSegment rightGoal = {Point(han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
+
+    AreaRectangular leftFisicalBarrier = {leftGoal.getStart(), {leftGoal.getEnd().getX() - han.new_vision.field.goal_depth, leftGoal.getEnd().getY()}};
+    AreaRectangular rightFisicalBarrier = {rightGoal.getStart(), {rightGoal.getEnd().getX() + han.new_vision.field.goal_depth, rightGoal.getEnd().getY()}};
+
     if (team.our_side == TeamInfo::left) {
+        world.field.ourFisicalBarrier = leftFisicalBarrier;
+        world.field.theirFisicalBarrier = rightFisicalBarrier;
         world.field.ourGoal = leftGoal;
         world.field.theirGoal = rightGoal;
-        //world.field.ourDefenseArea = leftDefenseArea;
-        //world.field.theirDefenseArea = rightDefenseArea;
+        world.field.ourDefenseArea = leftDefenseArea;
+        world.field.theirDefenseArea = rightDefenseArea;
     }
     if (team.our_side == TeamInfo::right) {
+        world.field.ourFisicalBarrier = rightFisicalBarrier;
+        world.field.theirFisicalBarrier = leftFisicalBarrier;
         world.field.ourGoal = rightGoal;
         world.field.theirGoal = leftGoal;
-        //world.field.ourDefenseArea = rightDefenseArea;
-        //world.field.theirDefenseArea = leftDefenseArea;
+        world.field.ourDefenseArea = rightDefenseArea;
+        world.field.theirDefenseArea = leftDefenseArea;
     }
 }
 void Leader::event_FSM() {
@@ -328,17 +339,13 @@ void Leader::event_FSM() {
 
 
 void Leader::receive_config() {
-    //TODO receber time do tartarus ou do GC
-    //TODO receber lado do time
-    team.our_side = TeamInfo::left;
-
-    if (team.our_side == TeamInfo::right) team.our_side_sign = 1;
-    else team.our_side_sign = -1;
 }
 
 void Leader::receive_gamecontroller() {
     //TODO implementar maquina de estados dos estados do jogo
     team.current_command = TeamInfo::Command(han.new_GC.current_command);
+
+    team.ball_placement_spot = {han.new_GC.designated_position_x, han.new_GC.designated_position_y};
     int is_team_blue = int(han.new_GC.team_blue);
     if (is_team_blue == 1) {
         team.color = TeamInfo::blue;
@@ -347,6 +354,14 @@ void Leader::receive_gamecontroller() {
     else if (is_team_blue == 0) {
         team.color = TeamInfo::yellow;
         team.goal_keeper_id = han.new_GC.yellow.goalkeeper_id;
+    }
+
+    if (han.new_GC.blue_team_on_positive_half) {
+        if (is_team_blue) team.our_side = TeamInfo::right;
+        else team.our_side = TeamInfo::left;
+    } else {
+        if (is_team_blue) team.our_side = TeamInfo::left;
+        else team.our_side = TeamInfo::right;
     }
 
     event_FSM();

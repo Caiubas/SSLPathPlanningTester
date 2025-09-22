@@ -152,10 +152,10 @@ Point LineSegment::intersection(const LineSegment& other) const {
     return p;
 }
 
-LineSegment LineSegment::getMovedOnX(int distance) {
+LineSegment LineSegment::getMovedOnX(double distance) {
     return {Point(start.getX() + distance, start.getY()), Point(end.getX() + distance, end.getY())};
 }
 
-LineSegment LineSegment::getMovedOnY(int distance) {
+LineSegment LineSegment::getMovedOnY(double distance) {
     return {Point(start.getX(), distance + start.getY()), Point(end.getX(), distance + end.getY())};
 }

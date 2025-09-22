@@ -32,8 +32,8 @@ public:
     bool isPointAligned(const Point& p, double tolerance = 1e-9) const;
     bool intersects(const LineSegment& other) const;
     Point intersection(const LineSegment& other) const;
-    LineSegment getMovedOnX(int distance);
-    LineSegment getMovedOnY(int distance);
+    LineSegment getMovedOnX(double distance);
+    LineSegment getMovedOnY(double distance);
     LineSegment getResized(int new_size);
 };
 

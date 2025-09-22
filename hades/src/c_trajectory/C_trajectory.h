@@ -10,6 +10,7 @@
 #include "geometry/Vetop.h"
 #include "geometry/Circle.h"
 #include "geometry/Rectangle.h"
+#include "geometry/TiltedRectangle.h"
 
 class C_trajectory {
     private:
@@ -34,32 +35,32 @@ class C_trajectory {
         }
 
         std::vector<std::vector<double>> path_find(std::vector<double> start, std::vector<double> goal,
-                                                   std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular);
+                                                   std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted);
 
         std::vector<std::vector<double>> path_connect(std::vector<double>& start, std::vector<double>& goal,
-            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular);
+            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted);
 
         std::vector<std::vector<double>> path_single(std::vector<double>& start, std::vector<double>& goal,
-             std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular);
+             std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted);
 
         std::vector<std::vector<double>> path_single_inverted(std::vector<double>& start, std::vector<double>& goal,
-            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular);
+            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted);
 
-        void retrace_path(auto& trajectory, auto& obs_circular, auto& obs_retangular);
+        void retrace_path(auto& trajectory, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
 
-        std::vector<std::vector<double>> smoothing(auto& trajectory, auto& obs_circular, auto& obs_retangular);
+        std::vector<std::vector<double>> smoothing(auto& trajectory, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
 
         void invert_trajectory(auto& trajectory);
 
-        std::vector<double> interference(auto point, auto& obs_circular, auto& obs_retangular);
+        std::vector<double> interference(auto point, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
 
-        bool collision_test(auto& start, auto& goal, auto& obs_circular, auto& obs_retangular);
+        bool collision_test(auto& start, auto& goal, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
 
         void find_blocking_circles(auto& trajectory, auto& goal, auto& new_obs_circular, auto& obs_circular);
         void remove_invalide_points(auto& points, auto& trajectory);
         void remove_empty_alternatives(auto& alternatives, auto& trajectory);
-        void shorten_path(auto& trajectory_1, auto& trajectory_2, auto& obs_circular, auto& obs_retangular);
-        std::deque<std::vector<double>> c_point(auto& start, auto& goal, auto& obs_circular, auto& obs_retangular);
+        void shorten_path(auto& trajectory_1, auto& trajectory_2, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
+        std::deque<std::vector<double>> c_point(auto& start, auto& goal, auto& obs_circular, auto& obs_retangular, auto& obs_tilted);
 
 };
 

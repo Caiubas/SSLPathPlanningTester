@@ -21,8 +21,8 @@ namespace roles {
             }
         } else {
             LineSegment line = {Point(0, 0), Point(0, 0)};
-            if (robot.mTeam->our_side == TeamInfo::left) line = {robot.mWorld.field.ourDefenseArea.getMajorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMajorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMinorPoint().getY())};
-            else line = {robot.mWorld.field.ourDefenseArea.getMinorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMinorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMajorPoint().getY())};
+            if (robot.mTeam->our_side == TeamInfo::left) line = LineSegment(robot.mWorld.field.ourDefenseArea.getMajorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMajorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMinorPoint().getY())).getMovedOnX(2*robot.getRadius());
+            else if (robot.mTeam->our_side == TeamInfo::right) line = LineSegment(robot.mWorld.field.ourDefenseArea.getMinorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMinorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMajorPoint().getY())).getMovedOnX(-2*robot.getRadius());
             keepXLine.act(robot, line, line.getMiddle().getY());
         }
     }

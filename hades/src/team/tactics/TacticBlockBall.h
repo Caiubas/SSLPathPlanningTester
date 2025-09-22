@@ -15,7 +15,7 @@ namespace tactics {
 class TacticBlockBall : public TacticBase {
 public:
 	void act(RobotController& robot, Robot toBlock, double block_distance);
-	void act(RobotController& robot) {std::cout << "This is a dummy method" << std::endl;}
+	void act(RobotController& robot) {std::cout << "This is a dummy method Block Ball" << std::endl;}
 };
 
 } // tactics

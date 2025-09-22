@@ -51,7 +51,7 @@ namespace roles {
             goal = robot.mWorld.getGoalPosition(robot.mTeam->getEnemyofRole(Robot::goal_keeper, robot.mWorld.enemies));
             hasGoalPosition = true;
         } catch (...) {
-            std::cout << "no score position found" << std::endl;
+            //std::cout << "no score position found" << std::endl;
             goal = robot.mWorld.field.theirGoal.getMiddle();
         }
         bool theyHaveGoalKeeper = false;

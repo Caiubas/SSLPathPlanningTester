@@ -12,6 +12,10 @@
 #include "../c_trajectory/C_trajectory.h"
 
 namespace skills {
+    Rectangle SkillMoveTo::getRectangle(AreaRectangular r) {
+        return Rectangle({r.getMinorPoint().getX(), r.getMinorPoint().getY()}, {r.getMajorPoint().getX(), r.getMajorPoint().getY()});
+    }
+
     Vector2d SkillMoveTo::motion_planner(RobotController& robot, std::vector<Point> trajectory) {
         Vector2d delta = {trajectory[1].getX() - robot.getPosition().getX(), trajectory[1].getY() - robot.getPosition().getY()};
         double dist = delta.getNorm() / 1000.0; // metros
@@ -116,6 +120,7 @@ namespace skills {
 
             std::vector<Circle> obs_circular = {};
             std::vector<Rectangle> obs_rectangular = {};
+            std::vector<TiltedRectangle> obs_tilted = {};
             Rectangle r({0, 0}, {0, 0});
             //rectangle r = field.their_defense_area;
             //obs_rectangular.push_back(r);
@@ -124,6 +129,13 @@ namespace skills {
                 or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
                 or robot.mTeam->event == TeamInfo::ourballPlacement or robot.mTeam->event == TeamInfo::theirballPlacement)) {
                 Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->stop_distance_to_ball + robot.mRadius);
+                obs_circular.push_back(c);
+            }
+
+            if (robot.mTeam->event == TeamInfo::theirballPlacement) {
+                auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, 500);
+                obs_tilted.push_back(t);
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.mRadius);
                 obs_circular.push_back(c);
             }
 
@@ -151,28 +163,14 @@ namespace skills {
                 obs_circular.push_back(c);
             }
             if (robot.mTeam->roles[robot.getId()] != Robot::goal_keeper) {
-                Rectangle r({robot.mWorld.field.ourDefenseArea.getMinorPoint().getX() - robot.mRadius, robot.mWorld.field.ourDefenseArea.getMinorPoint().getY() - robot.mRadius}, {robot.mWorld.field.ourDefenseArea.getMajorPoint().getX() + robot.mRadius, robot.mWorld.field.ourDefenseArea.getMajorPoint().getY() + robot.mRadius});
-                obs_rectangular.push_back(r);
+                obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourDefenseArea.getResized(robot.getRadius())));
             }
 
-            r.minor = {robot.mWorld.field.theirDefenseArea.getMinorPoint().getX() - robot.mRadius, robot.mWorld.field.theirDefenseArea.getMinorPoint().getY() - robot.mRadius};
-            r.major = {robot.mWorld.field.theirDefenseArea.getMajorPoint().getX() + robot.mRadius, robot.mWorld.field.theirDefenseArea.getMajorPoint().getY() + robot.mRadius};
-            obs_rectangular.push_back(r);
+            obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
+            obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourFisicalBarrier.getResized(robot.getRadius())));
+            obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirFisicalBarrier.getResized(robot.getRadius())));
 
-
-            //goal fisical barrier
-            r.minor = {robot.mWorld.field.ourFisicalBarrier.getMinorPoint().getX() - robot.mRadius, robot.mWorld.field.ourFisicalBarrier.getMinorPoint().getY() + robot.mRadius};
-            r.major = {robot.mWorld.field.ourFisicalBarrier.getMajorPoint().getX() - robot.mRadius, robot.mWorld.field.ourFisicalBarrier.getMajorPoint().getY() + robot.mRadius};
-            obs_rectangular.push_back(r);
-
-            r.minor = {robot.mWorld.field.theirFisicalBarrier.getMinorPoint().getX() - robot.mRadius, robot.mWorld.field.theirFisicalBarrier.getMinorPoint().getY() + robot.mRadius};
-            r.major = {robot.mWorld.field.theirFisicalBarrier.getMajorPoint().getX() - robot.mRadius, robot.mWorld.field.theirFisicalBarrier.getMajorPoint().getY() + robot.mRadius};
-            obs_rectangular.push_back(r);
-
-            r.minor = {robot.mWorld.field.inside_dimensions.getMinorPoint().getX() - robot.mRadius, robot.mWorld.field.inside_dimensions.getMinorPoint().getY() + robot.mRadius};
-            r.major = {robot.mWorld.field.inside_dimensions.getMajorPoint().getX() - robot.mRadius, robot.mWorld.field.inside_dimensions.getMajorPoint().getY() + robot.mRadius};
-
-            auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular);
+            auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular, obs_tilted);
             std::vector<Point> trajectory = {};
             for (int i = 0; i < trajectory_vector.size(); i++) {
                 trajectory.emplace_back(trajectory_vector[i][0], trajectory_vector[i][1]);
@@ -195,7 +193,7 @@ namespace skills {
         robot.positioned = false;
         robot.mTeam->positioned[robot.getId()] = false;
         Vector2d v_vet;
-        std::size(trajectory) > 0 ? v_vet = motion_planner(robot, trajectory) : v_vet = {0, 0};
+        std::size(trajectory) > 0 ? v_vet = motion_planner(robot, trajectory) : v_vet = Vector2d(robot.getPosition(), {0, 0}).getNormalized(robot.mVxy_min);
 
         v_vet = motion_control(v_vet, -robot.getYaw());
 

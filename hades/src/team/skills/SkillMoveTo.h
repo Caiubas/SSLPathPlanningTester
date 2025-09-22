@@ -5,8 +5,10 @@
 #ifndef SKILLMOVETO_H
 #define SKILLMOVETO_H
 #include "SkillBase.h"
+#include "../geometry/AreaRectangular.h"
 #include "../geometry/Vector2d.h"
 #include "../geometry/Point.h"
+#include "../../c_trajectory/geometry/Rectangle.h"
 
 namespace skills {
 
@@ -18,6 +20,7 @@ private:
 	Vector2d motion_planner(RobotController& robot, std::vector<Point> trajectory);
 	Vector2d motion_control(Vector2d v_vet, double yaw);
 	std::vector<Point> find_trajectory(RobotController& robot, Point start, Point goal, bool avoid_ball, bool ignore_stop = false, bool full_field = false);
+	Rectangle getRectangle(AreaRectangular r);
 };
 
 } // skills

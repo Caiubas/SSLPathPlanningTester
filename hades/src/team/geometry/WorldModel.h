@@ -16,7 +16,7 @@
 class WorldModel {
 public:
     WorldModel() : field() {}
-    
+
     Field field;
 
     std::array<Robot, 16> allies = {
@@ -54,6 +54,7 @@ public:
     Robot getClosestEnemyToPoint(Point p);
     bool isBallHittingTheGoal();
     Point getGoalPosition(Robot goalkeeper = {0});
+    Robot getBallOwner();
 };
 
 

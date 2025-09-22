@@ -9,7 +9,7 @@
 namespace tactics {
 
 void TacticMark::act(RobotController& robot) {
-	std::cout << "This is a dummy method" << std::endl;
+	std::cout << "This is a dummy method Mark" << std::endl;
 }
 
 Point TacticMark::findMarkPosition(RobotController& robot, Robot toMark) {
