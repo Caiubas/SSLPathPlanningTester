@@ -50,6 +50,8 @@ void recebe_dados_GC() {
             my_gc_data.yellow.timeout_time = referee.yellow().timeout_time();
             my_gc_data.yellow.goalkeeper_id = referee.yellow().goalkeeper();
 
+            my_gc_data.stage = referee.stage(); // enum stage
+
             if(!han.new_tartarus.iris_as_GC){
                 if(referee.game_events_size() > 0) {
                 game_event = &referee.game_events(referee.game_events_size() - 1); // pega o último evento
@@ -104,6 +106,6 @@ void recebe_dados_GC() {
         //std::cout << "tartarus Designated position: (" << han.new_tartarus.iris_gc.designated_position_x << ", " << han.new_tartarus.iris_gc.designated_position_y << ")" << std::endl;
         //std::cout << "Team blue: " << (my_gc_data.team_blue ? "true" : "false") << std::endl << std::endl;
         //std::cout << "has_designated_position: " << int(my_gc_data.has_designated_position) << std::endl;
-        
+        //std::cout << "Stage: " << my_gc_data.stage << std::endl;
     }
 }
