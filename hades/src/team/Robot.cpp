@@ -49,8 +49,16 @@ double Robot::getRadius() const {
 	return radius;
 }
 
+bool Robot::hasKicker() {
+	return kicker;
+}
 
 // --- Setters ---
+
+void Robot::setKicker(bool kicker) {
+	this->kicker = kicker;
+}
+
 void Robot::setAlly(bool is) {
 	this->ally = is;
 }

@@ -12,29 +12,32 @@
 namespace roles {
     Point RoleSupport::getSupportPosition(RobotController robot) {
         int N = 12;
+        int K = 1;
         int k1 = 1;
         std::vector<Point> points;
         points.reserve(N);
         Point goal = robot.mWorld.getGoalPosition();
         LineSegment ball_goal(robot.mWorld.ball.getPosition(), goal);
-        for (int i = 0; i < N; i++) {
-            double angle = 2.0 * M_PI * i / N;
-            double x = 0;
-            double y = 0;
-            try {
-                x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
-            } catch (...) { // no striker
-                x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance(), 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+        for (int j = 1; j<K + 1; j++) {
+            for (int i = 0; i < N; i++) {
+                double angle = 2.0 * M_PI * i / N;
+                double x = 0;
+                double y = 0;
+                try {
+                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+                } catch (...) { // no striker
+                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+                }
+                Point p(x, y);
+                if (!robot.mWorld.ball.isVisible(p)) continue;
+                if (!robot.mWorld.field.inside_dimensions.getResized(-distance_to_edge).detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
+                if (robot.mWorld.field.theirDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
+                if (robot.mWorld.field.ourDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
+                if (AreaCircular(p, robot.getRadius()).detectIfIntercepts(ball_goal)) continue;
+                points.push_back(p);
             }
-            Point p(x, y);
-            if (!robot.mWorld.ball.isVisible(p)) continue;
-            if (!robot.mWorld.field.inside_dimensions.getResized(-distance_to_edge).detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
-            if (robot.mWorld.field.theirDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
-            if (robot.mWorld.field.ourDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
-            if (AreaCircular(p, robot.getRadius()).detectIfIntercepts(ball_goal)) continue;
-            points.push_back(p);
         }
 
 

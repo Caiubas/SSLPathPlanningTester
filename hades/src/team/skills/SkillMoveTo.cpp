@@ -104,17 +104,17 @@ namespace skills {
         std::vector<Point> SkillMoveTo::find_trajectory(RobotController& robot, Point start, Point goal, bool avoid_ball = true, bool full_field, bool ignore_stop) {
             double minor[2];
             double major[2];
-            if (full_field) {
-                minor[0] = robot.mWorld.field.full_dimensions.getMinorPoint().getX();
-                minor[1] = robot.mWorld.field.full_dimensions.getMinorPoint().getY();
-                major[0] = robot.mWorld.field.full_dimensions.getMajorPoint().getX();
-                major[1] = robot.mWorld.field.full_dimensions.getMajorPoint().getY();
+            if (full_field or robot.getRole()  == Robot::goal_keeper) {
+                minor[0] = robot.mWorld.field.full_dimensions.getResized(-robot.getRadius()).getMinorPoint().getX();
+                minor[1] = robot.mWorld.field.full_dimensions.getResized(-robot.getRadius()).getMinorPoint().getY();
+                major[0] = robot.mWorld.field.full_dimensions.getResized(-robot.getRadius()).getMajorPoint().getX();
+                major[1] = robot.mWorld.field.full_dimensions.getResized(-robot.getRadius()).getMajorPoint().getY();
 
             } else {
-                minor[0] = robot.mWorld.field.inside_dimensions.getMinorPoint().getX();
-                minor[1] = robot.mWorld.field.inside_dimensions.getMinorPoint().getY();
-                major[0] = robot.mWorld.field.inside_dimensions.getMajorPoint().getX();
-                major[1] = robot.mWorld.field.inside_dimensions.getMajorPoint().getY();
+                minor[0] = robot.mWorld.field.inside_dimensions.getResized(-robot.getRadius()).getMinorPoint().getX();
+                minor[1] = robot.mWorld.field.inside_dimensions.getResized(-robot.getRadius()).getMinorPoint().getY();
+                major[0] = robot.mWorld.field.inside_dimensions.getResized(-robot.getRadius()).getMajorPoint().getX();
+                major[1] = robot.mWorld.field.inside_dimensions.getResized(-robot.getRadius()).getMajorPoint().getY();
             }
             C_trajectory pf(false, false, 0, 100, 50, 0, minor, major);
 
@@ -127,7 +127,8 @@ namespace skills {
 
             if (!ignore_stop && (robot.mTeam->event == TeamInfo::stop or robot.mTeam->event == TeamInfo::timeout or robot.mTeam->event == TeamInfo::prepareOurKickOff
                 or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
-                or robot.mTeam->event == TeamInfo::ourballPlacement or robot.mTeam->event == TeamInfo::theirballPlacement)) {
+                or robot.mTeam->event == TeamInfo::theirballPlacement  or robot.mTeam->event == TeamInfo::theirFreeKick
+                or robot.mTeam->event == TeamInfo::runningTheirFreeKick)) {
                 Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->stop_distance_to_ball + robot.mRadius);
                 obs_circular.push_back(c);
             }
@@ -162,38 +163,65 @@ namespace skills {
                 Circle c({robot.mWorld.enemies[i].getPosition().getX(), robot.mWorld.enemies[i].getPosition().getY()}, robot.mRadius);
                 obs_circular.push_back(c);
             }
-            if (robot.mTeam->roles[robot.getId()] != Robot::goal_keeper) {
-                obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourDefenseArea.getResized(robot.getRadius())));
+
+            if (!((robot.getRole() == Robot::placer || robot.getRole() == Robot::placeHolder) && robot.mTeam->event == TeamInfo::ourballPlacement)) {
+                if (robot.mTeam->roles[robot.getId()] != Robot::goal_keeper) {
+                    obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourDefenseArea.getResized(robot.getRadius())));
+                }
+                obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
             }
 
-            obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
-            obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourFisicalBarrier.getResized(robot.getRadius())));
-            obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirFisicalBarrier.getResized(robot.getRadius())));
+            double wall_thickness = robot.mWorld.field.goalBarrierThickness;
+            AreaRectangular a({0, 0}, {0, 0});
+            a = robot.mWorld.field.leftFisicalBarrier;
+            a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            a = robot.mWorld.field.leftFisicalBarrier;
+            a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            a = robot.mWorld.field.leftFisicalBarrier;
+            a.setMajorPoint({a.getMinorPoint().getX() + wall_thickness, a.getMajorPoint().getY()});
+            a.setMinorPoint({a.getMinorPoint().getX() - 10000, a.getMinorPoint().getY()});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+
+            a = robot.mWorld.field.rightFisicalBarrier;
+            a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            a = robot.mWorld.field.rightFisicalBarrier;
+            a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            a = robot.mWorld.field.rightFisicalBarrier;
+            a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
+            a.setMajorPoint({a.getMajorPoint().getX() + 10000, a.getMajorPoint().getY()});
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
 
             auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular, obs_tilted);
             std::vector<Point> trajectory = {};
             for (int i = 0; i < trajectory_vector.size(); i++) {
+                if (trajectory_vector.size() > 1 && i == 1) {if (trajectory_vector[0][0] == trajectory_vector[1][0] && trajectory_vector[0][1] == trajectory_vector[1][1]) continue;}
                 trajectory.emplace_back(trajectory_vector[i][0], trajectory_vector[i][1]);
             }
+            if (trajectory.size() == 1) return {};
             return trajectory;
         }
 
 
     void SkillMoveTo::act(RobotController& robot, Point goal, bool avoid_ball, bool full_field, bool ignore_stop) {
-
         auto trajectory = find_trajectory(robot, robot.getPosition(), goal, avoid_ball, full_field, ignore_stop);
 
-        if (robot.getPosition().getDistanceTo(trajectory[size(trajectory) - 1]) < robot.mStatic_position_tolarance) {
-            robot.mtarget_vel = {0, 0};
-            robot.mtarget_vyaw = 0;
-            robot.positioned = true;
-            robot.mTeam->positioned[robot.getId()] = true;
-            return;
+        if (trajectory.size() > 1) {
+            if (robot.getPosition().getDistanceTo(trajectory[size(trajectory) - 1]) < robot.mStatic_position_tolarance) {
+                robot.mtarget_vel = {0, 0};
+                robot.mtarget_vyaw = 0;
+                robot.positioned = true;
+                robot.mTeam->positioned[robot.getId()] = true;
+                return;
+            }
         }
         robot.positioned = false;
         robot.mTeam->positioned[robot.getId()] = false;
         Vector2d v_vet;
-        std::size(trajectory) > 0 ? v_vet = motion_planner(robot, trajectory) : v_vet = Vector2d(robot.getPosition(), {0, 0}).getNormalized(robot.mVxy_min);
+        std::size(trajectory) > 1 ? v_vet = motion_planner(robot, trajectory) : v_vet = Vector2d({0, 0}, robot.getPosition()).getNormalized(robot.mVxy_min);
 
         v_vet = motion_control(v_vet, -robot.getYaw());
 

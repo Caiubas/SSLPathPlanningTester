@@ -27,7 +27,9 @@ public:
         retaker,
         penaltier,
         freeKicker,
-        watcher
+        watcher,
+        placeHolder,
+        placer
     };
 
 protected:
@@ -41,6 +43,7 @@ protected:
     double vyaw = 0.0;
     double radius = 160;
     bool detected = false;
+    bool kicker = false;
     double kickDistance = 3000;
     enum role this_role = unknown;
 
@@ -62,6 +65,7 @@ public:
     Vector2d& getVelocity();
     double getVyaw() const;
     bool isDetected() const;
+    bool hasKicker();
     enum role getRole() const;
     const std::deque<Vector2d>& getStoredVelocities() const;
     double getRadius() const;
@@ -69,6 +73,7 @@ public:
 
     // --- Setters ---
     void setAlly(bool is);
+    void setKicker(bool kicker);
     void setId(int id);
     void setPosition(const Point& p);
     void setYaw(double y);

@@ -45,7 +45,7 @@ public:
     int getIdOfTheBallInterceptor();
     bool isBallMovingIdDirection(int id, double tolerance = M_PI/2);
     bool isBallMovingRobotDirection(Robot robot, double tolerance = 3.1415/2);
-    bool isBallReachable(bool includeOurArea);
+    bool isBallReachable(bool includeOurArea, bool full_field = false);
     bool isAllAlliesOnOurSide();
     bool isAllAlliesOnOurSideorOnCenterCircle();
     bool isAllEnemiesOnTheirSide();

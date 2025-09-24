@@ -30,6 +30,8 @@ public:
     std::shared_ptr<roles::RolePenaltier> role_penaltier = std::make_shared<roles::RolePenaltier>();
     std::shared_ptr<roles::RoleWatcher> role_watcher = std::make_shared<roles::RoleWatcher>();
     std::shared_ptr<roles::RoleFreeKicker> role_free_kicker = std::make_shared<roles::RoleFreeKicker>();
+    std::shared_ptr<roles::RolePlacer> role_placer = std::make_shared<roles::RolePlacer>();
+    std::shared_ptr<roles::RolePlaceHolder> role_place_holder = std::make_shared<roles::RolePlaceHolder>();
 
     std::map<Robot::role, std::shared_ptr<roles::RoleBase>> role_map = {
         {Robot::unknown, role_halted},
@@ -47,10 +49,12 @@ public:
         {Robot::retaker, role_retaker},
         {Robot::penaltier, role_penaltier},
         {Robot::freeKicker, role_free_kicker},
-        {Robot::watcher, role_watcher}
+        {Robot::watcher, role_watcher},
+        {Robot::placeHolder, role_place_holder},
+        {Robot::placer, role_placer}
     };
 
-    double stop_distance_to_ball = 1000;
+    double stop_distance_to_ball = 500;
     double stop_max_speed = 0.5;
 
     enum sides {
@@ -77,6 +81,8 @@ public:
         theirKickOff,
         ourFreeKick,
         theirFreeKick,
+        runningOurFreeKick,
+        runningTheirFreeKick,
         ourPenalty,
         theirPenalty,
         runningOurPenalty,
@@ -134,8 +140,8 @@ public:
     sides our_side = right;
 
     bool debug = false;
-    enum Command current_command = HALT;
-    enum events event = halt;
+    enum Command current_command = FORCE_START;
+    enum events event = run;
     double central_line_x = 0;
     color color = yellow;
     std::array<Robot::role, 16> roles = {Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown, Robot::unknown};
