@@ -76,24 +76,6 @@ export default function TartarusSection({
       </RowWrapper>
 
       <RowWrapper>
-        <p>Modo Controller: </p>
-        <ToggleSwitch
-          value={tartarus.bool_controller}
-          onToggle={() =>
-            toggleBoolean('bool_controller', tartarus.bool_controller)
-          }
-        />
-      </RowWrapper>
-
-      <RowWrapper>
-        <p>Modo Debug: </p>
-        <ToggleSwitch
-          value={tartarus.debug_mode}
-          onToggle={() => toggleBoolean('debug_mode', tartarus.debug_mode)}
-        />
-      </RowWrapper>
-
-      <RowWrapper>
         <p>Meio Campo: </p>
         <ToggleSwitch
           value={tartarus.half_field}
@@ -107,6 +89,42 @@ export default function TartarusSection({
           value={tartarus.iris_as_GC}
           onToggle={() => toggleBoolean('iris_as_GC', tartarus.iris_as_GC)}
         />
+      </RowWrapper>
+
+      <RowWrapper>
+        <p>Controlar o robô em:</p>
+        <select
+          className="ml-2 rounded border border-gray-300 px-3 py-1 shadow-md outline-none transition focus:border-purple-700 focus:ring-1 focus:ring-[#6805F2]"
+          value={
+            tartarus.bool_controller
+              ? 'controller'
+              : tartarus.debug_mode
+                ? 'debug'
+                : 'hades'
+          }
+          onChange={(e) => {
+            const value = e.target.value;
+
+            if (value === 'controller') {
+              toggleBoolean('bool_controller', tartarus.bool_controller);
+              if (tartarus.debug_mode)
+                toggleBoolean('debug_mode', tartarus.debug_mode);
+            } else if (value === 'debug') {
+              toggleBoolean('debug_mode', tartarus.debug_mode);
+              if (tartarus.bool_controller)
+                toggleBoolean('bool_controller', tartarus.bool_controller);
+            } else {
+              if (tartarus.bool_controller)
+                toggleBoolean('bool_controller', tartarus.bool_controller);
+              if (tartarus.debug_mode)
+                toggleBoolean('debug_mode', tartarus.debug_mode);
+            }
+          }}
+        >
+          <option value="hades">Hades</option>
+          <option value="controller">Modo Controller</option>
+          <option value="debug">Modo Debug</option>
+        </select>
       </RowWrapper>
 
       <RowWrapper>
@@ -139,19 +157,14 @@ export default function TartarusSection({
         value={mcastSslVisionPort}
         setValue={setMcastSslVisionPort}
         onSubmit={() =>
-          updateNumber(
-            'mcast_port_vision_sslvision',
-            mcastSslVisionPort,
-          )
+          updateNumber('mcast_port_vision_sslvision', mcastSslVisionPort)
         }
       />
       <NumberInputRow
         label="GrSim Port:"
         value={mcastGrsimPort}
         setValue={setMcastGrsimPort}
-        onSubmit={() =>
-          updateNumber('mcast_port_vision_grsim', mcastGrsimPort)
-        }
+        onSubmit={() => updateNumber('mcast_port_vision_grsim', mcastGrsimPort)}
       />
       <NumberInputRow
         label="AutoReferee Port:"
