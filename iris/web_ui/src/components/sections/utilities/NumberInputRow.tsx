@@ -22,7 +22,7 @@ export function NumberInputRow({
           type="number"
           value={value}
           onChange={(e) => setValue(Number(e.target.value))}
-          className="border rounded px-2 py-1 mr-2 w-24"
+          className="border rounded px-2 py-1 mr-2 w-24 "
         />
         <ActionButton onClick={onSubmit} label="Alterar" />
       </div>
