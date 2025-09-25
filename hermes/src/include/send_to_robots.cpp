@@ -122,7 +122,9 @@ void robots_sender::send_control() { // global function to send control commands
 
                 if(han.data_tartarus_copy.competition_mode == 0) {
                     control_obj.control(); // Mantém atualizando
-                    pct.id = control_obj.robot_id; // Use the current robot ID from the controller
+                    pct.config = 0;
+                    pct.param = 0;
+                    pct.id = 255; // Use the current robot ID from the controller
                     std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
                     memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
                     write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
@@ -140,6 +142,8 @@ void robots_sender::send_control() { // global function to send control commands
                             pct.Vy = han.data_ia_copy.robots[i].vel_normal; //vy é o vel_normal
                             pct.Vang = -han.data_ia_copy.robots[i].vel_ang;
                             pct.kicker = han.data_ia_copy.robots[i].kick_speed_x;
+                            pct.config = 0;
+                            pct.param = 0;
                         }
                         std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
                         memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));

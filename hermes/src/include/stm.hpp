@@ -13,6 +13,8 @@ typedef struct {
     uint8_t id;
     float Vx, Vy, Vang;
     uint8_t kicker;
+    uint8_t config;
+    uint8_t param;
 } Pacote;
 #pragma pack(pop)
 

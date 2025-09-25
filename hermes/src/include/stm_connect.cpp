@@ -2,7 +2,6 @@
 
 void stm::stm_connect() { // function to send data to the robots via STM32
     stm_obj.serial_port = -1;
-
     while(stm_obj.serial_port < 0) {
         // Tenta abrir a porta serial até conseguir
         std::cout << "Tentando abrir a porta serial: " << port << han.data_tartarus_copy.stm_port << "..." << std::endl;
