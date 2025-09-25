@@ -57,6 +57,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/geometry/Shadow.cpp
         src/team/geometry/CircularShadow.h
         src/team/geometry/CircularShadow.cpp
+        src/team/geometry/RectangularShadow.h
+        src/team/geometry/RectangularShadow.cpp
         src/team/geometry/geometry.h
 
         src/team/plays/PlayAttack.cpp
@@ -84,6 +86,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/plays/PlayRetake.h
         src/team/plays/PlayOnTheirGoal.cpp
         src/team/plays/PlayOnTheirGoal.h
+        src/team/plays/PlayBallPlacement.cpp
+        src/team/plays/PlayBallPlacement.h
         src/team/plays/PlayBase.cpp
         src/team/plays/PlayBase.h
 
@@ -120,6 +124,10 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/roles/RoleWatcher.cpp
         src/team/roles/RoleFreeKicker.h
         src/team/roles/RoleFreeKicker.cpp
+        src/team/roles/RolePlaceHolder.h
+        src/team/roles/RolePlaceHolder.cpp
+        src/team/roles/RolePlacer.h
+        src/team/roles/RolePlacer.cpp
 
 
         src/team/tactics/TacticBase.h

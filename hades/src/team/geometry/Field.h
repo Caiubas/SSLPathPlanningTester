@@ -16,12 +16,12 @@ public:
 				ourGoal(Point(-6000, -850), Point(-6000, 850)),
 				theirDefenseArea({4200, -1750}, {6000, 1750}),
 				ourDefenseArea({-6000, -1750}, {-4200, 1750}),
-				theirFisicalBarrier({6000, -900}, {6800, 900}),
-				ourFisicalBarrier({-6800, -900}, {-6000, 900}),
+				rightFisicalBarrier({6000, -900}, {6800, 900}),
+				leftFisicalBarrier({-6800, -900}, {-6000, 900}),
 				center_circle_radius(1000),
 				left_penalty_mark(-2000, 0),
-				right_penalty_mark(2000, 0)
-
+				right_penalty_mark(2000, 0),
+				goalBarrierThickness(0)
 	{}
 
 	AreaRectangular full_dimensions;
@@ -30,8 +30,9 @@ public:
 	LineSegment ourGoal;
 	AreaRectangular theirDefenseArea;
 	AreaRectangular ourDefenseArea;
-	AreaRectangular theirFisicalBarrier;
-	AreaRectangular ourFisicalBarrier;
+	AreaRectangular leftFisicalBarrier;
+	AreaRectangular rightFisicalBarrier;
+	double goalBarrierThickness;
 	Point left_penalty_mark;
 	Point right_penalty_mark;
 	double center_circle_radius;

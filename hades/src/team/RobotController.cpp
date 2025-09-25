@@ -77,7 +77,6 @@ void RobotController::select_behavior() {
         lastRole = mTeam->roles[id];
         mState = 0;
     }
-
     try {
         mTeam->role_map[mTeam->roles[id]]->act(*this);
     }
@@ -85,7 +84,6 @@ void RobotController::select_behavior() {
         mTeam->role_map[Robot::halted]->act(*this);
         //when role inst on role_map
     }
-
 }
 
 void RobotController::check_connection() {
@@ -217,6 +215,29 @@ void RobotController::receive_vision() {
         if (!enemy.isDetected()) continue;
         graph.addShadow(CircularShadow(mWorld.ball.getPosition(), {enemy.getPosition(), enemy.getRadius()}));
     }
+
+    AreaRectangular a({0, 0}, {0, 0});
+    double wall_thickness = mWorld.field.goalBarrierThickness;
+    a = mWorld.field.leftFisicalBarrier;
+    a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+    a = mWorld.field.leftFisicalBarrier;
+    a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+    a = mWorld.field.leftFisicalBarrier;
+    a.setMajorPoint({a.getMinorPoint().getX() + wall_thickness, a.getMajorPoint().getY()});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+
+    a = mWorld.field.rightFisicalBarrier;
+    a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+    a = mWorld.field.rightFisicalBarrier;
+    a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+    a = mWorld.field.rightFisicalBarrier;
+    a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
+    graph.addShadow(RectangularShadow(mWorld.ball.getPosition(), a));
+
     mWorld.ball.setVisibilityGraph(graph);
 
     mLast_time_stamp = han.new_vision.timestamp;
@@ -235,26 +256,24 @@ void RobotController::receive_field_geometry() {
     mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
     mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
 
-    AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2 - han.new_vision.field.goal_height, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
-    AreaRectangular rightDefenseArea = {{han.new_vision.field.field_length/2 - han.new_vision.field.defense_area_height, -han.new_vision.field.defense_area_width/2}, {han.new_vision.field.field_length/2 + han.new_vision.field.goal_height, han.new_vision.field.defense_area_width/2}};
+    AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
+    AreaRectangular rightDefenseArea = {{han.new_vision.field.field_length/2 - han.new_vision.field.defense_area_height, -han.new_vision.field.defense_area_width/2}, {han.new_vision.field.field_length/2, han.new_vision.field.defense_area_width/2}};
 
     LineSegment leftGoal = {Point(-han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(-han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
     LineSegment rightGoal = {Point(han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
 
-    AreaRectangular leftFisicalBarrier = {leftGoal.getStart(), {leftGoal.getEnd().getX() - han.new_vision.field.goal_depth, leftGoal.getEnd().getY()}};
-    AreaRectangular rightFisicalBarrier = {rightGoal.getStart(), {rightGoal.getEnd().getX() + han.new_vision.field.goal_depth, rightGoal.getEnd().getY()}};
+    AreaRectangular leftFisicalBarrier = {{leftGoal.getStart().getX() - han.new_vision.field.goal_height, leftGoal.getStart().getY()}, leftGoal.getEnd()};
+    AreaRectangular rightFisicalBarrier = {rightGoal.getStart(), {rightGoal.getEnd().getX() + han.new_vision.field.goal_height, rightGoal.getEnd().getY()}};
+    mWorld.field.leftFisicalBarrier = leftFisicalBarrier;
+    mWorld.field.rightFisicalBarrier = rightFisicalBarrier;
 
     if (mTeam->our_side == TeamInfo::left) {
-        mWorld.field.ourFisicalBarrier = leftFisicalBarrier;
-        mWorld.field.theirFisicalBarrier = rightFisicalBarrier;
         mWorld.field.ourGoal = leftGoal;
         mWorld.field.theirGoal = rightGoal;
         mWorld.field.ourDefenseArea = leftDefenseArea;
         mWorld.field.theirDefenseArea = rightDefenseArea;
     }
     if (mTeam->our_side == TeamInfo::right) {
-        mWorld.field.ourFisicalBarrier = rightFisicalBarrier;
-        mWorld.field.theirFisicalBarrier = leftFisicalBarrier;
         mWorld.field.ourGoal = rightGoal;
         mWorld.field.theirGoal = leftGoal;
         mWorld.field.ourDefenseArea = rightDefenseArea;
@@ -269,8 +288,6 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
-
-
 
     han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
     han.new_ia.robots[id].vel_tang = mtarget_vel.getX();

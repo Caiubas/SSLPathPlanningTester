@@ -1,27 +1,23 @@
 //
-// Created by caiu on 19/09/25.
+// Created by caiu on 23/09/25.
 //
 
-#include "PlayOurFreeKick.h"
+#include "PlayBallPlacement.h"
 
 #include <iostream>
-#include <ostream>
+#include <math.h>
 
-#include <team_info.hpp>
-
-
-#include "../TeamInfo.h"
-
-int PlayOurFreeKick::calc_score(WorldModel world, TeamInfo team) {
-    int new_score = 0;
-    if (team.event == TeamInfo::ourFreeKick || team.event == TeamInfo::runningOurFreeKick) {
-        new_score += 999992;
+int PlayBallPlacement::calc_score(WorldModel world, TeamInfo team) {
+    int score = 0;
+    if (team.event == TeamInfo::ourballPlacement) {
+        score += 999999992;
     }
-    this->score = new_score;
+
+    this->score = score;
     return score;
 }
 
-std::array<Robot::role, 16> PlayOurFreeKick::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
+std::array<Robot::role, 16> PlayBallPlacement::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
     std::vector<Robot*> avaiable_robots = {};
     for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
         if (team.active_robots[i] == 1) {
@@ -49,7 +45,20 @@ std::array<Robot::role, 16> PlayOurFreeKick::role_assign(WorldModel& world, Team
             avaiable_robots.erase(avaiable_robots.begin() + team.goal_keeper_id);
         }
 
-        if (selected_role == Robot::freeKicker || selected_role == Robot::support) {
+        if (selected_role == Robot::placeHolder) {  //mais proximo da posicao desejada da bola
+            int closest_idx = 0;
+            for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                if (avaiable_robots[idx]->getPosition().getDistanceTo(team.ball_placement_spot) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(team.ball_placement_spot)) {
+                    closest_idx = idx;
+                }
+            }
+            int closest_id = avaiable_robots[closest_idx]->getId();
+            avaiable_robots[closest_idx]->setRole(selected_role);
+            roles[closest_id] = selected_role;
+            avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
+        }
+
+        if (selected_role == Robot::placer) {   //mais proximo da bola
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {

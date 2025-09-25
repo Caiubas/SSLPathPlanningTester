@@ -192,17 +192,15 @@ void Leader::receive_field_geometry() {
     AreaRectangular leftFisicalBarrier = {leftGoal.getStart(), {leftGoal.getEnd().getX() - han.new_vision.field.goal_depth, leftGoal.getEnd().getY()}};
     AreaRectangular rightFisicalBarrier = {rightGoal.getStart(), {rightGoal.getEnd().getX() + han.new_vision.field.goal_depth, rightGoal.getEnd().getY()}};
 
+    world.field.leftFisicalBarrier = leftFisicalBarrier;
+    world.field.rightFisicalBarrier = rightFisicalBarrier;
     if (team.our_side == TeamInfo::left) {
-        world.field.ourFisicalBarrier = leftFisicalBarrier;
-        world.field.theirFisicalBarrier = rightFisicalBarrier;
         world.field.ourGoal = leftGoal;
         world.field.theirGoal = rightGoal;
         world.field.ourDefenseArea = leftDefenseArea;
         world.field.theirDefenseArea = rightDefenseArea;
     }
     if (team.our_side == TeamInfo::right) {
-        world.field.ourFisicalBarrier = rightFisicalBarrier;
-        world.field.theirFisicalBarrier = leftFisicalBarrier;
         world.field.ourGoal = rightGoal;
         world.field.theirGoal = leftGoal;
         world.field.ourDefenseArea = rightDefenseArea;
@@ -286,7 +284,8 @@ void Leader::event_FSM() {
     if (team.event == TeamInfo::ourballPlacement) {
         GC_timer += delta_time;
         if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
-        if (delta_time >= 1) team.event = TeamInfo::ourFreeKick;
+        if (delta_time > 30) team.event = TeamInfo::stop;
+        if (world.ball.getPosition().getDistanceTo(team.ball_placement_spot) < 150 && world.ball.isStopped()) team.event = TeamInfo::stop;
     }
 
     if (team.event == TeamInfo::theirballPlacement) {
@@ -325,6 +324,16 @@ void Leader::event_FSM() {
     }
 
     if (team.event == TeamInfo::ourFreeKick or team.event == TeamInfo::theirFreeKick) {
+        GC_timer = 0;
+        if (world.ball.isMoving()) {
+            team.event = TeamInfo::run;
+        }
+        if (team.current_command == TeamInfo::NORMAL_START) {
+            if (team.event == TeamInfo::ourFreeKick) team.event = TeamInfo::runningOurFreeKick;
+            if (team.event == TeamInfo::theirFreeKick) team.event = TeamInfo::runningTheirFreeKick;
+        }
+    }
+    if (team.event == TeamInfo::runningOurFreeKick or team.event == TeamInfo::runningTheirFreeKick) {
         GC_timer += delta_time;
         if (world.ball.isMoving() or GC_timer > 10) {
             team.event = TeamInfo::run;

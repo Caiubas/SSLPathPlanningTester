@@ -23,12 +23,16 @@ namespace roles {
 			has_support = true;
 		} catch (...) {}
 
+		bool shound_wait = true;
+		if (robot.mTeam->event == TeamInfo::runningOurFreeKick) shound_wait = false;
+
+
 		if (can_score) {
-			positionAndKick.act(robot, goal, false);
+			positionAndKick.act(robot, goal, true);
 		} else if (has_support) {
-			positionAndKick.act(robot, support, false);
+			positionAndKick.act(robot, support, shound_wait);
 		} else {
-			positionAndKick.act(robot, goal, false);
+			positionAndKick.act(robot, goal, shound_wait);
 		}
 	}
 } // roles

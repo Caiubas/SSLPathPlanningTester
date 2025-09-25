@@ -9,6 +9,7 @@
 #include "geometry/WorldModel.h"
 #include "TeamInfo.h"
 #include "plays/PlayAttack.h"
+#include "plays/PlayBallPlacement.h"
 #include "plays/PlayDebug.h"
 #include "plays/PlayHalt.h"
 #include "plays/PlayOurKickOff.h"
@@ -22,8 +23,6 @@
 class Leader {
 public:
     TeamInfo team;
-
-
 
     double ball_pos[2] = {0, 0};
     int64_t last_time_stamp = 0;
@@ -40,8 +39,9 @@ public:
     PlayTheirPenalty theirPenalty;
     PlayRetake retake;
     PlayOnTheirGoal onTheirGoal;
+    PlayBallPlacement ballPlacement;
 
-    std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal};
+    std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal, &ballPlacement};
 
     WorldModel world;
 

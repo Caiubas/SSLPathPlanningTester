@@ -140,12 +140,12 @@ bool WorldModel::doInterceptAnyRobot(LineSegment l) {
     return false;
 }
 
-bool WorldModel::isBallReachable(bool includeOurArea) {
+bool WorldModel::isBallReachable(bool includeOurArea, bool full_field) {
     // Create a list of areas to check
     std::vector<AreaRectangular> areasToCheck = {
         field.theirDefenseArea,
-        field.ourFisicalBarrier,
-        field.theirFisicalBarrier
+        field.leftFisicalBarrier,
+        field.rightFisicalBarrier
     };
     if (includeOurArea) {
         areasToCheck.push_back(field.ourDefenseArea);
@@ -157,18 +157,26 @@ bool WorldModel::isBallReachable(bool includeOurArea) {
             return false;
         }
     }
+    if (!full_field && !field.inside_dimensions.detectIfContains(ball.getPosition())) {
+        return false;
+    }
+    if (full_field && !field.full_dimensions.detectIfContains(ball.getPosition())) {
+        return false;
+    }
 
     return true;
 }
 
 Robot WorldModel::getClosestAllyToPoint(Point p) {
     Robot closest = allies[0];
-    while (int i = 0 < allies.size()) {
+    int i = 0;
+    while (i < allies.size()) {
         if (allies[i].isDetected()) {
             closest = allies[i];
             break;
         }
         if (i == 16) throw std::runtime_error("No allies");
+        i++;
     }
     for (Robot r : allies) {
         if (r.getPosition().getDistanceTo(p) < closest.getPosition().getDistanceTo(p)) closest = r;
@@ -178,16 +186,20 @@ Robot WorldModel::getClosestAllyToPoint(Point p) {
 
 Robot WorldModel::getClosestEnemyToPoint(Point p) {
     Robot closest = enemies[0];
-    while (int i = 0 < enemies.size()) {
+    int i = 0;
+    while (i < enemies.size()) {
         if (enemies[i].isDetected()) {
             closest = enemies[i];
             break;
         }
-        if (i == 16) throw std::runtime_error("No allies");
+        if (i == 16) throw std::runtime_error("No enemies");
+        i++;
     }
+
     for (Robot r : enemies) {
         if (r.getPosition().getDistanceTo(p) < closest.getPosition().getDistanceTo(p)) closest = r;
     }
+
     return closest;
 }
 

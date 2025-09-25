@@ -22,5 +22,7 @@
 #include "RolePenaltier.h"
 #include "RoleWatcher.h"
 #include "RoleFreeKicker.h"
+#include "RolePlacer.h"
+#include "RolePlaceHolder.h"
 
 #endif //ROLES_H
