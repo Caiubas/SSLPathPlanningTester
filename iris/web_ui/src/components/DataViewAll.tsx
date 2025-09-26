@@ -10,8 +10,9 @@ import VisionSection from './sections/VisionSection';
 import TartarusSection from './sections/TartarusSection';
 import CaronteSection from './sections/CaronteSection';
 import FieldSection from './sections/FieldSection';
-import SkillsSection from './sections/SkillsSection';
+import RobotSection from './sections/RobotSection';
 import CompetitionSection from './sections/CompetitionSection';
+import IrisGCTemplate from './sections/templates/IrisGCTemplate';
 
 type Props = {
   reading: boolean;
@@ -59,10 +60,10 @@ export function DataViewAll({
     ),
     caronte: <CaronteSection data={data} />,
     field: <FieldSection data={data} />,
-    skills:
-      selected === 'skills' ? (
+    skill:
+      selected === 'skill' ? (
         selectedRobotId !== null ? (
-          <SkillsSection
+          <RobotSection
             data={data}
             robotId={selectedRobotId}
             setSelected={setSelected}
@@ -75,6 +76,9 @@ export function DataViewAll({
       <CompetitionSection
         data={data}
       />
+    ),
+    irisGC: (
+      <IrisGCTemplate/>
     ),
   };
 

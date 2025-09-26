@@ -79,6 +79,11 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.designated_position_y = msg->iris_gc.designated_position_y;
     latest_data.current_command = msg->iris_gc.current_command;
     latest_data.game_event = msg->iris_gc.game_event;
+
+    latest_data.skill = msg->robots->skill;
+    latest_data.role = msg->robots->role;
+    latest_data.id = msg->robots->id;
+    latest_data.has_kicker = msg->robots->has_kicker;
 }
 
 
