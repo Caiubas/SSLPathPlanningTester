@@ -67,8 +67,10 @@ export const initialData: DataType = {
     goalkeeper_id: 0,
     cams_number: 0,
   },
-  skills: {
+  skill: {
     id: 0,
+    skill: 0,
+    role: 0,
   },
   competition: {
     ssl_vision: true,

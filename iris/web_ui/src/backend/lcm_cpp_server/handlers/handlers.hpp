@@ -52,6 +52,11 @@ struct LatestData {
     int16_t mcast_port_vision_sslvision; // default 10006
 	int16_t mcast_port_vision_grsim; // default 10020
 	int16_t mcast_port_vision_tracked;
+
+    int16_t skill = 0;
+	int16_t role = 0;
+    int16_t id = 0;
+    bool has_kicker = false;
     
     bool team_blue_status = false;
 

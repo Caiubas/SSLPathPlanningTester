@@ -220,6 +220,7 @@ export function FieldSVG({
           />
         )}
 
+        {/* X de posição designada */}
         {designatedPosition &&
           designatedPosition.x != 0 &&
           designatedPosition.y != 0 && (

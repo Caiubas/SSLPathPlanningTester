@@ -139,6 +139,9 @@ int main()
             robot["wheel_fl"] = r.wheel_fl;
             robot["wheel_bl"] = r.wheel_bl;
             robot["wheel_br"] = r.wheel_br;
+            robot["has_kicker"] = r.has_kicker;
+            robot["skill"] = latest_data.skill;
+            robot["role"] = latest_data.role;
             data["robots"][i] = std::move(robot);
         }
 
@@ -184,6 +187,9 @@ int main()
         data["field"]["ball_radius"] = f.ball_radius;
         data["field"]["max_robot_radius"] = f.max_robot_radius;
 
+        // ---- Robots ----
+
+
         // ---- Extras ----
         data["processo"] = latest_data.processo;
         data["estrategia"] = latest_data.estrategia;
@@ -226,6 +232,24 @@ int main()
                 int cmd = body["game_event"].i();
                 latest_data.game_event = cmd;
                 std::cout << "[POST] game_event atualizado para " << cmd << std::endl;
+            }
+
+            if (body.has("skill") && body["skill"].t() == crow::json::type::Number) {
+                latest_data.skill = 0;
+                std::cout << "[POST] skill resetado para 0" << std::endl;
+
+                int cmd = body["skill"].i();
+                latest_data.skill = cmd;
+                std::cout << "[POST] skill atualizado para " << cmd << std::endl;
+            }
+
+            if (body.has("role") && body["role"].t() == crow::json::type::Number) {
+                latest_data.role = 0;
+                std::cout << "[POST] role resetado para 0" << std::endl;
+
+                int cmd = body["role"].i();
+                latest_data.role = cmd;
+                std::cout << "[POST] role atualizado para " << cmd << std::endl;
             }
 
 
@@ -352,6 +376,9 @@ int main()
             msg.iris_gc.designated_position_x = latest_data.designated_position_x;
             msg.iris_gc.designated_position_y = latest_data.designated_position_y;
             msg.iris_gc.current_command = latest_data.current_command;
+
+            msg.robots->skill = latest_data.skill;
+            msg.robots->role = latest_data.role;
 
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";

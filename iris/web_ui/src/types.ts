@@ -14,6 +14,7 @@ export type Robot = {
   wheel_fl: number;
   wheel_bl: number;
   wheel_br: number;
+  has_kicker: boolean;
 };
 
 export type CompetitionData = {
@@ -36,8 +37,10 @@ export type CompetitionData = {
   team_blue: boolean,
 }
 
-export type SkillsData = {
+export type SkillData = {
   id: number;
+  skill: number;
+  role: number;
 }
 
 export type IAData = {
@@ -160,7 +163,7 @@ export type DataType = {
   vision: VisionData;
   gc: GCType;
   tartarus: TartarusData;
-  skills: SkillsData;
+  skill: SkillData;
   competition: CompetitionData;
   irisGC: IrisGCData;
 };
