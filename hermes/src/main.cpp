@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     lcm.subscribe("IA", &handler::handleIA, &han);
     lcm.subscribe("tartarus", &handler::handletartarus, &han);
     lcm.subscribe("GC", &handler::handleGC, &han);
+    lcm.subscribe("vision", &handler::handleVision, &han);
 
     std::thread t1([&]() { 
         sender.send_control(); 
