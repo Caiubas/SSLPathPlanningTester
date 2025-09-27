@@ -5,6 +5,7 @@
 #include "../../data_lcm/ia.hpp"
 #include "../../data_lcm/tartarus.hpp"
 #include "../../data_lcm/game_controller.hpp"
+#include "../../data_lcm/vision.hpp"
 #include "../../build/grSim_Packet.pb.h"
 
 class handler {
@@ -20,10 +21,15 @@ class handler {
         void handleGC(const lcm::ReceiveBuffer* rbuf,
                            const std::string& chan, 
                            const data::game_controller* data_gc);
+        
+        void handleVision(const lcm::ReceiveBuffer* rbuf,
+                           const std::string& chan, 
+                           const data::vision* data_vision);
 
         data::ia data_ia_copy;
         data::tartarus data_tartarus_copy;
         data::game_controller data_gc_copy;
+        data::vision data_vision_copy;
         bool updated_tartarus = false;
     };
 

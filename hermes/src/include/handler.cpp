@@ -29,3 +29,11 @@ void handler::handleGC(const lcm::ReceiveBuffer* rbuf,
     this->data_gc_copy = *data_gc;
 
 }
+
+void handler::handleVision(const lcm::ReceiveBuffer* rbuf,
+    const std::string& chan, 
+    const data::vision * data_vision) {
+
+    this->data_vision_copy = *data_vision;
+
+}

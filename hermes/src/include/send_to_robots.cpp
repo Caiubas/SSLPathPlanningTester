@@ -138,17 +138,38 @@ void robots_sender::send_control() { // global function to send control commands
 
                         else {
                             pct.id = han.data_ia_copy.robots[i].id;
-                            pct.Vx = han.data_ia_copy.robots[i].vel_tang; //vx é o vel_tang
-                            pct.Vy = han.data_ia_copy.robots[i].vel_normal; //vy é o vel_normal
-                            pct.Vang = -han.data_ia_copy.robots[i].vel_ang;
-                            pct.kicker = han.data_ia_copy.robots[i].kick_speed_x;
-                            pct.config = 0;
-                            pct.param = 0;
+                            if(han.data_gc_copy.team_blue)
+                            {
+                                if(han.data_vision_copy.robots_blue[pct.id].detected){
+                                    pct.Vx = han.data_ia_copy.robots[i].vel_tang; //vx é o vel_tang
+                                    pct.Vy = han.data_ia_copy.robots[i].vel_normal; //vy é o vel_normal
+                                    pct.Vang = -han.data_ia_copy.robots[i].vel_ang;
+                                    pct.kicker = han.data_ia_copy.robots[i].kick_speed_x;
+                                    pct.config = 0;
+                                    pct.param = 0;
+
+                                    std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
+                                    memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
+                                    write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
+                                    usleep(5000);
+                                }
+                            }
+                            else{
+                                if(han.data_vision_copy.robots_yellow[pct.id].detected) {
+                                    pct.Vx = han.data_ia_copy.robots[i].vel_tang; //vx é o vel_tang
+                                    pct.Vy = han.data_ia_copy.robots[i].vel_normal; //vy é o vel_normal
+                                    pct.Vang = -han.data_ia_copy.robots[i].vel_ang;
+                                    pct.kicker = han.data_ia_copy.robots[i].kick_speed_x;
+                                    pct.config = 0;
+                                    pct.param = 0;
+
+                                    std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
+                                    memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
+                                    write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
+                                    usleep(5000);
+                                }
+                            }
                         }
-                        std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
-                        memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
-                        write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
-                        usleep(5000);
                     }
                 }
             }
