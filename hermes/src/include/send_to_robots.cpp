@@ -124,7 +124,7 @@ void robots_sender::send_control() { // global function to send control commands
                     control_obj.control(); // Mantém atualizando
                     pct.config = 0;
                     pct.param = 0;
-                    pct.id = 255; // Use the current robot ID from the controller
+                    pct.id = control_obj.robot_id; // Use the current robot ID from the controller
                     std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
                     memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
                     write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
