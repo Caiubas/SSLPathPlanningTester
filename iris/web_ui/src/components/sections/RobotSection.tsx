@@ -29,7 +29,7 @@ export default function RobotSection({ data, robotId, setSelected }: Props) {
 
       <h2 className="text-lg font-bold mb-1">Skills do Robô {robotId}</h2>
       {/* Aqui você renderiza as skills do robô */}
-      <RobotTabs/>
+      <RobotTabs robotId={robotId}/>
     </div>
   );
 }

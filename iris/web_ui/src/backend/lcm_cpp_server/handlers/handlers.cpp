@@ -80,9 +80,16 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.current_command = msg->iris_gc.current_command;
     latest_data.game_event = msg->iris_gc.game_event;
 
-    latest_data.skill = msg->robots->skill;
-    latest_data.role = msg->robots->role;
-    latest_data.id = msg->robots->id;
+    for (const auto& robot : msg->robots) {
+    int id = robot.id;          // ID do robô vindo do Tartarus
+    int skill = robot.skill;    // skill do robô
+    int role = robot.role;      // role do robô
+
+    latest_data.skill_by_robot[id] = skill;
+    latest_data.role_by_robot[id] = role;
+}
+
+    latest_data.selected_robot_id = msg->robots->id;
     latest_data.has_kicker = msg->robots->has_kicker;
 }
 
