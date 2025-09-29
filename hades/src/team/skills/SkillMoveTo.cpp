@@ -88,10 +88,6 @@ namespace skills {
                 vel_cmd = vel_cmd.getNormalized(max_speed);
             }
 
-            if (vel_cmd.getNorm() < robot.mVxy_min) {
-                vel_cmd = vel_cmd.getNormalized(robot.mVxy_min);
-            }
-
             if (std::isnan(vel_cmd.getX())) vel_cmd.setX(0);
             if (std::isnan(vel_cmd.getY())) vel_cmd.setY(0);
 
@@ -135,25 +131,18 @@ namespace skills {
         // --- 8) Somar feedforward ---
         double out_x = v_target_world.getX() + pid_x;
         double out_y = v_target_world.getY() + pid_y;
-
-        // --- 9) Deadzone / velocidade mínima ---
-        double out_norm = std::hypot(out_x, out_y);
-        if (out_norm > 0 && out_norm < robot.mVxy_min) {
-            double scale = robot.mVxy_min / out_norm;
-            out_x *= scale;
-            out_y *= scale;
-        }
+        std::cout << pid_x << " " << pid_y << std::endl;
 
         // --- 10) Saturação de velocidade máxima ---
         double max_v = robot.mVxy_max;
         if (std::hypot(out_x, out_y) > max_v) {
-            double s = max_v / std::hypot(out_x, out_y);
+            double s = max_v*1.5 / std::hypot(out_x, out_y);
             out_x *= s;
-            out_y *= s;
+            out_y *= s;       //TODO verificar isso. Saída não pode superar em 50% a velocidade maxima
         }
 
         // --- 11) Rotacionar para enviar ao robô ---
-        return Vector2d(out_x, out_y).getRotated(-yaw);
+        return Vector2d(out_x, out_y).getRotated(yaw);
     }
 
 
@@ -271,6 +260,11 @@ namespace skills {
                 robot.mtarget_vyaw = 0;
                 robot.positioned = true;
                 robot.mTeam->positioned[robot.getId()] = true;
+                robot.mlast_target_vel = {0, 0};
+                robot.mLast_delta_vx = 0;
+                robot.mLast_delta_vy = 0;
+                robot.mI_vx = 0;
+                robot.mI_vy = 0;
                 return;
             }
         }

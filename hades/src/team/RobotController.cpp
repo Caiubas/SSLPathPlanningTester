@@ -64,7 +64,7 @@ void RobotController::loop() {
             if (mTeam->event != TeamInfo::halt) {
                 //std::cout << "nao halt " << std::endl;
                 //stop.act(*this);
-                //moveTo.act(*this, mWorld.ball.getPosition(), true, true, true);
+                moveTo.act(*this, mWorld.ball.getPosition(), true);
                 //mTeam->role_map[Robot::striker]->act(*this);
                 //posandkick.act(*this, mWorld.field.theirGoal.getMiddle());
                 if (positioned) {
@@ -74,7 +74,7 @@ void RobotController::loop() {
             } else {
                 stop.act(*this);
             }
-            select_behavior();
+            //select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -314,10 +314,10 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
-    mtarget_vel = mtarget_vel.getRotated(3.14156/2);
+    //mtarget_vel = mtarget_vel.getRotated(3.14156/2);
     han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
     han.new_ia.robots[id].vel_tang = mtarget_vel.getX();
-    han.new_ia.robots[id].vel_ang = static_cast<float>(-mtarget_vyaw);
+    han.new_ia.robots[id].vel_ang = static_cast<float>(mtarget_vyaw);
     if (mkicker_x != 0) {
         han.new_ia.robots[id].kick = true;
         han.new_ia.robots[id].kick_speed_x = mkicker_x;

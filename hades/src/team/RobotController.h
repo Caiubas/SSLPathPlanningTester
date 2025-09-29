@@ -91,13 +91,13 @@ public:
 
     double mI_vx = 0;
     double mI_vy = 0;
-    double mI_vxy_max = 0;
+    double mI_vxy_max = 1;
     double mLast_delta_vx = 0;
     double mLast_delta_vy = 0;
 
-    double mKP_vxy = 1;
+    double mKP_vxy = 0;
     double mKI_vxy = 1;
-    double mKD_vxy = 1;
+    double mKD_vxy = 0;
 
     //field info
     WorldModel mWorld;
