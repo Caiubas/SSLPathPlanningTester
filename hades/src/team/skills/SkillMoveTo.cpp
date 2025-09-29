@@ -53,11 +53,11 @@ namespace skills {
                     curve_safe_speed = robot.mVxy_min;
                 }
 
-            }
+        }
 
             double current_speed = robot.getVelocity().getNorm();
 
-            double brake_distance = (max_speed*max_speed - curve_safe_speed * curve_safe_speed) / (2.0 * robot.mA_xy_brake);
+            double brake_distance = (max_speed*max_speed - curve_safe_speed * curve_safe_speed) / (2.0 * robot.mA_xy_brake);    //TODO usar aceleracao normal?
             brake_distance = std::max(brake_distance, 0.0);
             if (dist <= brake_distance) {
                 v_target_magnitude = curve_safe_speed;
@@ -88,6 +88,10 @@ namespace skills {
                 vel_cmd = vel_cmd.getNormalized(max_speed);
             }
 
+            if (vel_cmd.getNorm() < robot.mVxy_min) {
+                vel_cmd = vel_cmd.getNormalized(robot.mVxy_min);
+            }
+
             if (std::isnan(vel_cmd.getX())) vel_cmd.setX(0);
             if (std::isnan(vel_cmd.getY())) vel_cmd.setY(0);
 
@@ -95,10 +99,62 @@ namespace skills {
             return vel_cmd;
         }
 
-        Vector2d SkillMoveTo::motion_control(Vector2d v_vet, double yaw) {
-            const double ang = yaw;
-            return v_vet.getRotated(ang);
+    Vector2d SkillMoveTo::motion_control(RobotController& robot, Vector2d v_target_world, double yaw) {
+        // --- 1) Medir velocidade atual ---
+        Vector2d v_meas_world = robot.getVelocity();
+
+        // --- 2) Calcular erro em cada eixo ---
+        double delta_x = v_target_world.getX() - v_meas_world.getX();
+        double delta_y = v_target_world.getY() - v_meas_world.getY();
+
+        // --- 3) Ganhos PID ---
+        double Kp = robot.mKP_vxy;
+        double Ki = robot.mKI_vxy;
+        double Kd = robot.mKD_vxy;
+
+        // --- 4) Delta time ---
+        double dt = robot.mDelta_time;
+        if (dt <= 0) dt = 1e-3;
+
+        // --- 5) PID eixo X ---
+        robot.mI_vx += delta_x * dt;
+        robot.mI_vx = std::clamp(robot.mI_vx, -robot.mI_vxy_max, robot.mI_vxy_max);
+        double d_delta_x = (delta_x - robot.mLast_delta_vx) / dt;
+        double pid_x = Kp * delta_x + Ki * robot.mI_vx + Kd * d_delta_x;
+
+        // --- 6) PID eixo Y ---
+        robot.mI_vy += delta_y * dt;
+        robot.mI_vy = std::clamp(robot.mI_vy, -robot.mI_vxy_max, robot.mI_vxy_max);
+        double d_delta_y = (delta_y - robot.mLast_delta_vy) / dt;
+        double pid_y = Kp * delta_y + Ki * robot.mI_vy + Kd * d_delta_y;
+
+        // --- 7) Armazenar últimos deltas ---
+        robot.mLast_delta_vx = delta_x;
+        robot.mLast_delta_vy = delta_y;
+
+        // --- 8) Somar feedforward ---
+        double out_x = v_target_world.getX() + pid_x;
+        double out_y = v_target_world.getY() + pid_y;
+
+        // --- 9) Deadzone / velocidade mínima ---
+        double out_norm = std::hypot(out_x, out_y);
+        if (out_norm > 0 && out_norm < robot.mVxy_min) {
+            double scale = robot.mVxy_min / out_norm;
+            out_x *= scale;
+            out_y *= scale;
         }
+
+        // --- 10) Saturação de velocidade máxima ---
+        double max_v = robot.mVxy_max;
+        if (std::hypot(out_x, out_y) > max_v) {
+            double s = max_v / std::hypot(out_x, out_y);
+            out_x *= s;
+            out_y *= s;
+        }
+
+        // --- 11) Rotacionar para enviar ao robô ---
+        return Vector2d(out_x, out_y).getRotated(-yaw);
+    }
 
 
         std::vector<Point> SkillMoveTo::find_trajectory(RobotController& robot, Point start, Point goal, bool avoid_ball = true, bool full_field, bool ignore_stop) {
@@ -151,7 +207,7 @@ namespace skills {
                 if (!robot.mWorld.allies[i].isDetected() || i == robot.getId()) {
                     continue;
                 }
-                Circle c({robot.mWorld.allies[i].getPosition().getX(), robot.mWorld.allies[i].getPosition().getY()}, robot.mRadius);
+                Circle c({robot.mWorld.allies[i].getPosition().getX(), robot.mWorld.allies[i].getPosition().getY()}, robot.getRadius() + robot.mWorld.allies[i].getRadius());
                 obs_circular.push_back(c);
             }
 
@@ -160,7 +216,7 @@ namespace skills {
                 if (!robot.mWorld.enemies[i].isDetected()) {
                     continue;
                 }
-                Circle c({robot.mWorld.enemies[i].getPosition().getX(), robot.mWorld.enemies[i].getPosition().getY()}, robot.mRadius);
+                Circle c({robot.mWorld.enemies[i].getPosition().getX(), robot.mWorld.enemies[i].getPosition().getY()}, robot.getRadius() + robot.mWorld.enemies[i].getRadius());
                 obs_circular.push_back(c);
             }
 
@@ -223,7 +279,7 @@ namespace skills {
         Vector2d v_vet;
         std::size(trajectory) > 1 ? v_vet = motion_planner(robot, trajectory) : v_vet = Vector2d({0, 0}, robot.getPosition()).getNormalized(robot.mVxy_min);
 
-        v_vet = motion_control(v_vet, -robot.getYaw());
+        v_vet = motion_control(robot, v_vet, -robot.getYaw());
 
         robot.mtarget_vel = v_vet;
         robot.mkicker_x = 0;

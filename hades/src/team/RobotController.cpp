@@ -13,6 +13,7 @@
 #include <set>
 #include <unordered_set>
 #include "TeamInfo.h"
+#include "geometry/LineSegment.h"
 
 
 void RobotController::start(TeamInfo* team) {
@@ -32,6 +33,9 @@ void RobotController::stop() {
     mTeam->active_robots[id] = false;
     mTeam->roles[id] = unknown;
     mTerminate = true;
+    skills::SkillStop stop;
+    stop.act(*this);
+    publish();
     mTeam->num_of_active_robots--;
 }
 
@@ -39,6 +43,7 @@ void RobotController::loop() {
     auto t0 = std::chrono::steady_clock::now();
 
     while (not mTerminate) {
+        //mTeam->role_map[support]->act(*this);
         if (mLast_time_stamp == han.new_ia.timestamp) {
             continue;
         }
@@ -46,13 +51,34 @@ void RobotController::loop() {
 
         receive_vision();
         receive_field_geometry();
-        check_connection();
+        //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         try {
+            skills::SkillMoveTo moveTo;
+            skills::SkillStop stop;
+            skills::SkillTurnTo turnTo;
+            tactics::TacticPositionAndKick posandkick;
+            if (getRole() != 4){
+            //std::cout << id << " " << getPosition().getX() << " " << getPosition().getY() << " " << getRole() << std::endl;
+            //std::cout << mWorld.ball.getPosition().getX() << " " << mWorld.ball.getPosition().getY() << std::endl;
+            }
+            if (mTeam->event != TeamInfo::halt) {
+                //std::cout << "nao halt " << std::endl;
+                //stop.act(*this);
+                //moveTo.act(*this, mWorld.ball.getPosition(), true, true, true);
+                //mTeam->role_map[Robot::striker]->act(*this);
+                //posandkick.act(*this, mWorld.field.theirGoal.getMiddle());
+                if (positioned) {
+                    //stop.act(*this);
+                    //turnTo.act(*this, mWorld.ball.getPosition());
+                }
+            } else {
+                stop.act(*this);
+            }
             select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
-        //mTeam->role_map[support]->act(*this);
+        check_connection();
         publish();
         std::chrono::duration<double> delta = t1 - t0;
         t0 = std::chrono::steady_clock::now();
@@ -288,10 +314,10 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
-
+    mtarget_vel = mtarget_vel.getRotated(3.14156/2);
     han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
     han.new_ia.robots[id].vel_tang = mtarget_vel.getX();
-    han.new_ia.robots[id].vel_ang = static_cast<float>(mtarget_vyaw);
+    han.new_ia.robots[id].vel_ang = static_cast<float>(-mtarget_vyaw);
     if (mkicker_x != 0) {
         han.new_ia.robots[id].kick = true;
         han.new_ia.robots[id].kick_speed_x = mkicker_x;

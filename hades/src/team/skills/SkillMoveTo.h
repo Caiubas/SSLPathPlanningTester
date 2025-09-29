@@ -18,7 +18,7 @@ public:
 	void act(RobotController& robot);
 private:
 	Vector2d motion_planner(RobotController& robot, std::vector<Point> trajectory);
-	Vector2d motion_control(Vector2d v_vet, double yaw);
+	Vector2d motion_control(RobotController& robot, Vector2d v_target_world, double yaw);
 	std::vector<Point> find_trajectory(RobotController& robot, Point start, Point goal, bool avoid_ball, bool ignore_stop = false, bool full_field = false);
 	Rectangle getRectangle(AreaRectangular r);
 };

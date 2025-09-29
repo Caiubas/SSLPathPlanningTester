@@ -8,8 +8,11 @@
 
 namespace roles {
 	class RoleCircularTrajectory : public roles::RoleBase {
+	private:
+		int resolution = 120;
+		double radius = 500;
 	public:
-          void act(RobotController& robot);
+		void act(RobotController& robot);
 	};
 }
 

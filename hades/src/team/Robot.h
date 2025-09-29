@@ -43,8 +43,8 @@ protected:
     double vyaw = 0.0;
     double radius = 160;
     bool detected = false;
-    bool kicker = false;
-    double kickDistance = 3000;
+    bool kicker = true;
+    double kickDistance = 500;
     enum role this_role = unknown;
 
 public:

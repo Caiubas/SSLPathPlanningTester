@@ -17,7 +17,7 @@ private:
 	Point position;
 	Vector2d velocity;
 	Point stopPosition = Point(0, 0);
-	double velocityThreshold = 0.2;
+	double velocityThreshold = 0.6;
 	VisibilityGraph visibility;
 public:
   	Ball(bool detected, Point position, Vector2d velocity) : detected(detected), position(position), velocity(velocity) {stopPosition = getStopPosition();};

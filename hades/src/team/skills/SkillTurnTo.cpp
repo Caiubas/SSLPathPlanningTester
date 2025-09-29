@@ -20,29 +20,41 @@ namespace skills {
 
 	double SkillTurnTo::turn_control(RobotController robot, double delta) {
 		double P = robot.mKP_ang * delta;
-		robot.mI_ang = robot.mI_ang + delta*robot.mDelta_time*robot.mKI_ang;
-		double D = (delta-robot.mLast_delta)*robot.mKD_ang;
+		if (!robot.oriented) {	//anti-windup
+			robot.mI_ang = robot.mI_ang + delta*robot.mDelta_time*robot.mKI_ang;
+		}
+		double D = ((delta-robot.mLast_delta_vyaw)/robot.mDelta_time)*robot.mKD_ang;	//TODO fitro no derivativo (sofre mto de ruido)
 		double PID_vyaw = P + robot.mI_ang + D;
 
-		robot.mLast_delta = delta;
-
+		robot.mLast_delta_vyaw = delta;
 		if (fabs(PID_vyaw) > robot.mVyaw_max) {
 			PID_vyaw = robot.mVyaw_max*PID_vyaw/fabs(PID_vyaw);
 		};
 		if (fabs(PID_vyaw) < robot.mVyaw_min && fabs(PID_vyaw) != 0) {
 			PID_vyaw = robot.mVyaw_min*PID_vyaw/fabs(PID_vyaw);
 		}
+
 		return PID_vyaw;
 	}
 
 void SkillTurnTo::act(RobotController& robot, Point goal) {
 	double delta = find_angle_error(robot, goal);
-	if (fabs(delta) < robot.mStatic_angle_tolarance) {
+	if (!robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance) {	//quando alinhando
 		robot.mtarget_vyaw = 0;
 		robot.oriented = true;
 		return;
 	}
+	if (robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance*2) { //quando já alinhado
+		robot.mtarget_vyaw = 0;
+		robot.oriented = true;
+		return;
+	}
+
 	robot.oriented = false;
+	if (robot.mtarget_vel.getNorm() != 0) {
+		robot.mtarget_vyaw = 0;
+		return;
+	}
 	double new_vyaw = turn_control(robot, delta);
 	if (new_vyaw > robot.mtarget_vyaw + robot.mDelta_time*robot.mA_ang_max) {
 		new_vyaw = robot.mtarget_vyaw + robot.mDelta_time*robot.mA_ang_max;

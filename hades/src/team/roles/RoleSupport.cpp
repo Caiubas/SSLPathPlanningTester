@@ -24,8 +24,8 @@ namespace roles {
                 double x = 0;
                 double y = 0;
                 try {
-                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
-                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 50.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 50.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
                 } catch (...) { // no striker
                     x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
                     y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
@@ -63,7 +63,6 @@ namespace roles {
                 Point p = getSupportPosition(robot);
                 keepLocation.act(robot, p);
             } catch (...) {
-                //std::cout << "No support position found" << std::endl;
                 keepLocation.act(robot, Point(0, 0));
             }
         }
