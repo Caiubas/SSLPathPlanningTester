@@ -1,4 +1,5 @@
 import type { DataType } from '../../types';
+import RobotTabs from './utilities/RobotTabs';
 
 type Props = {
   data: DataType;
@@ -6,7 +7,7 @@ type Props = {
   setSelected: React.Dispatch<React.SetStateAction<keyof DataType>>;
 };
 
-export default function SkillsSection({ data, robotId, setSelected }: Props) {
+export default function RobotSection({ data, robotId, setSelected }: Props) {
   const teamBlueSelected = data.gc.team_blue;
   const team = teamBlueSelected ? 'blue_team' : 'yellow_team';
 
@@ -28,7 +29,7 @@ export default function SkillsSection({ data, robotId, setSelected }: Props) {
 
       <h2 className="text-lg font-bold mb-1">Skills do Robô {robotId}</h2>
       {/* Aqui você renderiza as skills do robô */}
-      <p>Aqui vão as skills do robô...</p>
+      <RobotTabs robotId={robotId}/>
     </div>
   );
 }

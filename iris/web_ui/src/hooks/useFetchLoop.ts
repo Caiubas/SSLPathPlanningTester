@@ -78,9 +78,9 @@ export function useFetchLoop(reading: boolean, initialData: DataType): DataType 
             current_command: json.current_command ?? initialData.irisGC.current_command,
             game_event: json.game_event ?? initialData.irisGC.game_event,
           },
-          skills: {
-            ...initialData.skills,
-            id: json.id ?? initialData.skills.id,
+          skill: {
+            ...initialData.skill,
+            id: json.id ?? initialData.skill.id,
           },
           competition: (() => {
             const competitionMode = json.competition_mode ?? initialData.tartarus.competition_mode;

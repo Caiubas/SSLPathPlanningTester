@@ -139,6 +139,11 @@ int main()
             robot["wheel_fl"] = r.wheel_fl;
             robot["wheel_bl"] = r.wheel_bl;
             robot["wheel_br"] = r.wheel_br;
+            robot["has_kicker"] = r.has_kicker;
+            int id = r.id;
+            robot["skill"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
+            robot["role"]  = latest_data.role_by_robot.count(id)  ? latest_data.role_by_robot.at(id)  : 0;
+
             data["robots"][i] = std::move(robot);
         }
 
@@ -184,6 +189,9 @@ int main()
         data["field"]["ball_radius"] = f.ball_radius;
         data["field"]["max_robot_radius"] = f.max_robot_radius;
 
+        // ---- Robots ----
+
+
         // ---- Extras ----
         data["processo"] = latest_data.processo;
         data["estrategia"] = latest_data.estrategia;
@@ -227,6 +235,38 @@ int main()
                 latest_data.game_event = cmd;
                 std::cout << "[POST] game_event atualizado para " << cmd << std::endl;
             }
+
+            if (body.has("skill") && body["skill"].t() == crow::json::type::Number) {
+                int cmd = body["skill"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.skill_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] skill " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] skill recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+            if (body.has("role") && body["role"].t() == crow::json::type::Number) {
+                int cmd = body["role"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.role_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] role " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] role recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+
 
 
             if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
@@ -353,8 +393,26 @@ int main()
             msg.iris_gc.designated_position_y = latest_data.designated_position_y;
             msg.iris_gc.current_command = latest_data.current_command;
 
+            // Preencher robôs (até 16)
+            for (size_t i = 0; i < 16; ++i) {
+                if (i < latest_data.robots.size()) {
+                    int robot_id = latest_data.robots[i].id;
+                    msg.robots[i].id = robot_id;
+                    msg.robots[i].has_kicker = latest_data.robots[i].has_kicker;
+                    msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
+                    msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+                } else {
+                    // Robô vazio
+                    msg.robots[i].id = -1;
+                    msg.robots[i].has_kicker = false;
+                    msg.robots[i].skill = 0;
+                    msg.robots[i].role = 0;
+                }
+            }
+
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";
+
         }
         catch (const std::exception &e)
         {

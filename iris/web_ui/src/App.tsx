@@ -9,7 +9,7 @@ import { useFetchLoop } from './hooks/useFetchLoop';
 import { mapBallToFieldCoords, mapRobotsToFieldCoords } from './utils';
 import type { DataType } from './types';
 
-export type SoftwareOption = 'ia' | 'gc' | 'vision' | 'tartarus' | 'caronte' | 'competition';
+export type SoftwareOption = 'ia' | 'gc' | 'vision' | 'tartarus' | 'caronte' | 'skill' | 'irisGC' | 'competition';
 
 export default function App() {
   // App.tsx
