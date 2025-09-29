@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import RolesTemplate from '../templates/RolesTemplate';
+import RoleTemplate from '../templates/RoleTemplate';
 import SkillTemplate from '../templates/SkillTemplate';
 
-export default function RobotTabs() {
+export type Props = {
+  robotId: number;
+}
+
+export default function RobotTabs({ robotId } : Props) {
   const [activeTab, setActiveTab] = useState('ball_left');
 
   const tabs = [
@@ -31,8 +35,8 @@ export default function RobotTabs() {
 
       {/* Conteúdo das abas */}
       <div className="p-4 bg-[#7e7e7e]">
-        {activeTab === 'role' && <RolesTemplate/>}
-        {activeTab === 'skill' && <SkillTemplate/>}
+        {activeTab === 'role' && <RoleTemplate robotId={robotId}/>}
+        {activeTab === 'skill' && <SkillTemplate robotId={robotId}/>}
       </div>
     </div>
   );
