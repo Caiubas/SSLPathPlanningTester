@@ -6,6 +6,10 @@ struct robot_parameters
     boolean has_kicker;
 	int16_t skill;
 	int16_t role;
+    float move_to_x;
+	float move_to_y;
+	float turn_to_x;
+	float turn_to_y;
 }
 
 struct iris_controller
@@ -35,6 +39,7 @@ struct tartarus
 	int16_t mcast_port_vision_tracked; // default 10010 "we use the tigers autoreferee"
 
 	boolean team_blue; //changes the team (not recommended for use in competitions)
+	int16_t actual_team_play;
 	robot_parameters robots[16];
 	iris_controller iris_gc;
 }
