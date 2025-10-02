@@ -71,6 +71,10 @@ export const initialData: DataType = {
     id: 0,
     skill: 0,
     role: 0,
+    movey: 0,
+    movex: 0,
+    turny: 0,
+    turnx: 0,
   },
   competition: {
     ssl_vision: true,

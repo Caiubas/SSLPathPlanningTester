@@ -41,6 +41,10 @@ export type SkillData = {
   id: number;
   skill: number;
   role: number;
+  movey: number;
+  movex: number;
+  turny: number;
+  turnx: number;
 }
 
 export type IAData = {

@@ -144,6 +144,11 @@ int main()
             robot["skill"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
             robot["role"]  = latest_data.role_by_robot.count(id)  ? latest_data.role_by_robot.at(id)  : 0;
 
+            robot["move_to_x"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
+            robot["move_to_y"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
+            robot["turn_to_x"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
+            robot["turn_to_y"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+
             data["robots"][i] = std::move(robot);
         }
 
@@ -265,6 +270,43 @@ int main()
                     std::cout << "[POST] role recebida mas sem robot_id" << std::endl;
                 }
             }
+
+            if (body.has("move_to_x") && body["move_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_x_by_robot[robot_id] = static_cast<float>(body["move_to_x"].d());
+                    std::cout << "[POST] move_to_x atualizado para robô " << robot_id
+                            << ": " << latest_data.move_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("move_to_y") && body["move_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_y_by_robot[robot_id] = static_cast<float>(body["move_to_y"].d());
+                    std::cout << "[POST] move_to_y atualizado para robô " << robot_id
+                            << ": " << latest_data.move_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("turn_to_x") && body["turn_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_x_by_robot[robot_id] = static_cast<float>(body["turn_to_x"].d());
+                    std::cout << "[POST] turn_to_x atualizado para robô " << robot_id
+                            << ": " << latest_data.turn_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("turn_to_y") && body["turn_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_y_by_robot[robot_id] = static_cast<float>(body["turn_to_y"].d());
+                    std::cout << "[POST] turn_to_y atualizado para robô " << robot_id
+                            << ": " << latest_data.turn_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
 
 
 
@@ -397,18 +439,32 @@ int main()
             for (size_t i = 0; i < 16; ++i) {
                 if (i < latest_data.robots.size()) {
                     int robot_id = latest_data.robots[i].id;
+
                     msg.robots[i].id = robot_id;
                     msg.robots[i].has_kicker = latest_data.robots[i].has_kicker;
+
+                    // Skill e role
                     msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
                     msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+
+                    // Move/Turn
+                    msg.robots[i].move_to_x = latest_data.move_x_by_robot.count(robot_id) ? latest_data.move_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].move_to_y = latest_data.move_y_by_robot.count(robot_id) ? latest_data.move_y_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_x = latest_data.turn_x_by_robot.count(robot_id) ? latest_data.turn_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_y = latest_data.turn_y_by_robot.count(robot_id) ? latest_data.turn_y_by_robot.at(robot_id) : 0.0f;
                 } else {
                     // Robô vazio
                     msg.robots[i].id = -1;
                     msg.robots[i].has_kicker = false;
                     msg.robots[i].skill = 0;
                     msg.robots[i].role = 0;
+                    msg.robots[i].move_to_x = 0.0f;
+                    msg.robots[i].move_to_y = 0.0f;
+                    msg.robots[i].turn_to_x = 0.0f;
+                    msg.robots[i].turn_to_y = 0.0f;
                 }
             }
+
 
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";

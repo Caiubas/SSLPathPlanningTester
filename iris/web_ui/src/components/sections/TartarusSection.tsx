@@ -28,16 +28,16 @@ export default function TartarusSection({
   const {
     stmPort,
     setStmPort,
-    mcastGCPort: mcastGCPort,
-    setMcastPortGC: setMcastGCPort,
-    mcastSslVisionPort: mcastSslVisionPort,
-    setSslVisionPort: setMcastSslVisionPort,
-    mcastTrackedPort: mcastTrackedPort,
-    setTrackedPort: setMcastTrackedPort,
+    mcastGCPort,
+    setMcastPortGC,
+    mcastSslVisionPort,
+    setSslVisionPort,
+    mcastTrackedPort,
+    setTrackedPort,
     camsNumber,
     setCamsNumber,
-    mcastGrsimPort: mcastGrsimPort,
-    setMcastGrsimPort: setMcastGrsimPort,
+    mcastGrsimPort,
+    setMcastGrsimPort,
   } = useTartarusState(tartarus);
 
   return (
@@ -49,24 +49,22 @@ export default function TartarusSection({
 
       <h2 className="text-lg font-bold mb-4">Tartarus</h2>
 
-      <RowWrapper>
-        <p>SSL Vision: </p>
+      {/* Toggles */}
+      <RowWrapper title="SSL Vision:">
         <ToggleSwitch
           value={tartarus.ssl_vision}
           onToggle={() => toggleBoolean('ssl_vision', tartarus.ssl_vision)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Auto Referee: </p>
+      <RowWrapper title="Auto Referee:">
         <ToggleSwitch
           value={tartarus.autoreferee}
           onToggle={() => toggleBoolean('autoreferee', tartarus.autoreferee)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Modo Competição: </p>
+      <RowWrapper title="Modo Competição:">
         <ToggleSwitch
           value={tartarus.competition_mode}
           onToggle={() =>
@@ -75,24 +73,21 @@ export default function TartarusSection({
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Meio Campo: </p>
+      <RowWrapper title="Meio Campo:">
         <ToggleSwitch
           value={tartarus.half_field}
           onToggle={() => toggleBoolean('half_field', tartarus.half_field)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Iris GC: </p>
+      <RowWrapper title="Iris GC:">
         <ToggleSwitch
           value={tartarus.iris_as_GC}
           onToggle={() => toggleBoolean('iris_as_GC', tartarus.iris_as_GC)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Controlar o robô em:</p>
+      <RowWrapper title="Controlar o robô em:">
         <select
           className="ml-2 rounded border border-gray-300 px-3 py-1 shadow-md outline-none transition focus:border-purple-700 focus:ring-1 focus:ring-[#6805F2]"
           value={
@@ -127,13 +122,8 @@ export default function TartarusSection({
         </select>
       </RowWrapper>
 
-      <RowWrapper>
-        <p>
-          Time Azul:{' '}
-          <span className="font-mono">
-            {tartarus.team_blue ? 'Sim' : 'Não'}
-          </span>
-        </p>
+      <RowWrapper title="Time Azul:">
+        <span className="font-mono">{tartarus.team_blue ? 'Sim' : 'Não'}</span>
       </RowWrapper>
 
       <GoalkeeperIdInput />
@@ -149,13 +139,13 @@ export default function TartarusSection({
       <NumberInputRow
         label="GC Port:"
         value={mcastGCPort}
-        setValue={setMcastGCPort}
+        setValue={setMcastPortGC}
         onSubmit={() => updateNumber('mcast_port_gc', mcastGCPort)}
       />
       <NumberInputRow
         label="SSL Vision Port:"
         value={mcastSslVisionPort}
-        setValue={setMcastSslVisionPort}
+        setValue={setSslVisionPort}
         onSubmit={() =>
           updateNumber('mcast_port_vision_sslvision', mcastSslVisionPort)
         }
@@ -169,7 +159,7 @@ export default function TartarusSection({
       <NumberInputRow
         label="AutoReferee Port:"
         value={mcastTrackedPort}
-        setValue={setMcastTrackedPort}
+        setValue={setTrackedPort}
         onSubmit={() =>
           updateNumber('mcast_port_vision_tracked', mcastTrackedPort)
         }
@@ -177,18 +167,16 @@ export default function TartarusSection({
 
       <h2 className="text-lg font-bold mb-4">Campo</h2>
 
-      <RowWrapper>
-        <p>Orientação do Campo:</p>
+      <RowWrapper title="Orientação do Campo:">
         <ActionButton
-          onClick={() => setFlipField(!flipField)} // precisa passar o estado atual para o pai, invertido
+          onClick={() => setFlipField(!flipField)}
           label={flipField ? 'Normal' : 'Inverter'}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Dimensões do Campo:</p>
+      <RowWrapper title="Dimensões do Campo:">
         <ActionButton
-          onClick={() => setReceptDimensions(!receptDimensions)} // precisa passar o estado atual para o pai, invertido
+          onClick={() => setReceptDimensions(!receptDimensions)}
           label={receptDimensions ? 'Fixas' : 'SSL-Vision'}
         />
       </RowWrapper>
