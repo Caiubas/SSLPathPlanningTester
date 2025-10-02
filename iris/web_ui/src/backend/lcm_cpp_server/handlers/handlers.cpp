@@ -97,28 +97,77 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
 void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, const vision_t *msg)
 {
     std::lock_guard<std::mutex> lock(data_mutex);
-    msg_vision = *msg;
+
+    // Atualiza timestamp
     latest_data.timestamp = msg->timestamp;
 
-    // Copiar robôs amarelos
+    // Atualiza bola (simples, struct única)
+    latest_data.balls = msg->balls;
+
+    // Atualiza dimensões do campo
+    latest_data.field = msg->field;
+
+    // ----- Robôs Amarelos -----
     latest_data.robots_yellow.clear();
+    latest_data.robots_yellow.reserve(msg->robots_yellow_size);
+
     for (int i = 0; i < msg->robots_yellow_size; ++i)
     {
-        latest_data.robots_yellow.push_back(msg->robots_yellow[i]);
+        const auto &src = msg->robots_yellow[i];
+        data::detection_robots robot;
+
+        robot.robot_id   = src.robot_id;
+        robot.position_x = src.position_x;
+        robot.position_y = src.position_y;
+        robot.orientation = src.orientation;
+        robot.detected   = src.detected;
+
+        latest_data.robots_yellow.push_back(robot);
     }
     latest_data.robots_yellow_size = msg->robots_yellow_size;
 
-    // Copiar robôs azuis
+    // ----- Robôs Azuis -----
     latest_data.robots_blue.clear();
+    latest_data.robots_blue.reserve(msg->robots_blue_size);
+
     for (int i = 0; i < msg->robots_blue_size; ++i)
     {
-        latest_data.robots_blue.push_back(msg->robots_blue[i]);
+        const auto &src = msg->robots_blue[i];
+        data::detection_robots robot;
+
+        robot.robot_id   = src.robot_id;
+        robot.position_x = src.position_x;
+        robot.position_y = src.position_y;
+        robot.orientation = src.orientation;
+        robot.detected   = src.detected;
+
+        latest_data.robots_blue.push_back(robot);
     }
     latest_data.robots_blue_size = msg->robots_blue_size;
 
-    latest_data.balls = msg->balls;
-    latest_data.field = msg->field;
+    // DEBUG opcional (pra confirmar valores chegando corretamente)
+    /*
+    std::cout << "[Vision] ts=" << msg->timestamp
+              << " yellow=" << msg->robots_yellow_size
+              << " blue="   << msg->robots_blue_size << std::endl;
+
+    for (const auto &r : latest_data.robots_yellow) {
+        std::cout << "  [Y] id=" << r.robot_id 
+                  << " x=" << r.position_x 
+                  << " y=" << r.position_y 
+                  << " θ=" << r.orientation 
+                  << " detected=" << r.detected << std::endl;
+    }
+    for (const auto &r : latest_data.robots_blue) {
+        std::cout << "  [B] id=" << r.robot_id 
+                  << " x=" << r.position_x 
+                  << " y=" << r.position_y 
+                  << " θ=" << r.orientation 
+                  << " detected=" << r.detected << std::endl;
+    }
+    */
 }
+
 
 void Handler::handleIA(const lcm::ReceiveBuffer *, const std::string &, const ia_t *msg)
 {
