@@ -90,6 +90,8 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
         float turnx = robot.turn_to_x;
         float turny = robot.turn_to_y;
 
+        bool has_kicker = robot.has_kicker;
+
         latest_data.skill_by_robot[id] = skill;
         latest_data.role_by_robot[id]  = role;
 
@@ -101,11 +103,12 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
 
         // OU, se usar TargetPose
         // latest_data.target_pose_by_robot[id] = {movex, movey, turnx, turny};
+
+        latest_data.has_kicker[id] = has_kicker;
     }
 
 
     latest_data.selected_robot_id = msg->robots->id;
-    latest_data.has_kicker = msg->robots->has_kicker;
 }
 
 

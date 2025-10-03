@@ -62,9 +62,11 @@ struct LatestData
     std::map<int, float> move_y_by_robot;
     std::map<int, float> turn_x_by_robot;
     std::map<int, float> turn_y_by_robot;
+
+    std::map<int, bool> has_kicker;
     
     int16_t selected_robot_id = -1; // id do robô que deve receber skill/role
-    bool has_kicker = false;
+    
 
     bool team_blue_status = false;
 

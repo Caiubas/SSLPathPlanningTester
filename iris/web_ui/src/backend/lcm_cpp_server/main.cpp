@@ -139,8 +139,8 @@ int main()
             robot["wheel_fl"] = r.wheel_fl;
             robot["wheel_bl"] = r.wheel_bl;
             robot["wheel_br"] = r.wheel_br;
-            robot["has_kicker"] = r.has_kicker;
             int id = r.id;
+            robot["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
             robot["skill"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
             robot["role"]  = latest_data.role_by_robot.count(id)  ? latest_data.role_by_robot.at(id)  : 0;
 
@@ -271,45 +271,28 @@ int main()
                 }
             }
 
-            if (body.has("move_to_x") && body["move_to_x"].t() == crow::json::type::Number) {
+            if (body.has("has_kicker") && (body["has_kicker"].t() == crow::json::type::True || body["has_kicker"].t() == crow::json::type::False)) {
+                bool hasKicker = body["has_kicker"].b();
                 int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
                 if (robot_id != -1) {
-                    latest_data.move_x_by_robot[robot_id] = static_cast<float>(body["move_to_x"].d());
-                    std::cout << "[POST] move_to_x atualizado para robô " << robot_id
-                            << ": " << latest_data.move_x_by_robot[robot_id] << std::endl;
+                    // Atualiza o map de has_kicker
+                    latest_data.has_kicker[robot_id] = hasKicker;
+
+                    // Atualiza o vetor de robôs também, caso já exista
+                    for (auto& robot : latest_data.robots) {
+                        if (robot.id == robot_id) {
+                            robot.has_kicker = hasKicker;
+                            break;
+                        }
+                    }
+
+                    std::cout << "[POST] has_kicker=" << (hasKicker ? "true" : "false")
+                            << " enviado para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] has_kicker recebido mas sem robot_id" << std::endl;
                 }
             }
-
-            if (body.has("move_to_y") && body["move_to_y"].t() == crow::json::type::Number) {
-                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
-                if (robot_id != -1) {
-                    latest_data.move_y_by_robot[robot_id] = static_cast<float>(body["move_to_y"].d());
-                    std::cout << "[POST] move_to_y atualizado para robô " << robot_id
-                            << ": " << latest_data.move_y_by_robot[robot_id] << std::endl;
-                }
-            }
-
-            if (body.has("turn_to_x") && body["turn_to_x"].t() == crow::json::type::Number) {
-                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
-                if (robot_id != -1) {
-                    latest_data.turn_x_by_robot[robot_id] = static_cast<float>(body["turn_to_x"].d());
-                    std::cout << "[POST] turn_to_x atualizado para robô " << robot_id
-                            << ": " << latest_data.turn_x_by_robot[robot_id] << std::endl;
-                }
-            }
-
-            if (body.has("turn_to_y") && body["turn_to_y"].t() == crow::json::type::Number) {
-                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
-                if (robot_id != -1) {
-                    latest_data.turn_y_by_robot[robot_id] = static_cast<float>(body["turn_to_y"].d());
-                    std::cout << "[POST] turn_to_y atualizado para robô " << robot_id
-                            << ": " << latest_data.turn_y_by_robot[robot_id] << std::endl;
-                }
-            }
-
-
-
-
 
             if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
                 latest_data.designated_position_x = static_cast<float>(body["designated_position_x"].d());
@@ -441,7 +424,11 @@ int main()
                     int robot_id = latest_data.robots[i].id;
 
                     msg.robots[i].id = robot_id;
-                    msg.robots[i].has_kicker = latest_data.robots[i].has_kicker;
+
+                    // Aqui garantimos que o has_kicker vá corretamente
+                    msg.robots[i].has_kicker = latest_data.has_kicker.count(robot_id)
+                                            ? latest_data.has_kicker.at(robot_id)
+                                            : latest_data.robots[i].has_kicker;
 
                     // Skill e role
                     msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;

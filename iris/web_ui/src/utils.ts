@@ -107,6 +107,28 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
     }
   };
 
+  export const toggleBooleanWithId = async (
+    key: string,
+    currentValue: boolean,
+    robotId: number
+  ) => {
+    try {
+      const payload = {
+        robot_id: robotId,
+        [key]: !currentValue,
+      };
+
+      const success = await sendPost('http://localhost:5000/command', payload);
+
+      if (!success) {
+        console.error(`Erro ao alternar ${key} para robô ${robotId}`);
+      }
+    } catch (err) {
+      console.error(`Erro ao enviar ${key} para robô ${robotId}:`, err);
+    }
+  };
+
+
   export const updateNumber = async (key: string, value: number) => {
       const success = await sendPost('http://localhost:5000/command', {
         [key]: value,
