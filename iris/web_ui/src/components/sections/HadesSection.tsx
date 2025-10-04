@@ -1,6 +1,5 @@
 // src/components/sections/IASection.tsx
-import type { DataType, } from '../../types';
-import { filterRobotsForTeam } from '../../utils';
+import type { DataType } from '../../types';
 
 type Props = {
   data: DataType;
@@ -14,19 +13,27 @@ export default function IASection({
   setSelectedRobotId,
 }: Props) {
   const teamBlueSelected = data.gc.team_blue;
-
-// no componente
-  const filteredRobots = filterRobotsForTeam(
-    data.ia.robots,
-    data.vision.robots_blue?.map(r => ({ id: r.robot_id })),
-    data.vision.robots_yellow?.map(r => ({ id: r.robot_id })),
-    teamBlueSelected,
-    data.ia.robots_size
-  );
-
-
   const team = teamBlueSelected ? 'blue_team' : 'yellow_team';
   const teamLabel = teamBlueSelected ? 'Azul' : 'Amarelo';
+
+  // Pega os IDs dos robôs detectados pelo LCM de visão
+  const detectedIds = new Set(
+    (teamBlueSelected ? data.vision.robots_blue : data.vision.robots_yellow)
+      ?.filter((r) => r.detected)
+      .map((r) => r.robot_id) || [],
+  );
+
+  // Filtra os 16 robôs do IA para renderizar só os detectados
+  // Filtra os 16 robôs do IA para renderizar só os detectados
+  const detectedRobots = data.ia.robots.filter((r) => detectedIds.has(r.id));
+
+  // 🔥 Log para debug
+  console.log(
+    'Robôs detectados para o time',
+    teamLabel,
+    ':',
+    detectedRobots.map((r) => r.id),
+  );
 
   return (
     <>
@@ -48,50 +55,48 @@ export default function IASection({
         Time selecionado: {teamLabel}
       </p>
       <div className="mt-2 overflow-y-auto space-y-2 border-3 border-[#6805F2] rounded-[5px] p-2 bg-[#545454] shadow-inner">
-        {
-          filteredRobots.length > 0 ? (
-            filteredRobots.map((robot) => (
-              <div
-                key={robot.id}
-                className="flex items-start gap-4 bg-[#2E2E2E] rounded p-3 text-sm"
-              >
-                <img
-                  src={`/img/${team}/id${robot.id}.png`}
-                  alt={`Robô ${robot.id}`}
-                  className="w-14 h-14 object-contain shrink-0"
-                />
-                <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                  <p className="col-span-3 font-bold">ID: {robot.id}</p>
-                  <p>Spinner: {robot.spinner ? 'Sim' : 'Não'}</p>
-                  <p>Kick: {robot.kick ? 'Sim' : 'Não'}</p>
-                  <p>Vel. Tangencial: {robot.vel_tang.toFixed(2)}</p>
-                  <p>Vel. Normal: {robot.vel_normal.toFixed(2)}</p>
-                  <p>Vel. Angular: {robot.vel_ang.toFixed(2)}</p>
-                  <p>Kick X: {robot.kick_speed_x.toFixed(2)}</p>
-                  <p>Kick Z: {robot.kick_speed_z.toFixed(2)}</p>
-                  <p>Wheel Speed: {robot.wheel_speed ? 'Sim' : 'Não'}</p>
-                  <p>FR: {robot.wheel_fr.toFixed(2)}</p>
-                  <p>FL: {robot.wheel_fl.toFixed(2)}</p>
-                  <p>BL: {robot.wheel_bl.toFixed(2)}</p>
-                  <p>BR: {robot.wheel_br.toFixed(2)}</p>
-                </div>
-
-                {/* 🔥 Botão para abrir RobotSection */}
-                <button
-                  onClick={() => {
-                    setSelected('skill'); // muda a aba
-                    setSelectedRobotId(robot.id); // define o robô selecionado
-                  }}
-                  className="ml-auto px-3 py-1 bg-[#6805F2] rounded text-white text-xs h-fit"
-                >
-                  Ver Skills
-                </button>
+        {detectedRobots.length > 0 ? (
+          detectedRobots.map((robot) => (
+            <div
+              key={robot.id}
+              className="flex items-start gap-4 bg-[#2E2E2E] rounded p-3 text-sm"
+            >
+              <img
+                src={`/img/${team}/id${robot.id}.png`}
+                alt={`Robô ${robot.id}`}
+                className="w-14 h-14 object-contain shrink-0"
+              />
+              <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                <p className="col-span-3 font-bold">ID: {robot.id}</p>
+                <p>Spinner: {robot.spinner ? 'Sim' : 'Não'}</p>
+                <p>Kick: {robot.kick ? 'Sim' : 'Não'}</p>
+                <p>Vel. Tangencial: {robot.vel_tang.toFixed(2)}</p>
+                <p>Vel. Normal: {robot.vel_normal.toFixed(2)}</p>
+                <p>Vel. Angular: {robot.vel_ang.toFixed(2)}</p>
+                <p>Kick X: {robot.kick_speed_x.toFixed(2)}</p>
+                <p>Kick Z: {robot.kick_speed_z.toFixed(2)}</p>
+                <p>Wheel Speed: {robot.wheel_speed ? 'Sim' : 'Não'}</p>
+                <p>FR: {robot.wheel_fr.toFixed(2)}</p>
+                <p>FL: {robot.wheel_fl.toFixed(2)}</p>
+                <p>BL: {robot.wheel_bl.toFixed(2)}</p>
+                <p>BR: {robot.wheel_br.toFixed(2)}</p>
               </div>
-            ))
-          ) : (
-            <p className="italic text-gray-400">Nenhum robô identificado</p>
-          )
-        }
+
+              {/* 🔥 Botão para abrir RobotSection */}
+              <button
+                onClick={() => {
+                  setSelected('skill'); // muda a aba
+                  setSelectedRobotId(robot.id); // define o robô selecionado
+                }}
+                className="ml-auto px-3 py-1 bg-[#6805F2] rounded text-white text-xs h-fit"
+              >
+                Ver Skills
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="italic text-gray-400">Nenhum robô identificado</p>
+        )}
       </div>
     </>
   );

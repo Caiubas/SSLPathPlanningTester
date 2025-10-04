@@ -78,6 +78,7 @@ export type DetectionRobot = {
   position_x: number; // mm
   position_y: number; // mm
   orientation: number; // rad
+  detected: boolean;
 };
 
 export type RobotField = {

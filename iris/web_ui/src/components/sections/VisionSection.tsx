@@ -9,8 +9,8 @@ function convertRobots(robots: DetectionRobot[] | undefined): RobotField[] {
   return robots.map((dr) => ({
     id: dr.robot_id,
     // mm -> m
-    x: dr.position_x / 1000,
-    y: dr.position_y / 1000,
+    x: dr.position_x,
+    y: dr.position_y,
     // mantém em radianos
     orientation: dr.orientation,
   }));
@@ -33,13 +33,13 @@ export default function VisionSection({ data }: Props) {
           <p>
             Position X:{' '}
             <span className="font-mono">
-              {(vision.balls.position_x / 1000).toFixed(2)} m
+              {(vision.balls.position_x).toFixed(2)} mm
             </span>
           </p>
           <p>
             Position Y:{' '}
             <span className="font-mono">
-              {(vision.balls.position_y / 1000).toFixed(2)} m
+              {(vision.balls.position_y).toFixed(2)} mm
             </span>
           </p>
         </>
@@ -69,8 +69,8 @@ export default function VisionSection({ data }: Props) {
             .map((robot) => (
               <div key={robot.id} className="mb-2">
                 <p>ID: <span className="font-mono">{robot.id}</span></p>
-                <p>Pos X: <span className="font-mono">{robot.x.toFixed(2)} m</span></p>
-                <p>Pos Y: <span className="font-mono">{robot.y.toFixed(2)} m</span></p>
+                <p>Pos X: <span className="font-mono">{robot.x.toFixed(2)} mm</span></p>
+                <p>Pos Y: <span className="font-mono">{robot.y.toFixed(2)} mm</span></p>
                 <p>Orientation: <span className="font-mono">{robot.orientation.toFixed(3)} rad</span></p>
               </div>
             ))
