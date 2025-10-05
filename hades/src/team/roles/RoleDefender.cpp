@@ -13,9 +13,10 @@ namespace roles {
     void RoleDefender::act(RobotController& robot) {
         if (robot.mWorld.isBallMovingRobotDirection(robot) && robot.mWorld.ball.isMoving()) {
             intercept.act(robot);
-        } else if (robot.mWorld.getClosestAllyToPoint(robot.mWorld.ball.getPosition()).getId() == robot.getId()) {
+            std::cout << "INTERCEPTING" << std::endl;
+        } else if (robot.mWorld.getClosestAllyToPoint(robot.mWorld.ball.getPosition()).getId() == robot.getId() && false) { //TODO remover
             try {
-                positionAndKick.act(robot, robot.mTeam->getRobotofRole(Robot::support));
+                positionAndKick.act(robot, robot.mTeam->getRobotToKickTo(robot));
             } catch (...) {
                 positionAndKick.act(robot, robot.mWorld.field.theirGoal.getMiddle());
             }

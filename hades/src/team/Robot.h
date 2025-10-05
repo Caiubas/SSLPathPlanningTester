@@ -38,12 +38,17 @@ protected:
     Point old_pos = {0, 0};
     Point pos = {0, 0};
     double yaw = 0.0;
-    Vector2d vel = Vector2d(0,0);
+    Vector2d velocity = Vector2d(0,0);
+	int max_velocities_stored = 30;
+	int max_yaw_velocities_stored = 30;
     std::deque<Vector2d> stored_velocities = {};
+    std::deque<double> stored_yaw_velocities = {};
+    double velocityThreshold = 0.1;
+    double yawVelocityThreshold = 0.001;
     double vyaw = 0.0;
     double radius = 160;
     bool detected = false;
-    bool kicker = true;
+    bool kicker = false;
     double kickDistance = 500;
     enum role this_role = unknown;
 
@@ -66,6 +71,9 @@ public:
     double getVyaw() const;
     bool isDetected() const;
     bool hasKicker();
+    bool isStopped() const;
+    bool isMoving() const;
+    bool isSpinning() const;
     enum role getRole() const;
     const std::deque<Vector2d>& getStoredVelocities() const;
     double getRadius() const;

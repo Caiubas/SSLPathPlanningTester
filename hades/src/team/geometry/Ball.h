@@ -5,6 +5,8 @@
 #ifndef BALL_H
 #define BALL_H
 
+#include <deque>
+
 #include "LineSegment.h"
 #include "Point.h"
 #include "Vector2d.h"
@@ -13,11 +15,13 @@
 class Ball {
 private:
 	bool detected;
-	double deceleration = 0.3;
+	double deceleration = 0.4;
 	Point position;
 	Vector2d velocity;
+	int max_velocities_stored = 30;
+	std::deque<Vector2d> stored_velocities = {};
 	Point stopPosition = Point(0, 0);
-	double velocityThreshold = 0.6;
+	double velocityThreshold = 0.1;
 	VisibilityGraph visibility;
 public:
   	Ball(bool detected, Point position, Vector2d velocity) : detected(detected), position(position), velocity(velocity) {stopPosition = getStopPosition();};

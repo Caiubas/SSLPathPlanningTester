@@ -432,10 +432,11 @@ void Leader::inspect_enemy_team() {
     if (size(world.enemies) == 0) return;
     for (int i = 0; i < size(world.enemies) ; i++) {
         if (world.enemies[i].isDetected()) {
-            active_enemies_ids.push_back(i);
+            active_enemies_ids.push_back(world.enemies[i].getId());
             distances_enemies_from_ball.push_back(world.enemies[i].getPosition().getDistanceTo(world.ball.getPosition()));
         }
     }
+    if (active_enemies_ids.size() == 0) return;
     if (team.color == TeamInfo::blue) {
         team.enemy_roles[han.new_GC.yellow.goalkeeper_id] = Robot::goal_keeper;
     }
@@ -445,8 +446,8 @@ void Leader::inspect_enemy_team() {
 
     int closest_idx = -1;
     int second_closest_idx = -1;
-    for (int idx = 0; idx < active_enemies_ids.size(); idx++) {
-        if (team.enemy_roles[world.enemies[idx].getId()] == Robot::goal_keeper) continue;
+    for (int idx : active_enemies_ids) {
+        if (team.enemy_roles[idx] == Robot::goal_keeper || !world.enemies[idx].isDetected()) continue;
 
         if (closest_idx == -1 || distances_enemies_from_ball[idx] < distances_enemies_from_ball[closest_idx]) {
             // Atualiza os dois
@@ -459,10 +460,10 @@ void Leader::inspect_enemy_team() {
     }
 
     unsigned int id = world.enemies[closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper) team.enemy_roles[id] = Robot::striker;
+    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::striker;
 
     id = world.enemies[second_closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper) team.enemy_roles[id] = Robot::support;
+    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::support;
 
 }
 

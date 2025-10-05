@@ -19,6 +19,7 @@ namespace tactics {
 				trajectory.erase(trajectory.begin());
 				break;
 			}
+			std::cout << "next point: " << trajectory[0].getX() << " " << trajectory[0].getY() << std::endl;
 
 			if (distance < robot.mDynamic_position_tolarance) {
 				trajectory.erase(trajectory.begin());
@@ -33,7 +34,7 @@ namespace tactics {
 			return;
 		}
 
-		moveTo.act(robot, trajectory[0], true);
+		moveTo.act(robot, trajectory[0], false); //TODO mudar avoid ball
 
 		robot.positioned = false;
 		robot.mTeam->positioned[robot.getId()] = false;
