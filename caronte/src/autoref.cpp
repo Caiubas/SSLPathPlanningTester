@@ -24,7 +24,7 @@ void vision_master::recebe_dados_tracked() {
             tracked_packet.ParseFromArray(buffer_TRACKED, bytes_received_TRACKED);    
             if(tracked_packet.has_tracked_frame()){
                 tracked_frame = tracked_packet.tracked_frame();
-                my_autoref_data.timestamp = tracked_frame.timestamp();
+                my_autoref_data.timestamp = tracked_frame.frame_number();
 
                 if (tracked_frame.robots_size() > 0) {
                     for (int i = 0; i < tracked_frame.robots_size(); i++) {
@@ -38,6 +38,7 @@ void vision_master::recebe_dados_tracked() {
                             my_autoref_data.robots_blue[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000;
                             my_autoref_data.robots_blue[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
                             my_vision_data.robots_blue[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
+                            vision_master_instance.blue_ids.insert(new_robot_id.id());
                         }
                         
                     
@@ -51,6 +52,7 @@ void vision_master::recebe_dados_tracked() {
                             my_autoref_data.robots_yellow[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000; // mm/s
                             my_autoref_data.robots_yellow[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
                             my_vision_data.robots_yellow[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
+                            vision_master_instance.yellow_ids.insert(new_robot_id.id());
                         }
                         else{
                             std::cout << "!!!! há um robô com ID de time desconhecido !!!!" << std::endl;
@@ -65,7 +67,7 @@ void vision_master::recebe_dados_tracked() {
                             my_autoref_data.balls.vel_x = ball_vel.x()*1000;//multiplicando por 1000 para converter de metros para milimetros
                             my_autoref_data.balls.vel_y = ball_vel.y()*1000;
                         }
-                        if(autoreferee_atual) {
+                        if(han.new_tartarus.autoreferee) {
                             Vector3 ball_pos = tracked_frame.balls(i).pos();
                             my_vision_data.balls.position_x = ball_pos.x()*1000;
                             my_vision_data.balls.position_y = ball_pos.y()*1000;
@@ -75,6 +77,8 @@ void vision_master::recebe_dados_tracked() {
             }
         }
     }
+    my_vision_data.robots_yellow_size = vision_master_instance.yellow_ids.size();
+    my_vision_data.robots_blue_size = vision_master_instance.blue_ids.size();
     //std::cout << "Timestamp: " << my_autoref_data.timestamp << std::endl;
 }
 
