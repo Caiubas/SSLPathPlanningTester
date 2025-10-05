@@ -57,7 +57,7 @@ namespace skills {
 
             double current_speed = robot.getVelocity().getNorm();
 
-            double brake_distance = (max_speed*max_speed - curve_safe_speed * curve_safe_speed) / (2.0 * robot.mA_xy_brake);    //TODO usar aceleracao normal?
+            double brake_distance = 1.5*(max_speed*max_speed - curve_safe_speed * curve_safe_speed) / (2.0 * robot.mA_xy_max);    //TODO usar aceleracao normal?
             brake_distance = std::max(brake_distance, 0.0);
             if (dist <= brake_distance) {
                 v_target_magnitude = curve_safe_speed;
@@ -131,7 +131,6 @@ namespace skills {
         // --- 8) Somar feedforward ---
         double out_x = v_target_world.getX() + pid_x;
         double out_y = v_target_world.getY() + pid_y;
-        std::cout << pid_x << " " << pid_y << std::endl;
 
         // --- 10) Saturação de velocidade máxima ---
         double max_v = robot.mVxy_max;
@@ -187,7 +186,7 @@ namespace skills {
 
             //add static ball to obstacles according to avoidance radius
             if (avoid_ball) {
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.mRadius);
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius);
                 obs_circular.push_back(c);
             }
 
@@ -258,21 +257,31 @@ namespace skills {
             if (robot.getPosition().getDistanceTo(trajectory[size(trajectory) - 1]) < robot.mStatic_position_tolarance) {
                 robot.mtarget_vel = {0, 0};
                 robot.mtarget_vyaw = 0;
-                robot.positioned = true;
-                robot.mTeam->positioned[robot.getId()] = true;
                 robot.mlast_target_vel = {0, 0};
                 robot.mLast_delta_vx = 0;
                 robot.mLast_delta_vy = 0;
                 robot.mI_vx = 0;
                 robot.mI_vy = 0;
+                if (robot.isStopped()) {
+                    robot.positioned = true;
+                    robot.mTeam->positioned[robot.getId()] = true;
+                }
                 return;
             }
         }
+
         robot.positioned = false;
         robot.mTeam->positioned[robot.getId()] = false;
         Vector2d v_vet;
-        std::size(trajectory) > 1 ? v_vet = motion_planner(robot, trajectory) : v_vet = Vector2d({0, 0}, robot.getPosition()).getNormalized(robot.mVxy_min);
-
+        if (std::size(trajectory) > 1) {
+            v_vet = motion_planner(robot, trajectory);
+        } else {
+            if (robot.getPosition().getDistanceTo(Point(0, 0)) > robot.mStatic_position_tolarance) {
+            v_vet = Vector2d({0, 0}, robot.getPosition()).getNormalized(robot.mVxy_min);
+            } else {
+                v_vet = {0, 0};
+            }
+        }
         v_vet = motion_control(robot, v_vet, -robot.getYaw());
 
         robot.mtarget_vel = v_vet;

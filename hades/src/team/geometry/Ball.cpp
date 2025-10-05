@@ -7,7 +7,17 @@
 
 // --- Setters e Getters ---
 void Ball::setVelocity(const Vector2d& v) {
-    velocity = v;
+    if (stored_velocities.size() >= max_velocities_stored) {
+        stored_velocities.pop_front();
+    }
+    stored_velocities.push_back(v);
+    double average_x = 0;
+    double average_y = 0;
+    for (int i = 0; i < stored_velocities.size(); i++) {
+        average_x += stored_velocities[i].getX()/stored_velocities.size();
+        average_y += stored_velocities[i].getY()/stored_velocities.size();
+    }
+    velocity = Vector2d(average_x, average_y);
     stopPosition = getStopPosition();
 }
 

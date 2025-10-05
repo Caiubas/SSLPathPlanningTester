@@ -10,7 +10,7 @@ namespace roles {
 
 class RoleSquaredTrajectory : public RoleBase {
 private:
-	std::vector<Point> default_trajectory = {{1000, 500}, {1000, -500}, {-1000, -500}, {-1000, 500}};
+	std::vector<Point> default_trajectory = {{200, 400}, {1100, 400}, {1100, 800}, {300, 800}};
 public:
 	void act(RobotController& robot);
 };

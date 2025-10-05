@@ -10,7 +10,7 @@
 int PlayRetake::calc_score(WorldModel world, TeamInfo team) {
     int score = 50;
     if (team.event == TeamInfo::run && !world.getBallOwner().isAlly()) {
-        score += 200;
+        score += 500;
     }
     this->score = score;
     return score;
@@ -39,9 +39,14 @@ std::array<Robot::role, 16> PlayRetake::role_assign(WorldModel& world, TeamInfo&
 
         if (selected_role == Robot::goal_keeper) {
             if (!world.allies[team.goal_keeper_id].isDetected()) continue;
-            avaiable_robots[team.goal_keeper_id]->setRole(Robot::goal_keeper);
+            int goal_keeper_idx = -1;
+            for (int i = 0 ; i < avaiable_robots.size() ; i++) {
+                if (avaiable_robots[i]->getId() == team.goal_keeper_id) goal_keeper_idx = i;
+            }
+            if (goal_keeper_idx == -1) continue;
+            avaiable_robots[goal_keeper_idx]->setRole(Robot::goal_keeper);
             roles[team.goal_keeper_id] = Robot::goal_keeper;
-            avaiable_robots.erase(avaiable_robots.begin() + team.goal_keeper_id);
+            avaiable_robots.erase(avaiable_robots.begin() + goal_keeper_idx);
         }
 
         if (selected_role == Robot::retaker) {

@@ -21,7 +21,7 @@ namespace skills {
 	double SkillTurnTo::turn_control(RobotController robot, double delta) {
 		double P = robot.mKP_ang * delta;
 		if (!robot.oriented) {	//anti-windup
-			robot.mI_ang = robot.mI_ang + delta*robot.mDelta_time*robot.mKI_ang;
+			robot.mI_ang = std::clamp(robot.mI_ang + delta*robot.mDelta_time*robot.mKI_ang, -robot.mI_ang_max, robot.mI_ang_max);
 		}
 		double D = ((delta-robot.mLast_delta_vyaw)/robot.mDelta_time)*robot.mKD_ang;	//TODO fitro no derivativo (sofre mto de ruido)
 		double PID_vyaw = P + robot.mI_ang + D;
@@ -41,12 +41,16 @@ void SkillTurnTo::act(RobotController& robot, Point goal) {
 	double delta = find_angle_error(robot, goal);
 	if (!robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance) {	//quando alinhando
 		robot.mtarget_vyaw = 0;
-		robot.oriented = true;
+		if (!robot.isSpinning()) {
+			robot.oriented = true;
+		}
 		return;
 	}
 	if (robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance*2) { //quando já alinhado
 		robot.mtarget_vyaw = 0;
-		robot.oriented = true;
+		if (!robot.isSpinning()) {
+			robot.oriented = true;
+		}
 		return;
 	}
 

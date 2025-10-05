@@ -11,7 +11,7 @@ namespace tactics {
 
 class TacticKeepXLine : public TacticBase {
 private:
-	double distanceThreshold = 400;
+	double distanceThreshold = 600;
 public:
 	void act(RobotController& robot, LineSegment y_segment, double y_rest);
 	void act(RobotController& robot);

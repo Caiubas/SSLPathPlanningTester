@@ -51,30 +51,39 @@ void RobotController::loop() {
 
         receive_vision();
         receive_field_geometry();
+        receive_config();
+        mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
+        mWorld.field.full_dimensions = AreaRectangular({0, 0}, {2000, 1000});
+        //mWorld.field.ourGoal = LineSegment(Point(500, 0), Point(500, 1200));
+        mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
         //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         try {
             skills::SkillMoveTo moveTo;
             skills::SkillStop stop;
             skills::SkillTurnTo turnTo;
             tactics::TacticPositionAndKick posandkick;
-            if (getRole() != 4){
+            tactics::TacticKeepLocation keep;
             //std::cout << id << " " << getPosition().getX() << " " << getPosition().getY() << " " << getRole() << std::endl;
             //std::cout << mWorld.ball.getPosition().getX() << " " << mWorld.ball.getPosition().getY() << std::endl;
-            }
             if (mTeam->event != TeamInfo::halt) {
                 //std::cout << "nao halt " << std::endl;
                 //stop.act(*this);
-                moveTo.act(*this, mWorld.ball.getPosition(), true);
-                //mTeam->role_map[Robot::striker]->act(*this);
+                //moveTo.act(*this, mWorld.ball.getPosition(), false, true, true);
+                Robot::role role = Robot::defender;
+                setRole(role);
+                mTeam->roles[getId()] = role;
+                mTeam->role_map[role]->act(*this);
                 //posandkick.act(*this, mWorld.field.theirGoal.getMiddle());
-                if (positioned) {
-                    //stop.act(*this);
-                    //turnTo.act(*this, mWorld.ball.getPosition());
-                }
+                //keep.act(*this, Point(750, 500));
             } else {
                 stop.act(*this);
             }
-            //select_behavior();
+            mWorld.allies[3].positioned = true;
+            mTeam->positioned[3] = true;
+            if (getId() != 3) {
+                //std::cout << mWorld.ball.isMoving() << std::endl;
+                //select_behavior();
+            }
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -124,6 +133,33 @@ void RobotController::check_connection() {
     }
 }
 
+void RobotController::receive_config() {
+    if (!han.new_tartarus.ssl_vision) {
+        mKP_ang = 1;
+        mKD_ang = 1;
+        mKI_ang = 1;
+        kickDistance = 2000;
+        mStatic_position_tolarance = mRadius/8;
+        mDynamic_position_tolarance = mRadius/8;
+        mStatic_angle_tolarance = 0.01;
+        mVxy_min = 0.4;
+    }
+    if (han.new_tartarus.ssl_vision) {
+        mKP_ang = 0.35;
+        mKD_ang = 0;
+        mKI_ang = 0;
+        kickDistance = 500;
+        mStatic_position_tolarance = mRadius/4;
+        mDynamic_position_tolarance = mRadius/2;
+        mStatic_angle_tolarance = 0.01;
+        mVxy_min = 0.1;
+        mVxy_max = 0.7;
+        mVyaw_min = 0.25;
+        mVyaw_max = 3;
+    }
+}
+
+
 void RobotController::receive_vision() {
     std::unordered_set<int> allies_detected = {};
     std::unordered_set<int> enemies_detected = {};
@@ -136,14 +172,9 @@ void RobotController::receive_vision() {
             if (mDelta_time > 0) {
                 //TODO logica quebrada na troca de estrutura, refazer.
                 Vector2d v = {((blue_robot.position_x - mWorld.allies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((blue_robot.position_y - mWorld.allies[rb_id].getPosition().getY())/(mDelta_time*1000))};
-                auto velocities = mWorld.allies[rb_id].getStoredVelocities();
-                velocities.push_back(v);
-                if (size(mWorld.allies[rb_id].getStoredVelocities()) > 10) {
-                    velocities.pop_front();
-                }
-                mWorld.allies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
-                mWorld.allies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
-                mWorld.allies[rb_id].setStoredVelocities(velocities);
+                double vyaw = (new_yaw - mWorld.allies[rb_id].getYaw())/(mDelta_time*1000);
+                mWorld.allies[rb_id].setVyaw(vyaw);
+                mWorld.allies[rb_id].setVelocity(v);
             }
             mWorld.allies[rb_id].setYaw(new_yaw);
             mWorld.allies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
@@ -155,21 +186,17 @@ void RobotController::receive_vision() {
             double new_yaw = blue_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (mDelta_time > 0) {
-                //TODO
-                Vector2d v = {((blue_robot.position_x - mWorld.enemies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((blue_robot.position_y - mWorld.allies[rb_id].getPosition().getY())/(mDelta_time*1000))};
-                auto velocities = mWorld.enemies[rb_id].getStoredVelocities();
-                velocities.push_back(v);
-                if (size(mWorld.enemies[rb_id].getStoredVelocities()) > 10) {
-                    velocities.pop_front();
-                }
-                mWorld.enemies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
-                mWorld.enemies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
-                mWorld.enemies[rb_id].setStoredVelocities(velocities);
+                //TODO logica quebrada na troca de estrutura, refazer.
+                Vector2d v = {((blue_robot.position_x - mWorld.enemies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((blue_robot.position_y - mWorld.enemies[rb_id].getPosition().getY())/(mDelta_time*1000))};
+                double vyaw = (new_yaw - mWorld.enemies[rb_id].getYaw())/(mDelta_time*1000);
+                mWorld.enemies[rb_id].setVyaw(vyaw);
+                mWorld.enemies[rb_id].setVelocity(v);
             }
             mWorld.enemies[rb_id].setYaw(new_yaw);
             mWorld.enemies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
             enemies_detected.insert(rb_id);
             mWorld.enemies[rb_id].setAlly(false);
+            mWorld.allies[rb_id].setRole(mTeam->enemy_roles[rb_id]);
         }
     }
 
@@ -183,14 +210,9 @@ void RobotController::receive_vision() {
             if (mDelta_time > 0) {
                 //TODO logica quebrada na troca de estrutura, refazer.
                 Vector2d v = {((yellow_robot.position_x - mWorld.allies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((yellow_robot.position_y - mWorld.allies[rb_id].getPosition().getY())/(mDelta_time*1000))};
-                auto velocities = mWorld.allies[rb_id].getStoredVelocities();
-                velocities.push_back(v);
-                if (size(mWorld.allies[rb_id].getStoredVelocities()) > 10) {
-                    velocities.pop_front();
-                }
-                mWorld.allies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
-                mWorld.allies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
-                mWorld.allies[rb_id].setStoredVelocities(velocities);
+                double vyaw = (new_yaw - mWorld.allies[rb_id].getYaw())/(mDelta_time*1000);
+                mWorld.allies[rb_id].setVyaw(vyaw);
+                mWorld.allies[rb_id].setVelocity(v);
             }
             mWorld.allies[rb_id].setYaw(new_yaw);
             mWorld.allies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
@@ -203,16 +225,11 @@ void RobotController::receive_vision() {
             double new_yaw = yellow_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (mDelta_time > 0) {
-                //TODO
-                Vector2d v = {((yellow_robot.position_x - mWorld.enemies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((yellow_robot.position_y - mWorld.allies[rb_id].getPosition().getY())/(mDelta_time*1000))};
-                auto velocities = mWorld.enemies[rb_id].getStoredVelocities();
-                velocities.push_back(v);
-                if (size(mWorld.enemies[rb_id].getStoredVelocities()) > 10) {
-                    velocities.pop_front();
-                }
-                mWorld.enemies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
-                mWorld.enemies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
-                mWorld.enemies[rb_id].setStoredVelocities(velocities);
+                //TODO logica quebrada na troca de estrutura, refazer.
+                Vector2d v = {((yellow_robot.position_x - mWorld.enemies[rb_id].getPosition().getX())/(mDelta_time*1000)), ((yellow_robot.position_y - mWorld.enemies[rb_id].getPosition().getY())/(mDelta_time*1000))};
+                double vyaw = (new_yaw - mWorld.enemies[rb_id].getYaw())/(mDelta_time*1000);
+                mWorld.enemies[rb_id].setVyaw(vyaw);
+                mWorld.enemies[rb_id].setVelocity(v);
             }
             mWorld.enemies[rb_id].setYaw(new_yaw);
             mWorld.enemies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
@@ -314,10 +331,16 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
-    //mtarget_vel = mtarget_vel.getRotated(3.14156/2);
-    han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
-    han.new_ia.robots[id].vel_tang = mtarget_vel.getX();
-    han.new_ia.robots[id].vel_ang = static_cast<float>(mtarget_vyaw);
+    if (han.new_tartarus.ssl_vision) {
+        mtarget_vel = mtarget_vel.getRotated(3.14156/2);
+        han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
+        han.new_ia.robots[id].vel_tang = mtarget_vel.getX();
+        han.new_ia.robots[id].vel_ang = static_cast<float>(-mtarget_vyaw);
+    } else {
+        han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
+        han.new_ia.robots[id].vel_tang = mtarget_vel.getX();
+        han.new_ia.robots[id].vel_ang = static_cast<float>(mtarget_vyaw);
+    }
     if (mkicker_x != 0) {
         han.new_ia.robots[id].kick = true;
         han.new_ia.robots[id].kick_speed_x = mkicker_x;
