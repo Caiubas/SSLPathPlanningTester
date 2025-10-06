@@ -62,6 +62,8 @@ void RobotController::loop() {
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
+        if (double_touch && !double_touch_waiting && mWorld.ball.isStopped()) double_touch_waiting = true;
+        if ((double_touch_waiting && mWorld.ball.isMoving()) or mTeam->event == TeamInfo::stop) {double_touch_waiting = false; double_touch = false;}
         check_connection();
         publish();
         std::chrono::duration<double> delta = t1 - t0;
