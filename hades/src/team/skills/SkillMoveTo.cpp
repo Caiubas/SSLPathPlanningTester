@@ -28,7 +28,7 @@ namespace skills {
 
         if ((robot.mTeam->event == TeamInfo::stop or robot.mTeam->event == TeamInfo::timeout or robot.mTeam->event == TeamInfo::prepareOurKickOff
             or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
-            or robot.mTeam->event == TeamInfo::ourballPlacement or robot.mTeam->event == TeamInfo::theirballPlacement)) {
+            or robot.mTeam->event == TeamInfo::theirballPlacement)) {
             max_speed = robot.mTeam->stop_max_speed;
             v_target_magnitude = robot.mTeam->stop_max_speed;
         }
@@ -178,10 +178,12 @@ namespace skills {
             }
 
             if (robot.mTeam->event == TeamInfo::theirballPlacement) {
-                auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, 500);
+                auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, robot.getRadius() + 500);
                 obs_tilted.push_back(t);
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.getRadius());
-                obs_circular.push_back(c);
+                Circle c1({robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, 500 + robot.getRadius());
+                obs_circular.push_back(c1);
+                Circle c2({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, 500 + robot.getRadius());
+                obs_circular.push_back(c2);
             }
 
             //add static ball to obstacles according to avoidance radius
@@ -212,7 +214,10 @@ namespace skills {
                 if (robot.mTeam->roles[robot.getId()] != Robot::goal_keeper) {
                     obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourDefenseArea.getResized(robot.getRadius())));
                 }
-                obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
+                if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::stop)
+                    obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius() + 200)));
+                else obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
+
             }
 
             double wall_thickness = robot.mWorld.field.goalBarrierThickness;
