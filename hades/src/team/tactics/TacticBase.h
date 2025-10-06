@@ -17,6 +17,7 @@ protected:
 	skills::SkillTurnTo turnTo;
 	skills::SkillKick kick;
 	skills::SkillCushion cushion;
+	skills::SkillPushBall pushBall;
 public:
 	virtual void act(RobotController& robot) = 0;
 };

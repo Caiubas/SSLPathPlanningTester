@@ -16,5 +16,6 @@
 #include "TacticIntercept.h"
 #include "TacticMark.h"
 #include "TacticBlockBall.h"
+#include "TacticPositionAndPush.h"
 
 #endif //TACTICS_H

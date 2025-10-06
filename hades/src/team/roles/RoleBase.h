@@ -24,6 +24,7 @@ protected:
     tactics::TacticIntercept intercept;
     tactics::TacticMark mark;
     tactics::TacticBlockBall blockBall;
+    tactics::TacticPositionAndPush positionAndPush;
 public:
     virtual void act(RobotController& robot) = 0;
 };

@@ -58,32 +58,7 @@ void RobotController::loop() {
         mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
         //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         try {
-            skills::SkillMoveTo moveTo;
-            skills::SkillStop stop;
-            skills::SkillTurnTo turnTo;
-            tactics::TacticPositionAndKick posandkick;
-            tactics::TacticKeepLocation keep;
-            //std::cout << id << " " << getPosition().getX() << " " << getPosition().getY() << " " << getRole() << std::endl;
-            //std::cout << mWorld.ball.getPosition().getX() << " " << mWorld.ball.getPosition().getY() << std::endl;
-            if (mTeam->event != TeamInfo::halt) {
-                //std::cout << "nao halt " << std::endl;
-                //stop.act(*this);
-                //moveTo.act(*this, mWorld.ball.getPosition(), false, true, true);
-                Robot::role role = Robot::defender;
-                setRole(role);
-                mTeam->roles[getId()] = role;
-                mTeam->role_map[role]->act(*this);
-                //posandkick.act(*this, mWorld.field.theirGoal.getMiddle());
-                //keep.act(*this, Point(750, 500));
-            } else {
-                stop.act(*this);
-            }
-            mWorld.allies[3].positioned = true;
-            mTeam->positioned[3] = true;
-            if (getId() != 3) {
-                //std::cout << mWorld.ball.isMoving() << std::endl;
-                //select_behavior();
-            }
+            select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
