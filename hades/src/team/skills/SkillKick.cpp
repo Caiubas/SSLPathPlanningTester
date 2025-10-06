@@ -27,6 +27,10 @@ namespace skills {
 				robot.positioned = false;
 				robot.mTeam->positioned[robot.getId()] = false;
 				robot.mtarget_vel = {0, 0};
+				if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
+					robot.double_touch = true;
+				}
+				//TODO adicionar return?
 			}
 			Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};
 			v_vet = v_vet.getNormalized(robot.mVxy_min);
@@ -39,6 +43,10 @@ namespace skills {
 				robot.positioned = false;
 				robot.mTeam->positioned[robot.getId()] = false;
 				robot.mtarget_vel = {0, 0};
+				if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
+					robot.double_touch = true;
+				}
+				//TODO adicionar return?
 			}
 			Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};
 			v_vet = v_vet.getNormalized(robot.mVxy_max);

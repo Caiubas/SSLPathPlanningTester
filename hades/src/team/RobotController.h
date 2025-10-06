@@ -100,6 +100,8 @@ public:
     double mKD_vxy = 0;
 
     //field info
+    bool double_touch = false;
+    bool double_touch_waiting = false;
     WorldModel mWorld;
     int64_t mLast_time_stamp = 0;
 
