@@ -112,6 +112,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/roles/RoleStriker.h
         src/team/roles/RoleSquaredTrajectory.h
         src/team/roles/RoleSquaredTrajectory.cpp
+        src/team/roles/RoleFieldTrajectory.h
+        src/team/roles/RoleFieldTrajectory.cpp
         src/team/roles/RoleCircularTrajectory.h
         src/team/roles/RoleCircularTrajectory.cpp
         src/team/roles/RoleMarker.h
