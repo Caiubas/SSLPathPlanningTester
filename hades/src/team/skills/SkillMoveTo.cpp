@@ -173,20 +173,20 @@ namespace skills {
                 or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
                 or robot.mTeam->event == TeamInfo::theirballPlacement  or robot.mTeam->event == TeamInfo::theirFreeKick
                 or robot.mTeam->event == TeamInfo::runningTheirFreeKick)) {
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->stop_distance_to_ball + robot.mRadius);
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->stop_distance_to_ball + robot.getRadius());
                 obs_circular.push_back(c);
             }
 
             if (robot.mTeam->event == TeamInfo::theirballPlacement) {
                 auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, 500);
                 obs_tilted.push_back(t);
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.mRadius);
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.getRadius());
                 obs_circular.push_back(c);
             }
 
             //add static ball to obstacles according to avoidance radius
             if (avoid_ball) {
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius);
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mBall_avoidance_radius + robot.getRadius());
                 obs_circular.push_back(c);
             }
 
