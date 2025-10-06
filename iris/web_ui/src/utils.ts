@@ -1,6 +1,8 @@
 import { competitionData } from './data/competitionData';
 import { sendPost } from './hooks/useSendPost';
-import type { DataType, DetectionBall, DetectionRobot, Robot, RobotField } from './types'; // ajuste o caminho conforme
+import type { DataType, DetectionBall, DetectionRobot, Robot, RobotField } from './types';
+
+// -------------------- Conversões --------------------
 
 export function detectionRobotToRobot(dr: DetectionRobot): RobotField {
   return {
@@ -37,7 +39,8 @@ export function mapBallToFieldCoords(
   };
 }
 
-// tipagem mínima para filtro de IDs
+// -------------------- Filtros --------------------
+
 type RobotIdOnly = { id: number };
 
 export function filterRobotsForTeam(
@@ -57,10 +60,12 @@ export function filterRobotsForTeam(
     .slice(0, maxRobots);
 }
 
+// -------------------- Toggles --------------------
+
 export const toggleLocal = async (
   key: keyof DataType['tartarus'],
   value: boolean,
-  setValue: React.Dispatch<React.SetStateAction<boolean>>,
+  setValue: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   try {
     const newValue = !value;
@@ -81,59 +86,74 @@ export const toggleLocal = async (
 };
 
 export const toggleBoolean = async (key: string, currentValue: boolean) => {
-    try {
-      let payload;
+  try {
+    let payload;
 
-      if (key === 'competition_mode') {
-        if (!currentValue) {
-          // ativando modo competição → manda o preset inteiro
-          payload = competitionData;
-        } else {
-          // desativando → só desliga o campo
-          payload = { competition_mode: false };
-        }
+    if (key === 'competition_mode') {
+      if (!currentValue) {
+        // Ativando modo competição → manda o preset inteiro
+        payload = competitionData;
       } else {
-        // demais toggles → comportamento padrão
-        payload = { [key]: !currentValue };
+        // Desativando → apenas desliga o campo
+        payload = { competition_mode: false };
       }
-
-      const success = await sendPost('http://localhost:5000/command', payload);
-
-      if (!success) {
-        console.error(`Erro ao alternar ${key}`);
-      }
-    } catch (err) {
-      console.error(`Erro ao enviar ${key}:`, err);
+    } else {
+      // Demais toggles → comportamento padrão
+      payload = { [key]: !currentValue };
     }
-  };
 
-  export const toggleBooleanWithId = async (
-    key: string,
-    currentValue: boolean,
-    robotId: number
-  ) => {
-    try {
-      const payload = {
-        robot_id: robotId,
-        [key]: !currentValue,
-      };
+    const success = await sendPost('http://localhost:5000/command', payload);
 
-      const success = await sendPost('http://localhost:5000/command', payload);
-
-      if (!success) {
-        console.error(`Erro ao alternar ${key} para robô ${robotId}`);
-      }
-    } catch (err) {
-      console.error(`Erro ao enviar ${key} para robô ${robotId}:`, err);
+    if (!success) {
+      console.error(`Erro ao alternar ${key}`);
     }
-  };
+  } catch (err) {
+    console.error(`Erro ao enviar ${key}:`, err);
+  }
+};
 
-
-  export const updateNumber = async (key: string, value: number) => {
-      const success = await sendPost('http://localhost:5000/command', {
-        [key]: value,
-      });
-      if (!success) {
-        console.error(`Erro ao atualizar ${key} para ${value}`);
-      }
+export const toggleBooleanWithId = async (
+  key: string,
+  currentValue: boolean,
+  robotId: number
+) => {
+  try {
+    const payload = {
+      robot_id: robotId,
+      [key]: !currentValue,
     };
+
+    const success = await sendPost('http://localhost:5000/command', payload);
+
+    if (!success) {
+      console.error(`Erro ao alternar ${key} para robô ${robotId}`);
+    }
+  } catch (err) {
+    console.error(`Erro ao enviar ${key} para robô ${robotId}:`, err);
+  }
+};
+
+// -------------------- Update Numérico --------------------
+
+export const updateNumber = async (key: string, value: number) => {
+  const success = await sendPost('http://localhost:5000/command', {
+    [key]: value,
+  });
+
+  if (!success) {
+    console.error(`Erro ao atualizar ${key} para ${value}`);
+  }
+};
+
+let midField = false;
+
+export function toggleMidField() {
+  midField = !midField;
+  console.log("midField agora é:", midField);
+  return midField;
+}
+
+export function getMidField() {
+  return midField;
+}
+

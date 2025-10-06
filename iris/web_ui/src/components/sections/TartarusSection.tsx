@@ -6,7 +6,7 @@ import { ActionButton } from './utilities/ActionButton';
 import { CompetitionOverlay } from './utilities/CompetitionOverlay';
 import GoalkeeperIdInput from './utilities/GoalkeeperIdInput';
 import { useTartarusState } from '../../hooks/useTartarusState';
-import { toggleBoolean, updateNumber } from '../../utils';
+import { getMidField, toggleBoolean, toggleMidField, updateNumber } from '../../utils';
 
 type Props = {
   data: DataType;
@@ -24,6 +24,8 @@ export default function TartarusSection({
   receptDimensions,
 }: Props) {
   const { tartarus } = data;
+
+   const value = getMidField();
 
   const {
     stmPort,
@@ -187,6 +189,13 @@ export default function TartarusSection({
         setValue={setCamsNumber}
         onSubmit={() => updateNumber('cams_number', camsNumber)}
       />
+
+      <RowWrapper title="Meio Campo:">
+        <ToggleSwitch
+          value={value}
+          onToggle={() => toggleMidField()}
+        />
+      </RowWrapper>
     </div>
   );
 }
