@@ -79,7 +79,7 @@ namespace roles {
                 Robot support = robot.mTeam->getRobotofRole(Robot::support);
                 positionAndKick.act(robot, support);
             } catch (...) {
-                positionAndKick.act(robot, goal);
+                positionAndPush.act(robot, goal);
             }
         }
     }
