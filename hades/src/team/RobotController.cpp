@@ -114,8 +114,8 @@ void RobotController::receive_config() {
         mKD_ang = 1;
         mKI_ang = 1;
         kickDistance = 2000;
-        mStatic_position_tolarance = mRadius/8;
-        mDynamic_position_tolarance = mRadius/8;
+        mStatic_position_tolarance = radius/8;
+        mDynamic_position_tolarance = radius/8;
         mStatic_angle_tolarance = 0.01;
         mVxy_min = 0.4;
     }
@@ -124,8 +124,8 @@ void RobotController::receive_config() {
         mKD_ang = 0;
         mKI_ang = 0;
         kickDistance = 500;
-        mStatic_position_tolarance = mRadius/4;
-        mDynamic_position_tolarance = mRadius/2;
+        mStatic_position_tolarance = radius/4;
+        mDynamic_position_tolarance = radius/2;
         mStatic_angle_tolarance = 0.01;
         mVxy_min = 0.1;
         mVxy_max = 0.7;

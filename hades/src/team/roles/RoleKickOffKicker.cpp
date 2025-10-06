@@ -26,7 +26,7 @@ namespace roles {
     	} else {
 	        Point their_goal = robot.mWorld.field.theirGoal.getMiddle();
     		Point center = {0, 0};
-        	auto kickposition = robot.mWorld.getKickingPosition(center, their_goal, robot.mBall_avoidance_radius + robot.mRadius + 10); //Nao sei, nao me pergunte
+        	auto kickposition = robot.mWorld.getKickingPosition(center, their_goal, robot.mBall_avoidance_radius + robot.getRadius() + 10); //Nao sei, nao me pergunte
     		moveTo.act(robot, kickposition, true);
     		turnTo.act(robot, robot.mWorld.ball.getPosition());
         }

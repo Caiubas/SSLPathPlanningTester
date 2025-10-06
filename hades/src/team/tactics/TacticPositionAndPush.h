@@ -11,7 +11,7 @@ class Robot;
 
 namespace tactics {
 
-class TacticPositionAndPush {
+class TacticPositionAndPush : public TacticBase{
 private:
 	double distance_to_kick = 300;
 public:

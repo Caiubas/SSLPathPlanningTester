@@ -47,8 +47,8 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         }
 
 
-        double y_max = y_segment.getEnd().getY() - robot.mRadius;
-        double y_min = y_segment.getStart().getY() + robot.mRadius;
+        double y_max = y_segment.getEnd().getY() - robot.getRadius();
+        double y_min = y_segment.getStart().getY() + robot.getRadius();
         p.setY(std::clamp(p.getY(), y_min, y_max));
 
         if (robot.mWorld.enemies.size() > 0 && hasStriker) {

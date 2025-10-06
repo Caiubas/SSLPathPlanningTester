@@ -31,7 +31,6 @@ public:
 
     bool active = false;
 
-    double mRadius = 160;
     double mBall_avoidance_radius = 100;
 
     //target movimentation
@@ -78,8 +77,8 @@ public:
     double mDribbler_min = 0.5;
 
     //angle and position tolerance
-    double mStatic_position_tolarance = mRadius/2;
-    double mDynamic_position_tolarance = mRadius/2;
+    double mStatic_position_tolarance = radius/2;
+    double mDynamic_position_tolarance = radius/2;
     double mStatic_angle_tolarance = 0.1;
 
     //PID control
