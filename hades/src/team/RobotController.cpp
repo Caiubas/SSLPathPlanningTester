@@ -299,6 +299,10 @@ void RobotController::receive_field_geometry() {
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
     }
+
+    if (han.new_tartarus.half_field != 0) {
+            //TODO implementar
+    }
 }
 
 void RobotController::loadCalibration() {

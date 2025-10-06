@@ -29,7 +29,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         LineSegment line(Point(0, 0), Point(0, 0));
         if (true) {
             if (robot.mWorld.ball.isMoving()) {
-                line = robot.mWorld.ball.getMovementLine().getResized(robot.mWorld.ball.getMovementLine().getLength()*2);
+                line = robot.mWorld.ball.getMovementLine().getResized(robot.mWorld.ball.getMovementLine().getLength()*3);
             }
             else if (robot.mWorld.ball.isStopped() && hasStriker) {    //para bola parada
                 line = LineSegment(enemy_striker.getPosition(), robot.mWorld.ball.getPosition()).getResized(100000);
