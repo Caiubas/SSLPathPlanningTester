@@ -2,11 +2,11 @@
 // Created by caiu on 25/08/25.
 //
 
-#include "RoleFieldTrajectory.h"
+#include "RoleSquaredTrajectory.h"
 #include "../RobotController.h"
 
 namespace roles {
-	void RoleFieldTrajectory::act(RobotController& robot){
+	void RoleSquaredTrajectory::act(RobotController& robot){
 		if (size(robot.mCurrent_trajectory) == 0) {
 			robot.mCurrent_trajectory = default_trajectory;
 		}
