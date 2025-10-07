@@ -2,11 +2,12 @@
 // Created by caiu on 25/08/25.
 //
 
-#include "RoleSquaredTrajectory.h"
+#include "RoleFieldTrajectory.h"
+
 #include "../RobotController.h"
 
 namespace roles {
-	void RoleSquaredTrajectory::act(RobotController& robot){
+	void RoleFieldTrajectory::act(RobotController& robot){
 		if (size(robot.mCurrent_trajectory) == 0) {
 			robot.mCurrent_trajectory.push_back({robot.mWorld.field.inside_dimensions.getMajorPoint().getX(), robot.mWorld.field.inside_dimensions.getMajorPoint().getY()});
 			robot.mCurrent_trajectory.push_back({robot.mWorld.field.inside_dimensions.getMajorPoint().getX(), robot.mWorld.field.inside_dimensions.getMinorPoint().getY()});
