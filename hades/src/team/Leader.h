@@ -15,6 +15,7 @@
 #include "plays/PlayOurKickOff.h"
 #include "plays/PlayDefense.h"
 #include "plays/PlayOnTheirGoal.h"
+#include "plays/PlayOurFreeKick.h"
 #include "plays/PlayTheirKickOff.h"
 #include "plays/PlayOurPenalty.h"
 #include "plays/PlayRetake.h"
@@ -40,8 +41,9 @@ public:
     PlayRetake retake;
     PlayOnTheirGoal onTheirGoal;
     PlayBallPlacement ballPlacement;
+    PlayOurFreeKick ourFreeKick;
 
-    std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal, &ballPlacement};
+    std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal, &ballPlacement, &ourFreeKick};
 
     WorldModel world;
 
@@ -60,6 +62,7 @@ private:
     void add_robot(int id);
     void imprimir_ativos();
     void select_plays();
+    void debug_mode();
     void inspect_enemy_team();
     void world_analysis();
     void event_FSM();

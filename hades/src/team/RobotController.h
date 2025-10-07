@@ -120,7 +120,7 @@ private:
     void loadCalibration();
 
     void select_behavior();
-
+    void debug_mode();
 };
 
 

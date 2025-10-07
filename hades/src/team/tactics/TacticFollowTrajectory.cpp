@@ -19,7 +19,6 @@ namespace tactics {
 				trajectory.erase(trajectory.begin());
 				break;
 			}
-			std::cout << "next point: " << trajectory[0].getX() << " " << trajectory[0].getY() << std::endl;
 
 			if (distance < robot.mDynamic_position_tolarance) {
 				trajectory.erase(trajectory.begin());

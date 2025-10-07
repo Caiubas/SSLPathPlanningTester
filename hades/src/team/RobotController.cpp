@@ -58,7 +58,8 @@ void RobotController::loop() {
         mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
         //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         try {
-            select_behavior();
+            if (han.new_tartarus.debug_mode) debug_mode();
+            else select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -95,6 +96,47 @@ void RobotController::select_behavior() {
     catch (...) {
         mTeam->role_map[Robot::halted]->act(*this);
         //when role inst on role_map
+    }
+}
+
+void RobotController::debug_mode() {
+    enum hud_skills {
+        unselected = 0,
+        cushion = 1,
+        kick = 2,
+        moveTo = 3,
+        stop = 4,
+        turnTo = 5
+    };
+
+    Robot::role r = static_cast<Robot::role>(han.new_tartarus.robots[getId()].role);
+    hud_skills s = static_cast<hud_skills>(han.new_tartarus.robots[getId()].skill);
+    if (r != -1) {
+        mTeam->role_map[r]->act(*this);
+    }
+    if (s != unselected) {
+        switch (s) {
+            case cushion:
+                skills::SkillCushion cushion;
+                cushion.act(*this);
+                break;
+            case kick:
+                skills::SkillKick kick;
+                kick.act(*this);
+                break;
+            case moveTo:
+                skills::SkillMoveTo moveTo;
+                moveTo.act(*this, Point(han.new_tartarus.robots[getId()].move_to_x, han.new_tartarus.robots[getId()].move_to_y), true);
+                break;
+            case stop:
+                skills::SkillStop stop;
+                stop.act(*this);
+                break;
+            case turnTo:
+                skills::SkillTurnTo turnTo;
+                turnTo.act(*this, Point(han.new_tartarus.robots[getId()].turn_to_x, han.new_tartarus.robots[getId()].turn_to_y));
+                break;
+        }
     }
 }
 
