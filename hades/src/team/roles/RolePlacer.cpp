@@ -11,7 +11,7 @@ namespace roles {
 		try {
 			positionAndKick.act(robot, robot.mTeam->getRobotofRole(Robot::placeHolder));
 		} catch (...) {
-			positionAndKick.act(robot, robot.mTeam->ball_placement_spot);
+			positionAndKick.act(robot, robot.mTeam->getBallPlacementSpot());
 		}
 	}
 } // roles

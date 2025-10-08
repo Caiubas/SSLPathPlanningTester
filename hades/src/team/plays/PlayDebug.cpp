@@ -6,9 +6,9 @@
 
 #include "../TeamInfo.h"
 
-int PlayDebug::calc_score(WorldModel world, TeamInfo team) {
+int PlayDebug::calc_score(WorldModel world, TeamInfo& team) {
     int score = 0;
-    if (team.debug) {
+    if (team.isDebug()) {
         score += 999991;
     }
     this->score = score;
@@ -19,8 +19,8 @@ std::array<Robot::role, 16> PlayDebug::role_assign(WorldModel& world, TeamInfo& 
     int num_active_robots = 0;
     std::vector<int> active_allies_ids = {};
 
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != -1) {
                 continue;
             }

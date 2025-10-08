@@ -8,7 +8,7 @@
 
 namespace roles {
 	void RolePlaceHolder::act(RobotController& robot) {
-		LineSegment line{robot.mWorld.ball.getPosition(), robot.mTeam->ball_placement_spot};
+		LineSegment line{robot.mWorld.ball.getPosition(), robot.mTeam->getBallPlacementSpot()};
 		line = line.getResized(line.getLength() + robot.getRadius());
 		Point p = line.getEnd();
 		moveTo.act(robot, p, false);

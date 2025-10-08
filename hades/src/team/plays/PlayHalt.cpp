@@ -9,9 +9,9 @@
 
 #include "../TeamInfo.h"
 
-int PlayHalt::calc_score(WorldModel world, TeamInfo team) {
+int PlayHalt::calc_score(WorldModel world, TeamInfo& team) {
     int score = 0;
-    if (team.current_command == TeamInfo::HALT) {
+    if (team.getCurrentCommand() == TeamInfo::HALT) {
         score += 999992;
     }
     this->score = score;
@@ -22,8 +22,8 @@ std::array<Robot::role, 16> PlayHalt::role_assign(WorldModel& world, TeamInfo& t
     int num_active_robots = 0;
     std::vector<int> active_allies_ids = {};
 
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != -1) {
                 continue;
             }

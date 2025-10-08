@@ -12,9 +12,9 @@
 
 #include "../TeamInfo.h"
 
-int PlayOurPenalty::calc_score(WorldModel world, TeamInfo team) {
+int PlayOurPenalty::calc_score(WorldModel world, TeamInfo& team) {
     int new_score = 0;
-    if (team.event == TeamInfo::ourPenalty || team.event == TeamInfo::runningOurPenalty) {
+    if (team.getEvent() == TeamInfo::ourPenalty || team.getEvent() == TeamInfo::runningOurPenalty) {
         new_score += 999992;
     }
     this->score = new_score;
@@ -25,8 +25,8 @@ std::array<Robot::role, 16> PlayOurPenalty::role_assign(WorldModel& world, TeamI
     int num_active_robots = 0;
     std::vector<int> active_allies_ids = {};
     std::vector<double> distances_allies_from_ball = {};
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != Robot::unknown) {
                 continue;
             }

@@ -30,14 +30,14 @@ namespace tactics {
 		if (size(trajectory) == 0) {
 			robot.mtarget_vel = {0, 0};
 			robot.positioned = true;
-			robot.mTeam->positioned[robot.getId()] = true;
+			robot.mTeam->setPositioned(robot.getId(), true);
 			return;
 		}
 
 		moveTo.act(robot, trajectory[0], false); //TODO mudar avoid ball
 
 		robot.positioned = false;
-		robot.mTeam->positioned[robot.getId()] = false;
+		robot.mTeam->setPositioned(robot.getId(), false);
 	}
 	void TacticFollowTrajectory::act(RobotController& robot) {
 		std::cout << "this is a dummy method" << std::endl;
