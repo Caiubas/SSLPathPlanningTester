@@ -100,6 +100,7 @@ public:
     double mKD_vxy = 0;
 
     //field info
+    bool will_double_touch = false;
     bool double_touch = false;
     bool double_touch_waiting = false;
     WorldModel mWorld;
@@ -118,7 +119,7 @@ private:
     void receive_config();
     void publish();
     void loadCalibration();
-
+    void doubleTouchHandler();
     void select_behavior();
 
 };

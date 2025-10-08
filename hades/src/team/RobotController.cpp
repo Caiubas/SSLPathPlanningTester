@@ -52,18 +52,17 @@ void RobotController::loop() {
         receive_vision();
         receive_field_geometry();
         receive_config();
-        mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
-        mWorld.field.full_dimensions = AreaRectangular({0, 0}, {2000, 1000});
+        //mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
+        //mWorld.field.full_dimensions = AreaRectangular({0, 0}, {2000, 1000});
         //mWorld.field.ourGoal = LineSegment(Point(500, 0), Point(500, 1200));
-        mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
+        //mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
         //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         try {
             select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
-        if (double_touch && !double_touch_waiting && mWorld.ball.isStopped()) double_touch_waiting = true;
-        if ((double_touch_waiting && mWorld.ball.isMoving()) or mTeam->event == TeamInfo::stop) {double_touch_waiting = false; double_touch = false;}
+
         check_connection();
         publish();
         std::chrono::duration<double> delta = t1 - t0;
@@ -75,6 +74,17 @@ void RobotController::loop() {
 
 void RobotController::setActive(bool active) {
     this->active = active;
+}
+
+void RobotController::doubleTouchHandler() {
+    if (will_double_touch && mWorld.ball.isMoving()) {
+        Vector2d diff(mWorld.ball.getVelocity().getNormalized(1).getX() - getVelocity().getNormalized(1).getX(), mWorld.ball.getVelocity().getNormalized(1).getY() - getVelocity().getNormalized(1).getY());
+        if (diff.getNorm() < 0.2) double_touch_waiting = true;
+        std::cout << diff.getNorm() << std::endl;
+        will_double_touch = false;
+    }
+    if ((double_touch_waiting && mWorld.ball.isStopped())) {double_touch = true; double_touch_waiting = false;}
+    if ((double_touch && mWorld.ball.isMoving()) or mTeam->event == TeamInfo::stop) {double_touch = false; double_touch_waiting = false;}
 }
 
 bool RobotController::isActive() {
@@ -113,13 +123,14 @@ void RobotController::check_connection() {
 void RobotController::receive_config() {
     if (!han.new_tartarus.ssl_vision) {
         mKP_ang = 1;
-        mKD_ang = 1;
-        mKI_ang = 1;
+        mKD_ang = 0.5;
+        mKI_ang = 0;
         kickDistance = 2000;
         mStatic_position_tolarance = radius/8;
         mDynamic_position_tolarance = radius/8;
         mStatic_angle_tolarance = 0.01;
         mVxy_min = 0.4;
+        kicker = true;
     }
     if (han.new_tartarus.ssl_vision) {
         mKP_ang = 0.35;

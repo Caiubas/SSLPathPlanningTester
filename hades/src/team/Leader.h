@@ -22,6 +22,7 @@
 
 class Leader {
 public:
+    Leader();
     TeamInfo team;
 
     double ball_pos[2] = {0, 0};
@@ -29,19 +30,7 @@ public:
     double delta_time = 0;
     double GC_timer = 0;
 
-    PlayAttack attack;
-    PlayDebug debug;
-    PlayHalt halt;
-    PlayOurKickOff ourKickOff;
-    PlayDefense defense;
-    PlayTheirKickOff theirKickOff;
-    PlayOurPenalty ourPenalty;
-    PlayTheirPenalty theirPenalty;
-    PlayRetake retake;
-    PlayOnTheirGoal onTheirGoal;
-    PlayBallPlacement ballPlacement;
-
-    std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal, &ballPlacement};
+    std::vector<std::unique_ptr<PlayBase>> plays;
 
     WorldModel world;
 
