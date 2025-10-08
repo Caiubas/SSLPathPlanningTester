@@ -9,7 +9,7 @@
 
 
 namespace skills {
-	double SkillTurnTo::find_angle_error(RobotController robot, Point goal) {
+	double SkillTurnTo::find_angle_error(RobotController& robot, Point goal) {
 		double theta_final = atan2(goal.getY() - robot.getPosition().getY(), goal.getX() - robot.getPosition().getX());
 		double orientation = robot.getYaw();
 		double delta = theta_final - orientation;
@@ -18,20 +18,20 @@ namespace skills {
 		return delta;
 	}
 
-	double SkillTurnTo::turn_control(RobotController robot, double delta) {
-		double P = robot.mKP_ang * delta;
-		if (!robot.oriented) {	//anti-windup
-			robot.mI_ang = std::clamp(robot.mI_ang + delta*robot.mDelta_time*robot.mKI_ang, -robot.mI_ang_max, robot.mI_ang_max);
+	double SkillTurnTo::turn_control(RobotController& robot, double delta) {
+		double P = robot.get_m_kp_ang() * delta;
+		if (!robot.isOriented()) {	//anti-windup
+			robot.set_m_i_ang(std::clamp(robot.get_m_i_ang() + delta*robot.get_m_delta_time()*robot.get_m_ki_ang(), -robot.get_m_i_ang_max(), robot.get_m_i_ang_max()));
 		}
-		double D = ((delta-robot.mLast_delta_vyaw)/robot.mDelta_time)*robot.mKD_ang;	//TODO fitro no derivativo (sofre mto de ruido)
-		double PID_vyaw = P + robot.mI_ang + D;
+		double D = ((delta-robot.get_m_last_delta_vyaw())/robot.get_m_delta_time())*robot.get_m_kd_ang();	//TODO fitro no derivativo (sofre mto de ruido)
+		double PID_vyaw = P + robot.get_m_ki_ang() + D;
 
-		robot.mLast_delta_vyaw = delta;
-		if (fabs(PID_vyaw) > robot.mVyaw_max) {
-			PID_vyaw = robot.mVyaw_max*PID_vyaw/fabs(PID_vyaw);
+		robot.set_m_last_delta_vyaw(delta);
+		if (fabs(PID_vyaw) > robot.get_m_vyaw_max()) {
+			PID_vyaw = robot.get_m_vyaw_max()*PID_vyaw/fabs(PID_vyaw);
 		};
-		if (fabs(PID_vyaw) < robot.mVyaw_min && fabs(PID_vyaw) != 0) {
-			PID_vyaw = robot.mVyaw_min*PID_vyaw/fabs(PID_vyaw);
+		if (fabs(PID_vyaw) < robot.get_m_vyaw_min() && fabs(PID_vyaw) != 0) {
+			PID_vyaw = robot.get_m_vyaw_min()*PID_vyaw/fabs(PID_vyaw);
 		}
 
 		return PID_vyaw;
@@ -39,33 +39,33 @@ namespace skills {
 
 void SkillTurnTo::act(RobotController& robot, Point goal) {
 	double delta = find_angle_error(robot, goal);
-	if (!robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance) {	//quando alinhando
-		robot.mtarget_vyaw = 0;
+	if (!robot.isOriented() && fabs(delta) < robot.get_m_static_angle_tolarance()) {	//quando alinhando
+		robot.set_mtarget_vyaw(0);
 		if (!robot.isSpinning()) {
-			robot.oriented = true;
+			robot.setOriented(true);
 		}
 		return;
 	}
-	if (robot.oriented && fabs(delta) < robot.mStatic_angle_tolarance*2) { //quando já alinhado
-		robot.mtarget_vyaw = 0;
+	if (robot.isOriented() && fabs(delta) < robot.get_m_static_angle_tolarance()*2) { //quando já alinhado
+		robot.set_mtarget_vyaw(0);
 		if (!robot.isSpinning()) {
-			robot.oriented = true;
+			robot.setOriented(true);
 		}
 		return;
 	}
 
-	robot.oriented = false;
-	if (robot.mtarget_vel.getNorm() != 0) {
-		robot.mtarget_vyaw = 0;
+	robot.setOriented(false);
+	if (robot.get_mlast_target_vel().getNorm() != 0) {
+		robot.set_mtarget_vyaw(0);
 		return;
 	}
 	double new_vyaw = turn_control(robot, delta);
-	if (new_vyaw > robot.mtarget_vyaw + robot.mDelta_time*robot.mA_ang_max) {
-		new_vyaw = robot.mtarget_vyaw + robot.mDelta_time*robot.mA_ang_max;
+	if (new_vyaw > robot.get_mtarget_vyaw() + robot.get_m_delta_time()*robot.get_m_a_ang_max()) {
+		new_vyaw = robot.get_mtarget_vyaw() + robot.get_m_delta_time()*robot.get_m_a_ang_max();
 	}
-	if (new_vyaw < robot.mtarget_vyaw - robot.mDelta_time*robot.mA_ang_max) {
-		new_vyaw = robot.mtarget_vyaw - robot.mDelta_time*robot.mA_ang_max;
+	if (new_vyaw < robot.get_mtarget_vyaw() - robot.get_m_delta_time()*robot.get_m_a_ang_max()) {
+		new_vyaw = robot.get_mtarget_vyaw() - robot.get_m_delta_time()*robot.get_m_a_ang_max();
 	}
-	robot.mtarget_vyaw = new_vyaw;
+	robot.set_mtarget_vyaw(new_vyaw);
 }
 } // skills

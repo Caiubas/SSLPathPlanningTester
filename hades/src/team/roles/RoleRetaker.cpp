@@ -8,38 +8,38 @@
 namespace roles {
 	void RoleRetaker::act(RobotController& robot) {
 		bool has_goal = false;
-		Point goal = robot.mWorld.field.theirGoal.getMiddle();
+		Point goal = robot.get_world().field.theirGoal.getMiddle();
 		bool has_enemies = false;
 		Robot closest_enemy_to_ball(-1);
 		bool has_support = false;
 		Robot support(-1);
 		try {
-			closest_enemy_to_ball = robot.mWorld.getClosestEnemyToPoint(robot.mWorld.ball.getPosition());
+			closest_enemy_to_ball = robot.get_world().getClosestEnemyToPoint(robot.get_world().ball.getPosition());
 			has_enemies = true;
 		} catch (...) {std::cout << "no enemies" << std::endl;}
 		try {
-			goal = robot.mWorld.getGoalPosition();
+			goal = robot.get_world().getGoalPosition();
 			has_goal = true;
 		} catch (...) {
 		}
 		try {
-			support = robot.mTeam->getRobotofRole(Robot::marker);
+			support = robot.get_m_team()->getRobotofRole(Robot::marker);
 			has_support = true;
 		} catch (...) {
 			try {
-				support = robot.mTeam->getRobotofRole(Robot::support);
+				support = robot.get_m_team()->getRobotofRole(Robot::support);
 				has_support = true;
 			} catch (...) {}
 		}
-		if (robot.mWorld.ball.isMoving()) {
+		if (robot.get_world().ball.isMoving()) {
 			intercept.act(robot);
-		} else if (robot.mWorld.ball.isStopped() && (
-			closest_enemy_to_ball.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())
-			 < robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())) && has_goal) {
+		} else if (robot.get_world().ball.isStopped() && (
+			closest_enemy_to_ball.getPosition().getDistanceTo(robot.get_world().ball.getPosition())
+			 < robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition())) && has_goal) {
 			positionAndKick.act(robot, goal);
-		} else if (robot.mWorld.ball.isStopped() && (
-			closest_enemy_to_ball.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())
-			< robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())) && has_support) {
+		} else if (robot.get_world().ball.isStopped() && (
+			closest_enemy_to_ball.getPosition().getDistanceTo(robot.get_world().ball.getPosition())
+			< robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition())) && has_support) {
 			positionAndKick.act(robot, support);
 		}
 		else if (has_enemies) {

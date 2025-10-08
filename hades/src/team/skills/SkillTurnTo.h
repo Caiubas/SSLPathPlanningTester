@@ -13,8 +13,8 @@ class SkillTurnTo {
 public:
 	void act(RobotController& robot, Point goal);
 private:
-  	double find_angle_error(RobotController robot, Point goal);
-    double turn_control(RobotController robot, double delta);
+  	double find_angle_error(RobotController& robot, Point goal);
+    double turn_control(RobotController& robot, double delta);
 };
 
 } // skills

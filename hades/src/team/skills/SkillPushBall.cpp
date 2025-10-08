@@ -8,7 +8,7 @@
 #include "../TeamInfo.h"
 
 namespace skills {
-	double SkillPushBall::find_angle_error(RobotController robot, Point goal) {
+	double SkillPushBall::find_angle_error(RobotController& robot, Point goal) {
 		double theta_final = atan2(goal.getY() - robot.getPosition().getY(), goal.getX() - robot.getPosition().getX());
 		double orientation = robot.getYaw();
 		double delta = theta_final - orientation;
@@ -19,22 +19,22 @@ namespace skills {
 	}
 
 	void SkillPushBall::act(RobotController& robot) {
-		if (robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition()) > distancethreshold + robot.getRadius() || robot.mWorld.ball.getVelocity().getNorm() >= robot.mVxy_max/2) {
-			robot.mkicker_x = 0;
-			robot.positioned = false;
-			robot.mTeam->setPositioned(robot.getId(), false);
-			robot.mtarget_vel = {0, 0};
+		if (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_max()/2) {
+			robot.set_mkicker_x(0);
+			robot.setPositioned(false);
+			robot.get_m_team()->setPositioned(robot.getId(), false);
+			robot.set_mtarget_vel({0, 0});
 		}
-		if (robot.mTeam->getEvent() == TeamInfo::ourFreeKick or robot.mTeam->getEvent() == TeamInfo::runningOurFreeKick or robot.mTeam->getEvent() == TeamInfo::theirFreeKick or robot.mTeam->getEvent() == TeamInfo::runningTheirFreeKick or robot.mTeam->getEvent() == TeamInfo::ourKickOff or robot.mTeam->getEvent() == TeamInfo::theirKickOff) {
-			robot.will_double_touch = true;
+		if (robot.get_m_team()->getEvent() == TeamInfo::ourFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningOurFreeKick or robot.get_m_team()->getEvent() == TeamInfo::theirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningTheirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::ourKickOff or robot.get_m_team()->getEvent() == TeamInfo::theirKickOff) {
+			robot.set_will_double_touch(true);
 		}
-		Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};
-		v_vet = v_vet.getNormalized(robot.mVxy_max);
-		robot.mtarget_vel = v_vet.getRotated(-robot.getYaw());
+		Vector2d v_vet = {robot.get_world().ball.getPosition(), robot.getPosition()};
+		v_vet = v_vet.getNormalized(robot.get_m_vxy_max());
+		robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
 
-		double angle_error = find_angle_error(robot, robot.mWorld.ball.getPosition());	//TODO TESTAR ISSO AQUI
-		if (fabs(angle_error) > 2*robot.mStatic_angle_tolarance) {
-			robot.mtarget_vyaw = angle_error*robot.mVyaw_min/(2*fabs(angle_error));
+		double angle_error = find_angle_error(robot, robot.get_world().ball.getPosition());	//TODO TESTAR ISSO AQUI
+		if (fabs(angle_error) > 2*robot.get_m_static_angle_tolarance()) {
+			robot.set_mtarget_vyaw(angle_error*robot.get_m_vyaw_min());
 		}
 	}
 } // skills

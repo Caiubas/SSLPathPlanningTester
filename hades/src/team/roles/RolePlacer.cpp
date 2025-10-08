@@ -9,9 +9,9 @@
 namespace roles {
 	void RolePlacer::act(RobotController& robot) {
 		try {
-			positionAndKick.act(robot, robot.mTeam->getRobotofRole(Robot::placeHolder));
+			positionAndKick.act(robot, robot.get_m_team()->getRobotofRole(Robot::placeHolder));
 		} catch (...) {
-			positionAndKick.act(robot, robot.mTeam->getBallPlacementSpot());
+			positionAndKick.act(robot, robot.get_m_team()->getBallPlacementSpot());
 		}
 	}
 } // roles

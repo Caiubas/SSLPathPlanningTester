@@ -9,22 +9,22 @@
 namespace roles {
 
 	void RoleFreeKicker::act(RobotController& robot) {
-		Point goal = robot.mWorld.field.theirGoal.getMiddle();
+		Point goal = robot.get_world().field.theirGoal.getMiddle();
 		bool can_score = false;
 		try {
-			goal = robot.mWorld.getGoalPosition();
+			goal = robot.get_world().getGoalPosition();
 			can_score = true;
 		} catch (...) {}
 
 		Robot support = Robot(-1);
 		bool has_support = false;
 		try {
-			robot.mTeam->getRobotofRole(Robot::support);
+			robot.get_m_team()->getRobotofRole(Robot::support);
 			has_support = true;
 		} catch (...) {}
 
 		bool shound_wait = true;
-		if (robot.mTeam->getEvent() == TeamInfo::runningOurFreeKick) shound_wait = false;
+		if (robot.get_m_team()->getEvent() == TeamInfo::runningOurFreeKick) shound_wait = false;
 
 
 		if (can_score) {

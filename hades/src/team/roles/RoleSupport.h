@@ -11,7 +11,7 @@ namespace roles {
 
 class RoleSupport : public RoleBase {
 private:
-    Point getSupportPosition(RobotController robot);
+    Point getSupportPosition(RobotController& robot);
     double distance_to_edge = 500;
 public:
     void act(RobotController& robot);

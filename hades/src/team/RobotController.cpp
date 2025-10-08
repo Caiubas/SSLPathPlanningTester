@@ -340,3 +340,538 @@ void RobotController::publish() {
     }
     han.lc->publish("IA", &han.new_ia);
 }
+
+
+#include "RobotController.h"
+
+// --- Getters ---
+bool RobotController::is_active() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return active;
+}
+
+double RobotController::get_m_ball_avoidance_radius() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mBall_avoidance_radius;
+}
+
+double RobotController::get_mtarget_yaw() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mtarget_yaw;
+}
+
+Vector2d RobotController::get_mtarget_vel() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mtarget_vel;
+}
+
+double RobotController::get_mtarget_vyaw() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mtarget_vyaw;
+}
+
+Vector2d RobotController::get_mlast_target_vel() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mlast_target_vel;
+}
+
+double RobotController::get_mkicker_x() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mkicker_x;
+}
+
+double RobotController::get_mkicker_z() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mkicker_z;
+}
+
+double RobotController::get_mdribbler() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mdribbler;
+}
+
+TeamInfo* RobotController::get_m_team() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mTeam;
+}
+
+int RobotController::get_m_state() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mState;
+}
+
+double RobotController::get_m_delta_time() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mDelta_time;
+}
+
+double RobotController::get_m_timer() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mTimer;
+}
+
+std::vector<Point> RobotController::get_m_current_trajectory() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mCurrent_trajectory;
+}
+
+int RobotController::get_m_offline_counter() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mOffline_counter;
+}
+
+int RobotController::get_m_max_offline_counter() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mMax_offline_counter;
+}
+
+bool RobotController::is_m_terminate() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mTerminate;
+}
+
+double RobotController::get_m_vxy_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mVxy_max;
+}
+
+double RobotController::get_m_vxy_min() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mVxy_min;
+}
+
+double RobotController::get_m_a_xy_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mA_xy_max;
+}
+
+double RobotController::get_m_a_xy_brake() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mA_xy_brake;
+}
+
+double RobotController::get_m_vyaw_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mVyaw_max;
+}
+
+double RobotController::get_m_vyaw_min() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mVyaw_min;
+}
+
+double RobotController::get_m_a_ang_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mA_ang_max;
+}
+
+double RobotController::get_m_kicker_x_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKicker_x_max;
+}
+
+double RobotController::get_m_kicker_x_min() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKicker_x_min;
+}
+
+double RobotController::get_m_kicker_z_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKicker_z_max;
+}
+
+double RobotController::get_m_kicker_z_min() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKicker_z_min;
+}
+
+double RobotController::get_m_dribbler_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mDribbler_max;
+}
+
+double RobotController::get_m_dribbler_min() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mDribbler_min;
+}
+
+double RobotController::get_m_static_position_tolarance() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mStatic_position_tolarance;
+}
+
+double RobotController::get_m_dynamic_position_tolarance() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mDynamic_position_tolarance;
+}
+
+double RobotController::get_m_static_angle_tolarance() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mStatic_angle_tolarance;
+}
+
+double RobotController::get_m_kp_ang() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKP_ang;
+}
+
+double RobotController::get_m_ki_ang() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKI_ang;
+}
+
+double RobotController::get_m_kd_ang() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKD_ang;
+}
+
+double RobotController::get_m_i_ang() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mI_ang;
+}
+
+double RobotController::get_m_i_ang_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mI_ang_max;
+}
+
+double RobotController::get_m_last_delta_vyaw() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mLast_delta_vyaw;
+}
+
+double RobotController::get_m_i_vx() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mI_vx;
+}
+
+double RobotController::get_m_i_vy() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mI_vy;
+}
+
+double RobotController::get_m_i_vxy_max() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mI_vxy_max;
+}
+
+double RobotController::get_m_last_delta_vx() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mLast_delta_vx;
+}
+
+double RobotController::get_m_last_delta_vy() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mLast_delta_vy;
+}
+
+double RobotController::get_m_kp_vxy() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKP_vxy;
+}
+
+double RobotController::get_m_ki_vxy() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKI_vxy;
+}
+
+double RobotController::get_m_kd_vxy() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mKD_vxy;
+}
+
+bool RobotController::is_will_double_touch() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return will_double_touch;
+}
+
+bool RobotController::is_double_touch() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return double_touch;
+}
+
+bool RobotController::is_double_touch_waiting() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return double_touch_waiting;
+}
+
+WorldModel& RobotController::get_world() {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mWorld;
+}
+
+int64_t RobotController::get_m_last_time_stamp() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return mLast_time_stamp;
+}
+
+RobotController::role RobotController::get_last_role() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return lastRole;
+}
+
+// --- Setters ---
+void RobotController::set_active(bool value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    active = value;
+}
+
+void RobotController::set_m_ball_avoidance_radius(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mBall_avoidance_radius = value;
+}
+
+void RobotController::set_mtarget_yaw(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mtarget_yaw = value;
+}
+
+void RobotController::set_mtarget_vel(const Vector2d &value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mtarget_vel = value;
+}
+
+void RobotController::set_mtarget_vyaw(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mtarget_vyaw = value;
+}
+
+void RobotController::set_mlast_target_vel(const Vector2d &value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mlast_target_vel = value;
+}
+
+void RobotController::set_mkicker_x(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mkicker_x = value;
+}
+
+void RobotController::set_mkicker_z(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mkicker_z = value;
+}
+
+void RobotController::set_mdribbler(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mdribbler = value;
+}
+
+void RobotController::set_m_team(TeamInfo* value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mTeam = value;
+}
+
+void RobotController::set_m_state(int value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mState = value;
+}
+
+void RobotController::set_m_delta_time(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mDelta_time = value;
+}
+
+void RobotController::set_m_timer(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mTimer = value;
+}
+
+void RobotController::set_m_current_trajectory(const std::vector<Point> &value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mCurrent_trajectory = value;
+}
+
+void RobotController::set_m_offline_counter(int value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mOffline_counter = value;
+}
+
+void RobotController::set_m_max_offline_counter(int value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mMax_offline_counter = value;
+}
+
+void RobotController::set_m_terminate(bool value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mTerminate = value;
+}
+
+void RobotController::set_m_vxy_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mVxy_max = value;
+}
+
+void RobotController::set_m_vxy_min(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mVxy_min = value;
+}
+
+void RobotController::set_m_a_xy_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mA_xy_max = value;
+}
+
+void RobotController::set_m_a_xy_brake(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mA_xy_brake = value;
+}
+
+void RobotController::set_m_vyaw_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mVyaw_max = value;
+}
+
+void RobotController::set_m_vyaw_min(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mVyaw_min = value;
+}
+
+void RobotController::set_m_a_ang_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mA_ang_max = value;
+}
+
+void RobotController::set_m_kicker_x_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKicker_x_max = value;
+}
+
+void RobotController::set_m_kicker_x_min(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKicker_x_min = value;
+}
+
+void RobotController::set_m_kicker_z_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKicker_z_max = value;
+}
+
+void RobotController::set_m_kicker_z_min(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKicker_z_min = value;
+}
+
+void RobotController::set_m_dribbler_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mDribbler_max = value;
+}
+
+void RobotController::set_m_dribbler_min(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mDribbler_min = value;
+}
+
+void RobotController::set_m_static_position_tolarance(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mStatic_position_tolarance = value;
+}
+
+void RobotController::set_m_dynamic_position_tolarance(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mDynamic_position_tolarance = value;
+}
+
+void RobotController::set_m_static_angle_tolarance(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mStatic_angle_tolarance = value;
+}
+
+void RobotController::set_m_kp_ang(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKP_ang = value;
+}
+
+void RobotController::set_m_ki_ang(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKI_ang = value;
+}
+
+void RobotController::set_m_kd_ang(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKD_ang = value;
+}
+
+void RobotController::set_m_i_ang(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mI_ang = value;
+}
+
+void RobotController::set_m_i_ang_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mI_ang_max = value;
+}
+
+void RobotController::set_m_last_delta_vyaw(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mLast_delta_vyaw = value;
+}
+
+void RobotController::set_m_i_vx(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mI_vx = value;
+}
+
+void RobotController::set_m_i_vy(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mI_vy = value;
+}
+
+void RobotController::set_m_i_vxy_max(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mI_vxy_max = value;
+}
+
+void RobotController::set_m_last_delta_vx(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mLast_delta_vx = value;
+}
+
+void RobotController::set_m_last_delta_vy(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mLast_delta_vy = value;
+}
+
+void RobotController::set_m_kp_vxy(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKP_vxy = value;
+}
+
+void RobotController::set_m_ki_vxy(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKI_vxy = value;
+}
+
+void RobotController::set_m_kd_vxy(double value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mKD_vxy = value;
+}
+
+void RobotController::set_will_double_touch(bool value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    will_double_touch = value;
+}
+
+void RobotController::set_double_touch(bool value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    double_touch = value;
+}
+
+void RobotController::set_double_touch_waiting(bool value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    double_touch_waiting = value;
+}
+
+void RobotController::set_world(WorldModel& value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mWorld = value;
+}
+
+void RobotController::set_m_last_time_stamp(int64_t value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    mLast_time_stamp = value;
+}
+
+void RobotController::set_last_role(role value) {
+    std::lock_guard<std::mutex> lock(mtx);
+    lastRole = value;
+}

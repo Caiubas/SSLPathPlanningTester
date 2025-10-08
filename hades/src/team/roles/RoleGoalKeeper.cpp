@@ -16,24 +16,24 @@ namespace roles {
         bool has_support = false;
         Robot support(-1);
         bool has_goal = false;
-        Point goal((robot.mWorld.field.theirGoal.getStart().getX() + robot.mWorld.field.theirGoal.getEnd().getX())/2, (robot.mWorld.field.theirGoal.getStart().getY() + robot.mWorld.field.theirGoal.getEnd().getY())/2);
+        Point goal((robot.get_world().field.theirGoal.getStart().getX() + robot.get_world().field.theirGoal.getEnd().getX())/2, (robot.get_world().field.theirGoal.getStart().getY() + robot.get_world().field.theirGoal.getEnd().getY())/2);
 
         try {
-            support = robot.mTeam->getRobotofRole(Robot::support);
+            support = robot.get_m_team()->getRobotofRole(Robot::support);
             has_support = true;
         } catch (...) {}
 
         try {
-            goal = robot.mWorld.getGoalPosition();
+            goal = robot.get_world().getGoalPosition();
             has_goal = true;
         } catch (...) {}
 
-        if (!robot.mWorld.isPointOnOurArea(robot.mWorld.ball.getPosition()) || robot.mWorld.ball.isMoving()) {
-            LineSegment line = robot.mWorld.field.ourGoal;
+        if (!robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition()) || robot.get_world().ball.isMoving()) {
+            LineSegment line = robot.get_world().field.ourGoal;
             if (line.getStart().getX() < 0) line = line.getMovedOnX(robot.getRadius());
             if (line.getStart().getX() > 0) line = line.getMovedOnX(-robot.getRadius());
 
-            keepXLine.act(robot, line, (robot.mWorld.field.ourGoal.getStart().getY() + robot.mWorld.field.ourGoal.getEnd().getY())/2);
+            keepXLine.act(robot, line, (robot.get_world().field.ourGoal.getStart().getY() + robot.get_world().field.ourGoal.getEnd().getY())/2);
         } else {
             if (has_goal) {
                 positionAndKick.act(robot, goal);

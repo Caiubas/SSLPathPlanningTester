@@ -17,7 +17,7 @@ Robot TeamInfo::getEnemyofRole(enum Robot::role role, std::array<Robot, 16> enem
     throw std::runtime_error("No robot of desired role");
 }
 
-Robot TeamInfo::getRobotToKickTo(RobotController robot) {
+Robot TeamInfo::getRobotToKickTo(RobotController& robot) {
     std::lock_guard<std::mutex> lock(mtx);
     for (Robot r : robots) {
         if (r.getId() != robot.getId() && r.isDetected() && r.getRole() != Robot::goal_keeper)

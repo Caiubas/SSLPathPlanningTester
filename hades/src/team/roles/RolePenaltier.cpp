@@ -8,11 +8,11 @@
 
 namespace roles {
 	void RolePenaltier::act(RobotController& robot) {
-		Point goal = robot.mWorld.getGoalPosition();
-		if (robot.mTeam->getEvent() == TeamInfo::ourPenalty) {
+		Point goal = robot.get_world().getGoalPosition();
+		if (robot.get_m_team()->getEvent() == TeamInfo::ourPenalty) {
 			positionAndKick.act(robot, goal, true);
 		}
-		if (robot.mTeam->getEvent() == TeamInfo::runningOurPenalty) {
+		if (robot.get_m_team()->getEvent() == TeamInfo::runningOurPenalty) {
 			positionAndKick.act(robot, goal, false);
 		}
 	}
