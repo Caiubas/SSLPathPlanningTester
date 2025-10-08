@@ -29,8 +29,7 @@ struct tartarus
 	boolean debug_mode; //turn on or off the debug mode
 	boolean half_field; //turn on or off using the half of the field
 	boolean iris_as_GC; //turn iris as a game-controller
-	boolean mid_field;
-	boolean left_field;
+	boolean right_field;
 
 	int16_t goalkeeper_id; // changes keeper id
 	int16_t cams_number; // says the number of cameras in the vision system [0,4]
