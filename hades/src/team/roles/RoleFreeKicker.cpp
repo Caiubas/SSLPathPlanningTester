@@ -24,7 +24,7 @@ namespace roles {
 		} catch (...) {}
 
 		bool shound_wait = true;
-		if (robot.mTeam->event == TeamInfo::runningOurFreeKick) shound_wait = false;
+		if (robot.mTeam->getEvent() == TeamInfo::runningOurFreeKick) shound_wait = false;
 
 
 		if (can_score) {

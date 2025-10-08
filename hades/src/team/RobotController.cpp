@@ -20,7 +20,6 @@ void RobotController::start(TeamInfo* team) {
     han.new_ia.robots[id].kick_speed_x = 3;
     setActive(true);
     this->mTeam = team;
-    mTeam->num_of_active_robots++;
     mTerminate = false;
     mOffline_counter = 0;
     loadCalibration();
@@ -30,13 +29,12 @@ void RobotController::start(TeamInfo* team) {
 }
 
 void RobotController::stop() {
-    mTeam->active_robots[id] = false;
-    mTeam->roles[id] = unknown;
+    mTeam->setRobotActive(id, false);
+    mTeam->setAllyRole(id, unknown);
     mTerminate = true;
     skills::SkillStop stop;
     stop.act(*this);
     publish();
-    mTeam->num_of_active_robots--;
 }
 
 void RobotController::loop() {
@@ -84,7 +82,7 @@ void RobotController::doubleTouchHandler() {
         will_double_touch = false;
     }
     if ((double_touch_waiting && mWorld.ball.isStopped())) {double_touch = true; double_touch_waiting = false;}
-    if ((double_touch && mWorld.ball.isMoving()) or mTeam->event == TeamInfo::stop) {double_touch = false; double_touch_waiting = false;}
+    if ((double_touch && mWorld.ball.isMoving()) or mTeam->getEvent() == TeamInfo::stop) {double_touch = false; double_touch_waiting = false;}
 }
 
 bool RobotController::isActive() {
@@ -95,12 +93,12 @@ bool RobotController::isActive() {
 void RobotController::select_behavior() {
     //TODO roles
     //role reset
-    if (lastRole != mTeam->roles[id]) {
-        lastRole = mTeam->roles[id];
+    if (lastRole != mTeam->getAllyRole(id)) {
+        lastRole = mTeam->getAllyRole(id);
         mState = 0;
     }
     try {
-        mTeam->role_map[mTeam->roles[id]]->act(*this);
+        mTeam->role_map[mTeam->getAllyRole(id)]->act(*this);
     }
     catch (...) {
         mTeam->role_map[Robot::halted]->act(*this);
@@ -153,7 +151,7 @@ void RobotController::receive_vision() {
     std::unordered_set<int> enemies_detected = {};
     for (auto blue_robot : han.new_vision.robots_blue) {
         if (!blue_robot.detected) continue;
-        if (mTeam->color == TeamInfo::blue) {
+        if (mTeam->getColor() == TeamInfo::blue) {
             int rb_id = blue_robot.robot_id;
             double new_yaw = blue_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
@@ -184,14 +182,14 @@ void RobotController::receive_vision() {
             mWorld.enemies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
             enemies_detected.insert(rb_id);
             mWorld.enemies[rb_id].setAlly(false);
-            mWorld.allies[rb_id].setRole(mTeam->enemy_roles[rb_id]);
+            mWorld.allies[rb_id].setRole(mTeam->getEnemyRole(rb_id));
         }
     }
 
 
     for (auto yellow_robot : han.new_vision.robots_yellow) {
         if (!yellow_robot.detected) continue;
-        if (mTeam->color == TeamInfo::yellow) {
+        if (mTeam->getColor() == TeamInfo::yellow) {
             int rb_id = yellow_robot.robot_id;
             double new_yaw = yellow_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
@@ -298,13 +296,13 @@ void RobotController::receive_field_geometry() {
     mWorld.field.leftFisicalBarrier = leftFisicalBarrier;
     mWorld.field.rightFisicalBarrier = rightFisicalBarrier;
 
-    if (mTeam->our_side == TeamInfo::left) {
+    if (mTeam->getOurSide() == TeamInfo::left) {
         mWorld.field.ourGoal = leftGoal;
         mWorld.field.theirGoal = rightGoal;
         mWorld.field.ourDefenseArea = leftDefenseArea;
         mWorld.field.theirDefenseArea = rightDefenseArea;
     }
-    if (mTeam->our_side == TeamInfo::right) {
+    if (mTeam->getOurSide() == TeamInfo::right) {
         mWorld.field.ourGoal = rightGoal;
         mWorld.field.theirGoal = leftGoal;
         mWorld.field.ourDefenseArea = rightDefenseArea;

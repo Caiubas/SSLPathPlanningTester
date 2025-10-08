@@ -45,6 +45,7 @@ void Leader::loop() {
         if (last_time_stamp == han.new_ia.timestamp) {
             continue;
         }
+
         auto t1 = std::chrono::steady_clock::now();
 
         receive_config();
@@ -77,9 +78,9 @@ void Leader::receive_vision() {
 
     for (auto blue_robot : han.new_vision.robots_blue) {
         if (!blue_robot.detected) continue;
-        if (team.color == TeamInfo::blue) {
+        if (team.getColor() == TeamInfo::blue) {
             int rb_id = blue_robot.robot_id;
-            if (team.active_robots[rb_id] == 0) {
+            if (team.isRobotActive(rb_id) == 0) {
                 add_robot(rb_id);
                 continue;
             }
@@ -104,7 +105,6 @@ void Leader::receive_vision() {
         }
         else {
             int rb_id = blue_robot.robot_id;
-
             double new_yaw = blue_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (delta_time > 0) {
@@ -129,9 +129,9 @@ void Leader::receive_vision() {
 
     for (auto yellow_robot : han.new_vision.robots_yellow) {
         if (!yellow_robot.detected) continue;
-        if (team.color == TeamInfo::yellow) {
+        if (team.getColor() == TeamInfo::yellow) {
             int rb_id = yellow_robot.robot_id;
-            if (team.active_robots[rb_id] == 0) {
+            if (team.isRobotActive(rb_id) == 0) {
                 add_robot(rb_id);
                 continue;
             }
@@ -210,13 +210,13 @@ void Leader::receive_field_geometry() {
 
     world.field.leftFisicalBarrier = leftFisicalBarrier;
     world.field.rightFisicalBarrier = rightFisicalBarrier;
-    if (team.our_side == TeamInfo::left) {
+    if (team.getOurSide() == TeamInfo::left) {
         world.field.ourGoal = leftGoal;
         world.field.theirGoal = rightGoal;
         world.field.ourDefenseArea = leftDefenseArea;
         world.field.theirDefenseArea = rightDefenseArea;
     }
-    if (team.our_side == TeamInfo::right) {
+    if (team.getOurSide() == TeamInfo::right) {
         world.field.ourGoal = rightGoal;
         world.field.theirGoal = leftGoal;
         world.field.ourDefenseArea = rightDefenseArea;
@@ -224,141 +224,141 @@ void Leader::receive_field_geometry() {
     }
 }
 void Leader::event_FSM() {
-    if (team.current_command == TeamInfo::HALT) team.event = TeamInfo::halt;
+    if (team.getCurrentCommand() == TeamInfo::HALT) team.setEvent(TeamInfo::halt);
 
-    if (team.event == TeamInfo::halt) {
+    if (team.getEvent() == TeamInfo::halt) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::STOP) {
-            team.event = TeamInfo::stop;
+        if (team.getCurrentCommand() == TeamInfo::STOP) {
+            team.setEvent(TeamInfo::stop);
         }
     }
 
-    if (team.event == TeamInfo::timeout) {
+    if (team.getEvent() == TeamInfo::timeout) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
     }
 
-    if (team.event == TeamInfo::stop) {
+    if (team.getEvent() == TeamInfo::stop) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::PREPARE_KICKOFF_BLUE) {
-            if (team.color == TeamInfo::blue) team.event = TeamInfo::prepareOurKickOff;
-            else team.event = TeamInfo::prepareTheirKickOff;
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_KICKOFF_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::prepareOurKickOff);
+            else team.setEvent(TeamInfo::prepareTheirKickOff);
         }
-        if (team.current_command == TeamInfo::PREPARE_KICKOFF_YELLOW) {
-            if (team.color == TeamInfo::yellow) team.event = TeamInfo::prepareOurKickOff;
-            else team.event = TeamInfo::prepareTheirKickOff;
-        }
-
-        if (team.current_command == TeamInfo::BALL_PLACEMENT_BLUE) {
-            if (team.color == TeamInfo::blue) team.event = TeamInfo::ourballPlacement;
-            else team.event = TeamInfo::theirballPlacement;
-        }
-        if (team.current_command == TeamInfo::BALL_PLACEMENT_YELLOW) {
-            if (team.color == TeamInfo::yellow) team.event = TeamInfo::ourballPlacement;
-            else team.event = TeamInfo::theirballPlacement;
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_KICKOFF_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::prepareOurKickOff);
+            else team.setEvent(TeamInfo::prepareTheirKickOff);
         }
 
-        if (team.current_command == TeamInfo::PREPARE_PENALTY_BLUE) {
-            if (team.color == TeamInfo::blue) team.event = TeamInfo::prepareOurPenalty;
-            else team.event = TeamInfo::prepareTheirPenalty;
+        if (team.getCurrentCommand() == TeamInfo::BALL_PLACEMENT_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::ourballPlacement);
+            else team.setEvent(TeamInfo::theirballPlacement);
         }
-        if (team.current_command == TeamInfo::PREPARE_PENALTY_YELLOW) {
-            if (team.color == TeamInfo::yellow) team.event = TeamInfo::prepareOurPenalty;
-            else team.event = TeamInfo::prepareTheirPenalty;
-        }
-
-        if (team.current_command == TeamInfo::FORCE_START) team.event = TeamInfo::run;
-
-        if (team.current_command == TeamInfo::DIRECT_FREE_BLUE) {
-            if (team.color == TeamInfo::blue) team.event = TeamInfo::ourFreeKick;
-            else team.event = TeamInfo::theirFreeKick;
-        }
-        if (team.current_command == TeamInfo::DIRECT_FREE_YELLOW) {
-            if (team.color == TeamInfo::yellow) team.event = TeamInfo::ourFreeKick;
-            else team.event = TeamInfo::theirFreeKick;
+        if (team.getCurrentCommand() == TeamInfo::BALL_PLACEMENT_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::ourballPlacement);
+            else team.setEvent(TeamInfo::theirballPlacement);
         }
 
-        if (team.current_command == TeamInfo::TIMEOUT_BLUE or team.current_command == TeamInfo::TIMEOUT_YELLOW) {
-            team.event = TeamInfo::timeout;
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_PENALTY_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::prepareOurPenalty);
+            else team.setEvent(TeamInfo::prepareTheirPenalty);
         }
-    }
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_PENALTY_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::prepareOurPenalty);
+            else team.setEvent(TeamInfo::prepareTheirPenalty);
+        }
 
-    if (team.event == TeamInfo::prepareOurKickOff) {
-        GC_timer = 0;
-        if (team.current_command == TeamInfo::NORMAL_START) {
-            team.event = TeamInfo::ourKickOff;
+        if (team.getCurrentCommand() == TeamInfo::FORCE_START) team.setEvent(TeamInfo::run);
+
+        if (team.getCurrentCommand() == TeamInfo::DIRECT_FREE_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::ourFreeKick);
+            else team.setEvent(TeamInfo::theirFreeKick);
+        }
+        if (team.getCurrentCommand() == TeamInfo::DIRECT_FREE_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::ourFreeKick);
+            else team.setEvent(TeamInfo::theirFreeKick);
+        }
+
+        if (team.getCurrentCommand() == TeamInfo::TIMEOUT_BLUE or team.getCurrentCommand() == TeamInfo::TIMEOUT_YELLOW) {
+            team.setEvent(TeamInfo::timeout);
         }
     }
 
-    if (team.event == TeamInfo::prepareTheirKickOff) {
+    if (team.getEvent() == TeamInfo::prepareOurKickOff) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::NORMAL_START) {
-            team.event = TeamInfo::theirKickOff;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            team.setEvent(TeamInfo::ourKickOff);
         }
     }
 
-    if (team.event == TeamInfo::ourballPlacement) {
+    if (team.getEvent() == TeamInfo::prepareTheirKickOff) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            team.setEvent(TeamInfo::theirKickOff);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::ourballPlacement) {
         GC_timer += delta_time;
-        if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
-        if (delta_time > 30) team.event = TeamInfo::stop;
-        if (world.ball.getPosition().getDistanceTo(team.ball_placement_spot) < 150 && world.ball.isStopped()) team.event = TeamInfo::stop;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+        if (delta_time > 30) team.setEvent(TeamInfo::stop);
+        if (world.ball.getPosition().getDistanceTo(team.getBallPlacementSpot()) < 150 && world.ball.isStopped()) team.setEvent(TeamInfo::stop);
     }
 
-    if (team.event == TeamInfo::theirballPlacement) {
+    if (team.getEvent() == TeamInfo::theirballPlacement) {
         GC_timer += delta_time;
-        if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
-        if (delta_time >= 1) team.event = TeamInfo::theirFreeKick;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+        if (delta_time >= 1) team.setEvent(TeamInfo::theirFreeKick);
     }
 
-    if (team.event == TeamInfo::prepareOurPenalty) {
+    if (team.getEvent() == TeamInfo::prepareOurPenalty) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::NORMAL_START) team.event = TeamInfo::ourPenalty;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) team.setEvent(TeamInfo::ourPenalty);
     }
 
-    if (team.event == TeamInfo::prepareTheirPenalty) {
+    if (team.getEvent() == TeamInfo::prepareTheirPenalty) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::NORMAL_START) team.event = TeamInfo::theirPenalty;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) team.setEvent(TeamInfo::theirPenalty);
     }
 
-    if (team.event == TeamInfo::ourPenalty or team.event == TeamInfo::theirPenalty) {
+    if (team.getEvent() == TeamInfo::ourPenalty or team.getEvent() == TeamInfo::theirPenalty) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::NORMAL_START && team.event == TeamInfo::runningTheirPenalty) team.event = TeamInfo::runningTheirPenalty;
-        if (team.current_command == TeamInfo::NORMAL_START && team.event == TeamInfo::ourPenalty) team.event = TeamInfo::runningOurPenalty;
-        if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && team.getEvent() == TeamInfo::runningTheirPenalty) team.setEvent(TeamInfo::runningTheirPenalty);
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && team.getEvent() == TeamInfo::ourPenalty) team.setEvent(TeamInfo::runningOurPenalty);
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
     }
 
-    if (team.event == TeamInfo::runningOurPenalty || team.event == TeamInfo::runningTheirPenalty) {
+    if (team.getEvent() == TeamInfo::runningOurPenalty || team.getEvent() == TeamInfo::runningTheirPenalty) {
         GC_timer += delta_time;
-        if (GC_timer >= 10 or team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
+        if (GC_timer >= 10 or team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
     }
 
-    if (team.event == TeamInfo::ourKickOff or team.event == TeamInfo::theirKickOff) {
+    if (team.getEvent() == TeamInfo::ourKickOff or team.getEvent() == TeamInfo::theirKickOff) {
         GC_timer += delta_time;
-        if (team.current_command == TeamInfo::NORMAL_START && ((world.ball.isMoving() && world.ball.getPosition().getDistanceTo(Point(0, 0)) > 100) or GC_timer > 10)) {
-            team.event = TeamInfo::run;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && ((world.ball.isMoving() && world.ball.getPosition().getDistanceTo(Point(0, 0)) > 100) or GC_timer > 10)) {
+            team.setEvent(TeamInfo::run);
         }
     }
 
-    if (team.event == TeamInfo::ourFreeKick or team.event == TeamInfo::theirFreeKick) {
+    if (team.getEvent() == TeamInfo::ourFreeKick or team.getEvent() == TeamInfo::theirFreeKick) {
         GC_timer = 0;
         if (world.ball.isMoving()) {
-            team.event = TeamInfo::run;
+            team.setEvent(TeamInfo::run);
         }
-        if (team.current_command == TeamInfo::NORMAL_START) {
-            if (team.event == TeamInfo::ourFreeKick) team.event = TeamInfo::runningOurFreeKick;
-            if (team.event == TeamInfo::theirFreeKick) team.event = TeamInfo::runningTheirFreeKick;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            if (team.getEvent() == TeamInfo::ourFreeKick) team.setEvent(TeamInfo::runningOurFreeKick);
+            if (team.getEvent() == TeamInfo::theirFreeKick) team.setEvent(TeamInfo::runningTheirFreeKick);
         }
     }
-    if (team.event == TeamInfo::runningOurFreeKick or team.event == TeamInfo::runningTheirFreeKick) {
+    if (team.getEvent() == TeamInfo::runningOurFreeKick or team.getEvent() == TeamInfo::runningTheirFreeKick) {
         GC_timer += delta_time;
         if (world.ball.isMoving() or GC_timer > 10) {
-            team.event = TeamInfo::run;
+            team.setEvent(TeamInfo::run);
         }
     }
 
-    if (team.event == TeamInfo::run) {
+    if (team.getEvent() == TeamInfo::run) {
         GC_timer = 0;
-        if (team.current_command == TeamInfo::STOP) team.event = TeamInfo::stop;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
     }
 }
 
@@ -368,44 +368,38 @@ void Leader::receive_config() {
 
 void Leader::receive_gamecontroller() {
     //TODO implementar maquina de estados dos estados do jogo
-    team.current_command = TeamInfo::Command(han.new_GC.current_command);
+    team.setCurrentCommand(TeamInfo::Command(han.new_GC.current_command));
 
-    team.ball_placement_spot = {han.new_GC.designated_position_x, han.new_GC.designated_position_y};
+    team.setBallPlacementSpot({han.new_GC.designated_position_x, han.new_GC.designated_position_y});
     int is_team_blue = int(han.new_GC.team_blue);
     if (is_team_blue == 1) {
-        team.color = TeamInfo::blue;
-        team.goal_keeper_id = han.new_GC.blue.goalkeeper_id;
+        team.setColor(TeamInfo::blue);
+        team.setGoalKeeperId(han.new_GC.blue.goalkeeper_id);
     }
     else if (is_team_blue == 0) {
-        team.color = TeamInfo::yellow;
-        team.goal_keeper_id = han.new_GC.yellow.goalkeeper_id;
+        team.setColor(TeamInfo::yellow);
+        team.setGoalKeeperId(han.new_GC.yellow.goalkeeper_id);
     }
 
     if (han.new_GC.blue_team_on_positive_half) {
-        if (is_team_blue) team.our_side = TeamInfo::right;
-        else team.our_side = TeamInfo::left;
+        if (is_team_blue) team.setOurSide(TeamInfo::right);
+        else team.setOurSide(TeamInfo::left);
     } else {
-        if (is_team_blue) team.our_side = TeamInfo::left;
-        else team.our_side = TeamInfo::right;
+        if (is_team_blue) team.setOurSide(TeamInfo::left);
+        else team.setOurSide(TeamInfo::right);
     }
 
     event_FSM();
 }
 
 void Leader::world_analysis() {
-    world.ball.getPosition().getX() != 0 ? team.central_line_x = world.ball.getPosition().getX()
-    : team.central_line_x = 0;
-    //std::cout << team.central_line_x << std::endl;
 }
 
 
 void Leader::add_robot(int id) {
-    if (id >= team.active_robots.size()) {
-        return;
-    }
-    if (team.active_robots[id] == 0) {
-        team.active_robots[id] = 1;
-        team.robots[id].start(&team);
+    if (team.isRobotActive(id) == 0) {
+        team.setRobotActive(id, true);
+        team.getRobotController(id).start(&team);
     }
 }
 
@@ -436,9 +430,8 @@ void Leader::select_plays() {
     }
 
     // Copiar para o time
-    team.roles = roles;
     for (int i = 0; i < roles.size(); i++) {
-        team.robots[i].setRole(roles[i]);
+        team.setAllyRole(i, roles[i]);
     }
 }
 
@@ -458,17 +451,17 @@ void Leader::inspect_enemy_team() {
         }
     }
     if (active_enemies_ids.size() == 0) return;
-    if (team.color == TeamInfo::blue) {
-        team.enemy_roles[han.new_GC.yellow.goalkeeper_id] = Robot::goal_keeper;
+    if (team.getColor() == TeamInfo::blue) {
+        team.setEnemyRole(han.new_GC.yellow.goalkeeper_id, Robot::goal_keeper);
     }
     else {
-        team.enemy_roles[han.new_GC.blue.goalkeeper_id] = Robot::goal_keeper;
+        team.setEnemyRole(han.new_GC.blue.goalkeeper_id, Robot::goal_keeper);
     }
 
     int closest_idx = -1;
     int second_closest_idx = -1;
     for (int idx : active_enemies_ids) {
-        if (team.enemy_roles[idx] == Robot::goal_keeper || !world.enemies[idx].isDetected()) continue;
+        if (team.getEnemyRole(idx) == Robot::goal_keeper || !world.enemies[idx].isDetected()) continue;
 
         if (closest_idx == -1 || distances_enemies_from_ball[idx] < distances_enemies_from_ball[closest_idx]) {
             // Atualiza os dois
@@ -481,10 +474,10 @@ void Leader::inspect_enemy_team() {
     }
 
     unsigned int id = world.enemies[closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::striker;
+    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::striker);
 
     id = world.enemies[second_closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::support;
+    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::support);
 
 }
 
@@ -493,8 +486,8 @@ void Leader::inspect_enemy_team() {
 void Leader::imprimir_ativos() {
     std::cout << std::endl << "[";
     for (int i = 0; i < 16 ; i++) {
-        if (team.active_robots[i] == 1) {
-            std::cout << i << team.roles[i] << " , ";
+        if (team.isRobotActive(i) == 1) {
+            std::cout << i << " , ";
         }
     }
     std::cout << "]" << std::endl;

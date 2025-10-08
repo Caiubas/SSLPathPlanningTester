@@ -26,11 +26,11 @@ namespace skills {
 				std::cout << "aqui entra!" << std::endl;
 				robot.mkicker_x = 0;
 				robot.positioned = false;
-				robot.mTeam->positioned[robot.getId()] = false;
+				robot.mTeam->setPositioned(robot.getId(), false);
 				robot.mtarget_vel = {0, 0};
 				//TODO adicionar return?
 			}
-			if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::runningOurFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::runningTheirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
+			if (robot.mTeam->getEvent() == TeamInfo::ourFreeKick or robot.mTeam->getEvent() == TeamInfo::runningOurFreeKick or robot.mTeam->getEvent() == TeamInfo::theirFreeKick or robot.mTeam->getEvent() == TeamInfo::runningTheirFreeKick or robot.mTeam->getEvent() == TeamInfo::ourKickOff or robot.mTeam->getEvent() == TeamInfo::theirKickOff) {
 				robot.will_double_touch = true;
 			}
 			Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};
@@ -42,11 +42,11 @@ namespace skills {
 			if (robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition()) > distancethreshold + robot.getRadius() || robot.mWorld.ball.getVelocity().getNorm() >= robot.mVxy_max/2) {
 				robot.mkicker_x = 0;
 				robot.positioned = false;
-				robot.mTeam->positioned[robot.getId()] = false;
+				robot.mTeam->setPositioned(robot.getId(), false);
 				robot.mtarget_vel = {0, 0};
 				//TODO adicionar return?
 			}
-			if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::runningOurFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::runningTheirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
+			if (robot.mTeam->getEvent() == TeamInfo::ourFreeKick or robot.mTeam->getEvent() == TeamInfo::runningOurFreeKick or robot.mTeam->getEvent() == TeamInfo::theirFreeKick or robot.mTeam->getEvent() == TeamInfo::runningTheirFreeKick or robot.mTeam->getEvent() == TeamInfo::ourKickOff or robot.mTeam->getEvent() == TeamInfo::theirKickOff) {
 				robot.will_double_touch = true;
 			}
 			Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};

@@ -12,9 +12,9 @@
 
 #include "../TeamInfo.h"
 
-int PlayOurFreeKick::calc_score(WorldModel world, TeamInfo team) {
+int PlayOurFreeKick::calc_score(WorldModel world, TeamInfo& team) {
     int new_score = 0;
-    if (team.event == TeamInfo::ourFreeKick || team.event == TeamInfo::runningOurFreeKick) {
+    if (team.getEvent() == TeamInfo::ourFreeKick || team.getEvent() == TeamInfo::runningOurFreeKick) {
         new_score += 999992;
     }
     this->score = new_score;
@@ -23,8 +23,8 @@ int PlayOurFreeKick::calc_score(WorldModel world, TeamInfo team) {
 
 std::array<Robot::role, 16> PlayOurFreeKick::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
     std::vector<Robot*> avaiable_robots = {};
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != Robot::unknown) {
                 continue;
             }
@@ -43,14 +43,14 @@ std::array<Robot::role, 16> PlayOurFreeKick::role_assign(WorldModel& world, Team
         }
 
         if (selected_role == Robot::goal_keeper) {
-            if (!world.allies[team.goal_keeper_id].isDetected()) continue;
+            if (!world.allies[team.getGoalKeeperId()].isDetected()) continue;
             int goal_keeper_idx = -1;
             for (int i = 0 ; i < avaiable_robots.size() ; i++) {
-                if (avaiable_robots[i]->getId() == team.goal_keeper_id) goal_keeper_idx = i;
+                if (avaiable_robots[i]->getId() == team.getGoalKeeperId()) goal_keeper_idx = i;
             }
             if (goal_keeper_idx == -1) continue;
             avaiable_robots[goal_keeper_idx]->setRole(Robot::goal_keeper);
-            roles[team.goal_keeper_id] = Robot::goal_keeper;
+            roles[team.getGoalKeeperId()] = Robot::goal_keeper;
             avaiable_robots.erase(avaiable_robots.begin() + goal_keeper_idx);
         }
 

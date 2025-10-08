@@ -9,10 +9,10 @@
 namespace roles {
 	void RolePenaltier::act(RobotController& robot) {
 		Point goal = robot.mWorld.getGoalPosition();
-		if (robot.mTeam->event == TeamInfo::ourPenalty) {
+		if (robot.mTeam->getEvent() == TeamInfo::ourPenalty) {
 			positionAndKick.act(robot, goal, true);
 		}
-		if (robot.mTeam->event == TeamInfo::runningOurPenalty) {
+		if (robot.mTeam->getEvent() == TeamInfo::runningOurPenalty) {
 			positionAndKick.act(robot, goal, false);
 		}
 	}

@@ -14,9 +14,9 @@
 
 #include "../TeamInfo.h"
 
-int PlayOurKickOff::calc_score(WorldModel world, TeamInfo team) {
+int PlayOurKickOff::calc_score(WorldModel world, TeamInfo& team) {
     int new_score = 0;
-    if (team.event == TeamInfo::ourKickOff || team.event == TeamInfo::prepareOurKickOff) {
+    if (team.getEvent() == TeamInfo::ourKickOff || team.getEvent() == TeamInfo::prepareOurKickOff) {
         new_score += 999992;
     }
     this->score = new_score;
@@ -27,8 +27,8 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
     int num_active_robots = 0;
     std::vector<int> active_allies_ids = {};
     std::vector<double> distances_allies_from_center = {};
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != Robot::unknown) {
                 continue;
             }
@@ -48,10 +48,10 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
             return roles;
         }
         if (selected_role == Robot::goal_keeper) {
-            if (!world.allies[team.goal_keeper_id].isDetected()) continue;
-            roles[team.goal_keeper_id] = Robot::kickoff_goal_keeper;
+            if (!world.allies[team.getGoalKeeperId()].isDetected()) continue;
+            roles[team.getGoalKeeperId()] = Robot::kickoff_goal_keeper;
             int idx = -1;
-            for (int i = 0; i<active_allies_ids.size(); i++) if (i == team.goal_keeper_id) idx = i;
+            for (int i = 0; i<active_allies_ids.size(); i++) if (i == team.getGoalKeeperId()) idx = i;
             active_allies_ids.erase(active_allies_ids.begin() + idx);
         }
         if (selected_role == Robot::kickoff_kicker || selected_role == Robot::kickoff_support) {

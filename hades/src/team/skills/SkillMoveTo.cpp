@@ -26,11 +26,11 @@ namespace skills {
 
         double max_speed = robot.mVxy_max;
 
-        if ((robot.mTeam->event == TeamInfo::stop or robot.mTeam->event == TeamInfo::timeout or robot.mTeam->event == TeamInfo::prepareOurKickOff
-            or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
-            or robot.mTeam->event == TeamInfo::theirballPlacement)) {
-            max_speed = robot.mTeam->stop_max_speed;
-            v_target_magnitude = robot.mTeam->stop_max_speed;
+        if ((robot.mTeam->getEvent() == TeamInfo::stop or robot.mTeam->getEvent() == TeamInfo::timeout or robot.mTeam->getEvent() == TeamInfo::prepareOurKickOff
+            or robot.mTeam->getEvent() == TeamInfo::prepareTheirKickOff or robot.mTeam->getEvent() == TeamInfo::prepareOurPenalty or robot.mTeam->getEvent() == TeamInfo::prepareTheirPenalty
+            or robot.mTeam->getEvent() == TeamInfo::theirballPlacement)) {
+            max_speed = robot.mTeam->getStopMaxSpeed();
+            v_target_magnitude = robot.mTeam->getStopMaxSpeed();
         }
         if (trajectory.size() > 2) {
                 Point p0 = robot.getPosition();
@@ -169,18 +169,18 @@ namespace skills {
             //rectangle r = field.their_defense_area;
             //obs_rectangular.push_back(r);
 
-            if (!ignore_stop && (robot.mTeam->event == TeamInfo::stop or robot.mTeam->event == TeamInfo::timeout or robot.mTeam->event == TeamInfo::prepareOurKickOff
-                or robot.mTeam->event == TeamInfo::prepareTheirKickOff or robot.mTeam->event == TeamInfo::prepareOurPenalty or robot.mTeam->event == TeamInfo::prepareTheirPenalty
-                or robot.mTeam->event == TeamInfo::theirballPlacement  or robot.mTeam->event == TeamInfo::theirFreeKick
-                or robot.mTeam->event == TeamInfo::runningTheirFreeKick)) {
-                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->stop_distance_to_ball + robot.getRadius());
+            if (!ignore_stop && (robot.mTeam->getEvent() == TeamInfo::stop or robot.mTeam->getEvent() == TeamInfo::timeout or robot.mTeam->getEvent() == TeamInfo::prepareOurKickOff
+                or robot.mTeam->getEvent() == TeamInfo::prepareTheirKickOff or robot.mTeam->getEvent() == TeamInfo::prepareOurPenalty or robot.mTeam->getEvent() == TeamInfo::prepareTheirPenalty
+                or robot.mTeam->getEvent() == TeamInfo::theirballPlacement  or robot.mTeam->getEvent() == TeamInfo::theirFreeKick
+                or robot.mTeam->getEvent() == TeamInfo::runningTheirFreeKick)) {
+                Circle c({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, robot.mTeam->getStopDistanceToBall() + robot.getRadius());
                 obs_circular.push_back(c);
             }
 
-            if (robot.mTeam->event == TeamInfo::theirballPlacement) {
-                auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, robot.getRadius() + 500);
+            if (robot.mTeam->getEvent() == TeamInfo::theirballPlacement) {
+                auto t = TiltedRectangle({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, {robot.mTeam->getBallPlacementSpot().getX(), robot.mTeam->getBallPlacementSpot().getY()}, robot.getRadius() + 500);
                 obs_tilted.push_back(t);
-                Circle c1({robot.mTeam->ball_placement_spot.getX(), robot.mTeam->ball_placement_spot.getY()}, 500 + robot.getRadius());
+                Circle c1({robot.mTeam->getBallPlacementSpot().getX(), robot.mTeam->getBallPlacementSpot().getY()}, 500 + robot.getRadius());
                 obs_circular.push_back(c1);
                 Circle c2({robot.mWorld.ball.getPosition().getX(), robot.mWorld.ball.getPosition().getY()}, 500 + robot.getRadius());
                 obs_circular.push_back(c2);
@@ -210,11 +210,11 @@ namespace skills {
                 obs_circular.push_back(c);
             }
 
-            if (!((robot.getRole() == Robot::placer || robot.getRole() == Robot::placeHolder) && robot.mTeam->event == TeamInfo::ourballPlacement)) {
-                if (robot.mTeam->roles[robot.getId()] != Robot::goal_keeper) {
+            if (!((robot.getRole() == Robot::placer || robot.getRole() == Robot::placeHolder) && robot.mTeam->getEvent() == TeamInfo::ourballPlacement)) {
+                if (robot.mTeam->getAllyRole(robot.getId()) != Robot::goal_keeper) {
                     obs_rectangular.push_back(getRectangle(robot.mWorld.field.ourDefenseArea.getResized(robot.getRadius())));
                 }
-                if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::stop)
+                if (robot.mTeam->getEvent() == TeamInfo::ourFreeKick or robot.mTeam->getEvent() == TeamInfo::theirFreeKick or robot.mTeam->getEvent() == TeamInfo::stop)
                     obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius() + 200)));
                 else obs_rectangular.push_back(getRectangle(robot.mWorld.field.theirDefenseArea.getResized(robot.getRadius())));
 
@@ -269,14 +269,14 @@ namespace skills {
                 robot.mI_vy = 0;
                 if (robot.isStopped()) {
                     robot.positioned = true;
-                    robot.mTeam->positioned[robot.getId()] = true;
+                    robot.mTeam->setPositioned(robot.getId(), true);
                 }
                 return;
             }
         }
 
         robot.positioned = false;
-        robot.mTeam->positioned[robot.getId()] = false;
+        robot.mTeam->setPositioned(robot.getId(), false);
         Vector2d v_vet;
         if (std::size(trajectory) > 1) {
             v_vet = motion_planner(robot, trajectory);
