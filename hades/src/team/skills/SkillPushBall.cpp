@@ -24,9 +24,15 @@ namespace skills {
 			robot.positioned = false;
 			robot.mTeam->positioned[robot.getId()] = false;
 			robot.mtarget_vel = {0, 0};
+<<<<<<< HEAD
 			if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
 				robot.double_touch = true;
 			}
+=======
+		}
+		if (robot.mTeam->event == TeamInfo::ourFreeKick or robot.mTeam->event == TeamInfo::runningOurFreeKick or robot.mTeam->event == TeamInfo::theirFreeKick or robot.mTeam->event == TeamInfo::runningTheirFreeKick or robot.mTeam->event == TeamInfo::ourKickOff or robot.mTeam->event == TeamInfo::theirKickOff) {
+			robot.will_double_touch = true;
+>>>>>>> 0e3a37ff7831797fac5f3876b132a09b5b81d317
 		}
 		Vector2d v_vet = {robot.mWorld.ball.getPosition(), robot.getPosition()};
 		v_vet = v_vet.getNormalized(robot.mVxy_max);

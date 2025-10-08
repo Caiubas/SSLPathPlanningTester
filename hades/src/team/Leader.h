@@ -23,6 +23,7 @@
 
 class Leader {
 public:
+    Leader();
     TeamInfo team;
 
     double ball_pos[2] = {0, 0};
@@ -30,6 +31,7 @@ public:
     double delta_time = 0;
     double GC_timer = 0;
 
+<<<<<<< HEAD
     PlayAttack attack;
     PlayDebug debug;
     PlayHalt halt;
@@ -44,6 +46,9 @@ public:
     PlayOurFreeKick ourFreeKick;
 
     std::vector<PlayBase*> plays = {&attack, &debug, &halt, &ourKickOff, &defense, &theirKickOff, &ourPenalty, &theirPenalty, &retake, &onTheirGoal, &ballPlacement, &ourFreeKick};
+=======
+    std::vector<std::unique_ptr<PlayBase>> plays;
+>>>>>>> 0e3a37ff7831797fac5f3876b132a09b5b81d317
 
     WorldModel world;
 
