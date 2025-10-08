@@ -182,13 +182,13 @@ export function FieldSVG({
           const adjustedOrientation = 90 - (robot.orientation ?? 0); // Ajusta conforme seu padrão
           return (
             <image
-              key={`blue-${robot.id}`}
-              href={`/img/blue_team/id${robot.id}.png`}
-              x={robot.x - robotSize / 2}
-              y={robot.y - robotSize / 2}
+              key={`blue-${robot.robot_id}`}
+              href={`/img/blue_team/id${robot.robot_id}.png`}
+              x={robot.position_x - robotSize / 2}
+              y={robot.position_y - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.x}, ${robot.y})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_x}, ${robot.position_y})`}
               pointerEvents="none"
             />
           );
@@ -200,13 +200,13 @@ export function FieldSVG({
 
           return (
             <image
-              key={`yellow-${robot.id}`}
-              href={`/img/yellow_team/id${robot.id}.png`}
-              x={robot.x - robotSize / 2}
-              y={robot.y - robotSize / 2}
+              key={`yellow-${robot.robot_id}`}
+              href={`/img/yellow_team/id${robot.robot_id}.png`}
+              x={robot.position_x - robotSize / 2}
+              y={robot.position_y - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.x}, ${robot.y})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_x}, ${robot.position_y})`}
               pointerEvents="none"
             />
           );

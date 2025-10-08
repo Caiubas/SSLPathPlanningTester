@@ -1,5 +1,5 @@
 import type { FIELD_DIMENSIONS } from '../data/fieldDimensions';
-import type { BallField, DataType, RobotField } from '../types';
+import type { BallField, DataType, DetectionRobot } from '../types';
 import { getMidField } from '../utils';
 import { FieldSVG } from './FieldSVG';
 import { MidFieldSVG } from './MidFieldSVG';
@@ -9,8 +9,8 @@ type FieldDimensions = (typeof FIELD_DIMENSIONS)[keyof typeof FIELD_DIMENSIONS];
 export type FieldProps = {
   data: DataType;
   dimensions: FieldDimensions;
-  blueRobots?: RobotField[];
-  yellowRobots?: RobotField[];
+  blueRobots?: DetectionRobot[];
+  yellowRobots?: DetectionRobot[];
   ball?: BallField;
   flipField: boolean;
 };

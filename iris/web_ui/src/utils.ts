@@ -1,15 +1,16 @@
 import { competitionData } from './data/competitionData';
 import { sendPost } from './hooks/useSendPost';
-import type { DataType, DetectionBall, DetectionRobot, Robot, RobotField } from './types';
+import type { DataType, DetectionBall, DetectionRobot, Robot } from './types';
 
 // -------------------- Conversões --------------------
 
-export function detectionRobotToRobot(dr: DetectionRobot): RobotField {
+export function detectionRobotToRobot(dr: DetectionRobot): DetectionRobot {
   return {
-    id: dr.robot_id,
-    x: dr.position_x,
-    y: dr.position_y,
-    orientation: (dr.orientation * 180) / Math.PI, // rad → graus
+    robot_id: dr.robot_id,
+    position_x: dr.position_x,
+    position_y: dr.position_y,
+    orientation: (dr.orientation * 180) / Math.PI,
+    detected: dr.detected, // rad → graus
   };
 }
 
@@ -17,13 +18,14 @@ export function mapRobotsToFieldCoords(
   robots: DetectionRobot[] | undefined,
   centerX: number,
   centerY: number
-): RobotField[] {
+): DetectionRobot[] {
   if (!robots) return [];
   return robots.map((dr) => ({
-    id: dr.robot_id,
-    x: centerX + dr.position_y,
-    y: centerY + dr.position_x,
+    robot_id: dr.robot_id,
+    position_x: centerX + dr.position_y,
+    position_y: centerY + dr.position_x,
     orientation: ((dr.orientation * 180) / Math.PI - 90 + 360) % 360,
+    detected: dr.detected,
   }));
 }
 
