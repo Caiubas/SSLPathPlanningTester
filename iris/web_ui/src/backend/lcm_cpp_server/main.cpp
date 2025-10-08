@@ -90,6 +90,7 @@ int main()
         data["iris_as_GC"] = latest_data.iris_as_GC;
         data["team_blue"] = latest_data.team_blue;
         data["team_blue_status"] = latest_data.team_blue_status;
+        data["right_field"] = latest_data.right_field;
 
         // ---- Configuração de portas ----
         data["stm_port"] = latest_data.stm_port;
@@ -404,6 +405,10 @@ int main()
                 latest_data.iris_as_GC = body["iris_as_GC"].b();
                 std::cout << "[POST] iris_as_GC atualizado para " << (latest_data.iris_as_GC ? "true" : "false") << std::endl;
             }
+            if (body.has("right_field") && (body["right_field"].t() == crow::json::type::True || body["right_field"].t() == crow::json::type::False)) {
+                latest_data.right_field = body["right_field"].b();
+                std::cout << "[POST] right_field atualizado para " << (latest_data.right_field ? "true" : "false") << std::endl;
+            }
 
             // ---- Portas ----
             if (body.has("stm_port") && body["stm_port"].t() == crow::json::type::Number) {
@@ -440,6 +445,8 @@ int main()
             msg.debug_mode = latest_data.debug_mode;
             msg.half_field = latest_data.half_field;
             msg.iris_as_GC = latest_data.iris_as_GC;
+            msg.right_field = latest_data.right_field;
+
             msg.goalkeeper_id = latest_data.team_blue ? latest_data.blue.goalkeeper_id : latest_data.yellow.goalkeeper_id;
             msg.stm_port = latest_data.stm_port;
             msg.mcast_port_gc = latest_data.mcast_port_gc;

@@ -46,6 +46,7 @@ struct LatestData
     bool debug_mode = false;
     bool half_field;
     bool iris_as_GC;
+    bool right_field;
 
     int16_t goalkeeper_id;
     int16_t cams_number = 0;

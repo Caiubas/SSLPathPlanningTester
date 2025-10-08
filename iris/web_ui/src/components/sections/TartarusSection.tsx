@@ -6,7 +6,8 @@ import { ActionButton } from './utilities/ActionButton';
 import { CompetitionOverlay } from './utilities/CompetitionOverlay';
 import GoalkeeperIdInput from './utilities/GoalkeeperIdInput';
 import { useTartarusState } from '../../hooks/useTartarusState';
-import { getMidField, toggleBoolean, toggleMidField, updateNumber } from '../../utils';
+import { getMidField, toggleBoolean, updateNumber } from '../../utils';
+import { sendPost } from '../../hooks/useSendPost';
 
 type Props = {
   data: DataType;
@@ -25,7 +26,7 @@ export default function TartarusSection({
 }: Props) {
   const { tartarus } = data;
 
-   const value = getMidField();
+  const value = getMidField();
 
   const {
     stmPort,
@@ -72,13 +73,6 @@ export default function TartarusSection({
           onToggle={() =>
             toggleBoolean('competition_mode', tartarus.competition_mode)
           }
-        />
-      </RowWrapper>
-
-      <RowWrapper title="Meio Campo:">
-        <ToggleSwitch
-          value={tartarus.half_field}
-          onToggle={() => toggleBoolean('half_field', tartarus.half_field)}
         />
       </RowWrapper>
 
@@ -171,7 +165,20 @@ export default function TartarusSection({
 
       <RowWrapper title="Orientação do Campo:">
         <ActionButton
-          onClick={() => setFlipField(!flipField)}
+          onClick={async () => {
+            const newFlip = !flipField;
+            setFlipField(newFlip);
+
+            if (tartarus.half_field) {
+              const payload = { right_field: newFlip };
+              const success = await sendPost(
+                'http://localhost:5000/command',
+                payload,
+              );
+              if (!success) console.error('Erro ao enviar left_field');
+              else console.log('left_field enviado:', newFlip);
+            }
+          }}
           label={flipField ? 'Normal' : 'Inverter'}
         />
       </RowWrapper>
@@ -193,7 +200,7 @@ export default function TartarusSection({
       <RowWrapper title="Meio Campo:">
         <ToggleSwitch
           value={value}
-          onToggle={() => toggleMidField()}
+          onToggle={() => toggleBoolean('half_field', tartarus.half_field)}
         />
       </RowWrapper>
     </div>

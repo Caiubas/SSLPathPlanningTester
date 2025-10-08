@@ -65,12 +65,25 @@ export function MidFieldSVG({
         />
 
         {/* Campo jogável */}
+        
+        {/* parte da esquerda */}
         <rect
           x={dimensions.goal_depth}
           y={0}
-          width={dimensions.field_length}
+          width={dimensions.field_length / 2}
           height={dimensions.field_width}
-          stroke="white"
+          stroke="#0000f9"
+          strokeWidth={dimensions.line_thickness}
+          fill="#545454"
+        />
+
+        {/* parte da direita */}
+        <rect
+          x={dimensions.goal_depth + dimensions.field_length / 2}
+          y={0}
+          width={dimensions.field_length / 2}
+          height={dimensions.field_width}
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="#545454"
         />
@@ -82,7 +95,7 @@ export function MidFieldSVG({
           y2={dimensions.field_width}
           x2={centerX}
           stroke="white"
-          strokeWidth={dimensions.line_thickness}
+          strokeWidth={dimensions.line_thickness*1.5}
         />
 
         {/* Circulo central */}
@@ -101,7 +114,7 @@ export function MidFieldSVG({
           y={(dimensions.field_width - dimensions.defense_area_width) / 2}
           width={dimensions.defense_area_height}
           height={dimensions.defense_area_width}
-          stroke="white"
+          stroke="#0000f9"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -116,7 +129,7 @@ export function MidFieldSVG({
           }
           width={dimensions.defense_area_height}
           height={dimensions.defense_area_width}
-          stroke="white"
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -127,7 +140,7 @@ export function MidFieldSVG({
           x1={goalTopY}
           y2={(dimensions.field_width + dimensions.goal_width) / 2}
           x2={goalTopY}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -135,7 +148,7 @@ export function MidFieldSVG({
           x1={goalTopY}
           y2={(dimensions.field_width - dimensions.goal_width) / 2}
           x2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -143,7 +156,7 @@ export function MidFieldSVG({
           x1={goalTopY}
           y2={(dimensions.field_width + dimensions.goal_width) / 2}
           x2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
 
@@ -153,7 +166,7 @@ export function MidFieldSVG({
           x1={goalBottomY + dimensions.goal_depth}
           y2={(dimensions.field_width + dimensions.goal_width) / 2}
           x2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -161,7 +174,7 @@ export function MidFieldSVG({
           x1={goalBottomY}
           y2={(dimensions.field_width - dimensions.goal_width) / 2}
           x2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -169,7 +182,7 @@ export function MidFieldSVG({
           x1={goalBottomY}
           y2={(dimensions.field_width + dimensions.goal_width) / 2}
           x2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
 

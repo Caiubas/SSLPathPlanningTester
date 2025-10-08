@@ -137,6 +137,8 @@ export type TartarusData = {
   debug_mode: boolean;
   half_field: boolean;
   iris_as_GC: boolean;
+  right_field: boolean;
+
   stm_port: number;
   mcast_port_gc: number;// default 10003
 	mcast_port_vision_sslvision: number; // default 10006

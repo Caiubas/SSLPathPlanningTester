@@ -85,21 +85,30 @@ export const toggleLocal = async (
   }
 };
 
+let half_field = false; // variável global/local
+
 export const toggleBoolean = async (key: string, currentValue: boolean) => {
   try {
     let payload;
+    let newValue = !currentValue;
 
     if (key === 'competition_mode') {
       if (!currentValue) {
-        // Ativando modo competição → manda o preset inteiro
         payload = competitionData;
       } else {
-        // Desativando → apenas desliga o campo
         payload = { competition_mode: false };
       }
-    } else {
-      // Demais toggles → comportamento padrão
-      payload = { [key]: !currentValue };
+    } 
+    
+    else if (key === 'half_field') {
+      half_field = !half_field;
+      newValue = half_field;
+      payload = { [key]: newValue };
+      console.log("half_field agora é:", half_field);
+    } 
+    
+    else {
+      payload = { [key]: newValue };
     }
 
     const success = await sendPost('http://localhost:5000/command', payload);
@@ -111,6 +120,7 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
     console.error(`Erro ao enviar ${key}:`, err);
   }
 };
+
 
 export const toggleBooleanWithId = async (
   key: string,
@@ -145,15 +155,7 @@ export const updateNumber = async (key: string, value: number) => {
   }
 };
 
-let midField = false;
-
-export function toggleMidField() {
-  midField = !midField;
-  console.log("midField agora é:", midField);
-  return midField;
-}
-
 export function getMidField() {
-  return midField;
+  return half_field;
 }
 

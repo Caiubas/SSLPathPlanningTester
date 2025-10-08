@@ -59,6 +59,7 @@ export const initialData: DataType = {
     debug_mode: false,
     half_field: false,
     iris_as_GC: false,
+    right_field: false,
     stm_port: 0,
     mcast_port_gc: 0,// default 10003
     mcast_port_vision_sslvision: 0, // default 10006

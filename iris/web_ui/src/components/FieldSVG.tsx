@@ -47,7 +47,6 @@ export function FieldSVG({
           flipField ? `rotate(180, ${centerX}, ${centerY})` : undefined
         }
       >
-
         {/* Fundo campo + gol (centralizado com largura do gol) */}
         <rect
           x={(dimensions.field_width - dimensions.goal_width) / 2}
@@ -58,12 +57,24 @@ export function FieldSVG({
         />
 
         {/* Campo jogável */}
+        {/* parte de cima */}
         <rect
           x={0}
           y={dimensions.goal_depth}
           width={dimensions.field_width}
-          height={dimensions.field_length}
-          stroke="white"
+          height={dimensions.field_length / 2}
+          stroke="#0000f9"
+          strokeWidth={dimensions.line_thickness}
+          fill="#545454"
+        />
+
+        {/* parte de baixo */}
+        <rect
+          x={0}
+          y={dimensions.goal_depth + dimensions.field_length / 2}
+          width={dimensions.field_width}
+          height={dimensions.field_length / 2}
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="#545454"
         />
@@ -75,7 +86,7 @@ export function FieldSVG({
           x2={dimensions.field_width}
           y2={centerY}
           stroke="white"
-          strokeWidth={dimensions.line_thickness}
+          strokeWidth={dimensions.line_thickness*1.5}
         />
 
         {/* Circulo central */}
@@ -94,7 +105,7 @@ export function FieldSVG({
           y={dimensions.goal_depth}
           width={dimensions.defense_area_width}
           height={dimensions.defense_area_height}
-          stroke="white"
+          stroke="#0000f9"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -109,7 +120,7 @@ export function FieldSVG({
           }
           width={dimensions.defense_area_width}
           height={dimensions.defense_area_height}
-          stroke="white"
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -120,7 +131,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalTopY}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -128,7 +139,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width - dimensions.goal_width) / 2}
           y2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -136,7 +147,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
 
@@ -146,7 +157,7 @@ export function FieldSVG({
           y1={goalBottomY + dimensions.goal_depth}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -154,7 +165,7 @@ export function FieldSVG({
           y1={goalBottomY}
           x2={(dimensions.field_width - dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -162,7 +173,7 @@ export function FieldSVG({
           y1={goalBottomY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
 

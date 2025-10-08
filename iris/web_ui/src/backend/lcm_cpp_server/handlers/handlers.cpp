@@ -67,6 +67,7 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.debug_mode = msg->debug_mode;
     latest_data.half_field = msg->half_field;
     latest_data.iris_as_GC = msg->iris_as_GC;
+    latest_data.right_field = msg->right_field;
     
     latest_data.stm_port = msg->stm_port;
     latest_data.mcast_port_gc = msg->mcast_port_gc;
