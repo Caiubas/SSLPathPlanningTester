@@ -209,6 +209,35 @@ int main()
         data["robots_size"] = latest_data.robots_size;
         data["cams_number"] = latest_data.cams_number;
 
+        // ---- Dados do robô selecionado (para "data.skill") ----
+        if (latest_data.selected_robot_id >= 0) {
+            int id = latest_data.selected_robot_id;
+
+            crow::json::wvalue robotSkill;
+            robotSkill["id"] = id;
+            robotSkill["skill_robot"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
+            robotSkill["role"] = latest_data.role_by_robot.count(id) ? latest_data.role_by_robot.at(id) : 0;
+            robotSkill["movex"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
+            robotSkill["movey"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
+            robotSkill["turnx"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
+            robotSkill["turny"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+            robotSkill["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
+
+            data["robot"] = std::move(robotSkill);
+        } else {
+            // Caso nenhum robô tenha sido selecionado ainda
+            data["robot"]["id"] = -1;
+            data["robot"]["skill_robot"] = 0;
+            data["robot"]["role"] = 0;
+            data["robot"]["movex"] = 0.0;
+            data["robot"]["movey"] = 0.0;
+            data["robot"]["turnx"] = 0.0;
+            data["robot"]["turny"] = 0.0;
+            data["robot"]["has_kicker"] = false;
+        }
+
+
+
         return crow::response{data};
     });
 

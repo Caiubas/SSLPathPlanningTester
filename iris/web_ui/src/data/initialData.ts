@@ -67,9 +67,9 @@ export const initialData: DataType = {
     goalkeeper_id: 0,
     cams_number: 0,
   },
-  skill: {
+  robot: {
     id: 0,
-    skill: 0,
+    skill_robot: 0,
     role: 0,
     movey: 0,
     movex: 0,
@@ -101,5 +101,5 @@ export const initialData: DataType = {
     designated_position_y: 0,
     current_command: 0,
     game_event: 0,
-  }
+  },
 };

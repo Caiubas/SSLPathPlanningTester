@@ -60,8 +60,8 @@ export function DataViewAll({
     ),
     caronte: <CaronteSection data={data} />,
     field: <FieldSection data={data} />,
-    skill:
-      selected === 'skill' ? (
+    robot:
+      selected === 'robot' ? (
         selectedRobotId !== null ? (
           <RobotSection
             data={data}

@@ -94,6 +94,7 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
 
         latest_data.skill_by_robot[id] = skill;
         latest_data.role_by_robot[id]  = role;
+        latest_data.has_kicker[id] = has_kicker;
 
         // Se usar mapas separados
         latest_data.move_x_by_robot[id] = movex;

@@ -85,7 +85,7 @@ export default function IASection({
               {/* 🔥 Botão para abrir RobotSection */}
               <button
                 onClick={() => {
-                  setSelected('skill'); // muda a aba
+                  setSelected('robot'); // muda a aba
                   setSelectedRobotId(robot.id); // define o robô selecionado
                 }}
                 className="ml-auto px-3 py-1 bg-[#6805F2] rounded text-white text-xs h-fit"

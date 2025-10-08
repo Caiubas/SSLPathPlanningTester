@@ -38,7 +38,7 @@ export type CompetitionData = {
 
 export type RobotData = {
   id: number;
-  skill: number;
+  skill_robot: number;
   role: number;
   movey: number;
   movex: number;
@@ -168,7 +168,7 @@ export type DataType = {
   vision: VisionData;
   gc: GCType;
   tartarus: TartarusData;
-  skill: RobotData;
+  robot: RobotData;
   competition: CompetitionData;
   irisGC: IrisGCData;
 };

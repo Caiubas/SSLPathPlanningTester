@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import type { DataType } from '../../types';
 import { toggleBooleanWithId } from '../../utils';
 import RobotTabs from './utilities/RobotTabs';
@@ -16,18 +16,39 @@ export default function RobotSection({ data, robotId, setSelected }: Props) {
   const team = teamBlueSelected ? 'blue_team' : 'yellow_team';
 
   // Estado local para o switch
-  const [hasKicker, setHasKicker] = useState(data.skill.has_kicker);
+  const [hasKicker, setHasKicker] = useState(data.robot.has_kicker);
 
   // Sincroniza caso os dados externos mudem (ex: LCM atualizando)
   useEffect(() => {
-    setHasKicker(data.skill.has_kicker);
-  }, [data.skill.has_kicker]);
+    setHasKicker(data.robot.has_kicker);
+  }, [data.robot.has_kicker]);
 
   const handleToggle = async () => {
     const newValue = !hasKicker;
     setHasKicker(newValue); // atualiza o front imediatamente
     await toggleBooleanWithId('has_kicker', hasKicker, robotId);
   };
+
+  // No topo do RobotSection
+  // Forçando que seja um objeto indexado por number
+  // Map de skills por robô
+  const skillNames: Record<number, string> = {
+    0: 'Nenhuma',
+    1: 'Cushion',
+    2: 'Kick',
+    3: 'Move To',
+    4: 'Stop',
+    5: 'Turn To',
+  };
+
+  // Garante que robot existe
+  const robot = data.robot; // ou data.skill se você voltou para esse
+  if (!robot) return null; // evita undefined
+
+  const currentSkill = robot.skill_robot;
+  const currentSkillName = skillNames[currentSkill] ?? 'Desconhecida';
+
+  console.log('Skill atual:', currentSkill, currentSkillName, robot);
 
   return (
     <div>
@@ -44,11 +65,12 @@ export default function RobotSection({ data, robotId, setSelected }: Props) {
         className="w-14 h-14 object-contain shrink-0"
       />
 
-      <RowWrapper title='Has Kicker'>
-        <ToggleSwitch
-          value={hasKicker}
-          onToggle={handleToggle}
-        />
+      <RowWrapper title="Has Kicker">
+        <ToggleSwitch value={hasKicker} onToggle={handleToggle} />
+      </RowWrapper>
+
+      <RowWrapper title="Skill Atual">
+        <span>{currentSkillName}</span>
       </RowWrapper>
 
       <h2 className="text-lg font-bold mb-1">Skills do Robô {robotId}</h2>
