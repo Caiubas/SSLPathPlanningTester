@@ -14,6 +14,22 @@
 #include "TeamInfo.h"
 #include "plays/PlayOurKickOff.h"
 
+Leader::Leader() {
+    plays.clear();
+    plays.push_back(std::make_unique<PlayAttack>());
+    plays.push_back(std::make_unique<PlayDebug>());
+    plays.push_back(std::make_unique<PlayHalt>());
+    plays.push_back(std::make_unique<PlayOurKickOff>());
+    plays.push_back(std::make_unique<PlayDefense>());
+    plays.push_back(std::make_unique<PlayTheirKickOff>());
+    plays.push_back(std::make_unique<PlayOurPenalty>());
+    plays.push_back(std::make_unique<PlayTheirPenalty>());
+    plays.push_back(std::make_unique<PlayRetake>());
+    plays.push_back(std::make_unique<PlayOnTheirGoal>());
+    plays.push_back(std::make_unique<PlayBallPlacement>());
+}
+
+
 void Leader::start() {
     loop();
 }
@@ -384,7 +400,7 @@ void Leader::world_analysis() {
 
 
 void Leader::add_robot(int id) {
-    if (id >= sizeof(team.active_robots)) {
+    if (id >= team.active_robots.size()) {
         return;
     }
     if (team.active_robots[id] == 0) {
@@ -396,14 +412,19 @@ void Leader::add_robot(int id) {
 void Leader::select_plays() {
     // Calcular scores
     for (auto& p : plays) {
-        p->calc_score(world, team);
+        try {
+            p->calc_score(world, team);
+        } catch (...) {
+            std::cout << "error acessing play" << std::endl;
+        }
     }
 
     // Ordenar do maior para o menor score
     std::sort(plays.begin(), plays.end(),
-              [](PlayBase* a, PlayBase* b) {
-                  return a->get_score() > b->get_score();
-              });
+          [](const std::unique_ptr<PlayBase>& a, const std::unique_ptr<PlayBase>& b) {
+              return a->get_score() > b->get_score();
+          });
+
 
     // Criar lista inicial de roles
     std::array<Robot::role, 16> roles;

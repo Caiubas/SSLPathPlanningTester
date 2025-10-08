@@ -33,17 +33,14 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
             }
             else if (robot.mWorld.ball.isStopped() && hasStriker) {    //para bola parada
                 line = LineSegment(enemy_striker.getPosition(), robot.mWorld.ball.getPosition()).getResized(100000);
-                std::cout << "a" << std::endl;
             } else {
                 line = LineSegment(robot.mWorld.ball.getPosition(), y_segment.getMiddle()).getResized(100000);
-                std::cout << "b" << std::endl;
             }
         }
         Point p = {y_segment.getStart().getX(), y_rest};
         try {
             p = line.intersection(y_segment);
         } catch (...) {
-            std::cout << "no intersection" << std::endl;
         }
 
 
@@ -54,10 +51,8 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         if (robot.mWorld.enemies.size() > 0 && hasStriker) {
             if ((robot.mWorld.enemies[enemy_striker_id].getPosition().getDistanceTo(robot.mWorld.ball.getPosition()) > 500 && robot.mWorld.ball.isStopped())) {
                 p.setY(y_rest);
-                std::cout << "c" << std::endl;
             }
         }
-    std::cout << p.getX() << " " << p.getY() << std::endl;
         moveTo.act(robot, p, false);
         robot.mkicker_x = 0;
         turnTo.act(robot, robot.mWorld.ball.getPosition());
