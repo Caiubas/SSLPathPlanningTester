@@ -50,10 +50,26 @@ std::array<Robot::role, 16> PlayRetake::role_assign(WorldModel& world, TeamInfo&
         }
 
         if (selected_role == Robot::retaker) {
+            Robot closest_enemy_to_ball(-1);
+            bool has_enemies;
+            Robot support(-1);
+            try {
+                closest_enemy_to_ball = world.getClosestEnemyToPoint(world.ball.getPosition());
+                has_enemies = true;
+            } catch (...) {std::cout << "no enemies" << std::endl;}
+
             int closest_idx = 0;
-            for (int idx = 0; idx < avaiable_robots.size(); idx++) {
-                if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
-                    closest_idx = idx;
+            if (has_enemies) {
+                for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                    if (avaiable_robots[idx]->getPosition().getDistanceTo(closest_enemy_to_ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(closest_enemy_to_ball.getPosition())) {
+                        closest_idx = idx;
+                    }
+                }
+            } else {
+                for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                    if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
+                        closest_idx = idx;
+                    }
                 }
             }
             int closest_id = avaiable_robots[closest_idx]->getId();

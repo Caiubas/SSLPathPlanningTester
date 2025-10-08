@@ -16,7 +16,13 @@ namespace roles {
         int k1 = 1;
         std::vector<Point> points;
         points.reserve(N);
-        Point goal = robot.mWorld.getGoalPosition();
+        Point goal(0, 0);
+        try {
+            goal = robot.mWorld.getGoalPosition();
+        } catch (...) {
+            goal = robot.mWorld.field.theirGoal.getMiddle();
+        }
+
         LineSegment ball_goal(robot.mWorld.ball.getPosition(), goal);
         for (int j = 1; j<K + 1; j++) {
             for (int i = 0; i < N; i++) {
@@ -24,11 +30,11 @@ namespace roles {
                 double x = 0;
                 double y = 0;
                 try {
-                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 50.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
-                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 50.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 10 + robot.mTeam->getStopDistanceToBall(), robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.mTeam->getRobotofRole(Robot::striker).getKickDistance()/j, 10 + robot.mTeam->getStopDistanceToBall(), robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
                 } catch (...) { // no striker
-                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
-                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance()/j, 100.0, robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
+                    x = robot.mWorld.ball.getPosition().getX() + std::clamp(robot.getKickDistance()/j, 10 + robot.mTeam->getStopDistanceToBall(), robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * cos(angle);
+                    y = robot.mWorld.ball.getPosition().getY() + std::clamp(robot.getKickDistance()/j, 10 + robot.mTeam->getStopDistanceToBall(), robot.mWorld.field.inside_dimensions.getMajorPoint().getX()/2) * sin(angle);
                 }
                 Point p(x, y);
                 if (!robot.mWorld.ball.isVisible(p)) continue;

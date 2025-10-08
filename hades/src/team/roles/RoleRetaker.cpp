@@ -33,11 +33,11 @@ namespace roles {
 		}
 		if (robot.mWorld.ball.isMoving()) {
 			intercept.act(robot);
-		} else if (robot.mWorld.ball.isStopped() &&(
+		} else if (robot.mWorld.ball.isStopped() && (
 			closest_enemy_to_ball.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())
 			 < robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())) && has_goal) {
 			positionAndKick.act(robot, goal);
-		} else if (robot.mWorld.ball.isStopped() &&(
+		} else if (robot.mWorld.ball.isStopped() && (
 			closest_enemy_to_ball.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())
 			< robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition())) && has_support) {
 			positionAndKick.act(robot, support);
