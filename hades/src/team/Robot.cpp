@@ -9,6 +9,18 @@ bool Robot::isAlly() const {
 	return ally;
 }
 
+bool Robot::isPositioned() const {
+	return positioned;
+}
+
+bool Robot::isOriented() const {
+	return oriented;
+}
+
+bool Robot::isAligned() const {
+	return aligned;
+}
+
 int Robot::getId() const {
 	return id;
 }
@@ -61,6 +73,18 @@ void Robot::setKicker(bool kicker) {
 
 void Robot::setAlly(bool is) {
 	this->ally = is;
+}
+
+void Robot::setPositioned(bool is) {
+	this->positioned = is;
+}
+
+void Robot::setOriented(bool is) {
+	this->oriented = is;
+}
+
+void Robot::setAligned(bool is) {
+	this->aligned = is;
 }
 
 void Robot::setId(int id) {

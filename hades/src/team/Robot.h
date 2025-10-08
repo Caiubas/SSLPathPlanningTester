@@ -6,6 +6,8 @@
 #define ROBOT_H
 
 #include <deque>
+#include <mutex>
+
 #include "geometry/Point.h"
 #include "geometry/Vector2d.h"
 
@@ -51,18 +53,20 @@ protected:
     bool kicker = false;
     double kickDistance = 500;
     enum role this_role = unknown;
-
+    bool positioned = true;
+    bool aligned = true;
+    bool oriented = true;
 public:
     // Construtor
     Robot(int id) : id(id) {this_role = unknown;}
 
     //flags
-    bool positioned = true;
-    bool aligned = true;
-    bool oriented = true;
 
     // --- Getters ---
     bool isAlly() const;
+    bool isPositioned() const;
+    bool isOriented() const;
+    bool isAligned() const;
     int getId() const;
     Point getOldPosition() const;
     Point getPosition() const;
@@ -81,6 +85,9 @@ public:
 
     // --- Setters ---
     void setAlly(bool is);
+    void setPositioned(bool is);
+    void setOriented(bool is);
+    void setAligned(bool is);
     void setKicker(bool kicker);
     void setId(int id);
     void setPosition(const Point& p);

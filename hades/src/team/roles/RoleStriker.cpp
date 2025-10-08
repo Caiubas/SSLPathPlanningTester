@@ -11,7 +11,7 @@
 #include "../geometry/Point.h"
 
 namespace roles {
-    Point RoleStriker::getSupportPosition(RobotController robot) {
+    Point RoleStriker::getSupportPosition(RobotController& robot) {
         int N = 12;
         int k1 = 1;
         std::vector<Point> points;
@@ -21,22 +21,22 @@ namespace roles {
             double x = 0;
             double y = 0;
             try {
-                x = robot.mWorld.ball.getPosition().getX() + robot.mTeam->getRobotofRole(Robot::striker).getKickDistance() * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + robot.mTeam->getRobotofRole(Robot::striker).getKickDistance() * sin(angle);
+                x = robot.get_world().ball.getPosition().getX() + robot.get_m_team()->getRobotofRole(Robot::striker).getKickDistance() * cos(angle);
+                y = robot.get_world().ball.getPosition().getY() + robot.get_m_team()->getRobotofRole(Robot::striker).getKickDistance() * sin(angle);
             } catch (...) { // no striker
-                x = robot.mWorld.ball.getPosition().getX() + robot.getKickDistance() * cos(angle);
-                y = robot.mWorld.ball.getPosition().getY() + robot.getKickDistance() * sin(angle);
+                x = robot.get_world().ball.getPosition().getX() + robot.getKickDistance() * cos(angle);
+                y = robot.get_world().ball.getPosition().getY() + robot.getKickDistance() * sin(angle);
             }
             Point p(x, y);
-            if (!robot.mWorld.ball.isVisible(p)) continue;
-            if (!robot.mWorld.field.inside_dimensions.detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
+            if (!robot.get_world().ball.isVisible(p)) continue;
+            if (!robot.get_world().field.inside_dimensions.detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
             points.push_back(p);
         }
 
 
         int best_idx = 0;
         for (int i = 1; i < points.size(); i++) {
-            if (points[best_idx].getDistanceTo(robot.mWorld.field.theirGoal.getMiddle())*k1 > points[i].getDistanceTo(robot.mWorld.field.theirGoal.getMiddle())*k1) { //TODO melhorar essa funcao
+            if (points[best_idx].getDistanceTo(robot.get_world().field.theirGoal.getMiddle())*k1 > points[i].getDistanceTo(robot.get_world().field.theirGoal.getMiddle())*k1) { //TODO melhorar essa funcao
                 best_idx = i;
             }
         }
@@ -45,38 +45,38 @@ namespace roles {
     }
 
     void RoleStriker::act(RobotController& robot) {
-        Point goal = robot.mWorld.field.theirGoal.getMiddle();
+        Point goal = robot.get_world().field.theirGoal.getMiddle();
         bool hasGoalPosition = false;
         try {
-            goal = robot.mWorld.getGoalPosition(robot.mTeam->getEnemyofRole(Robot::goal_keeper, robot.mWorld.enemies));
+            goal = robot.get_world().getGoalPosition(robot.get_m_team()->getEnemyofRole(Robot::goal_keeper, robot.get_world().enemies));
             hasGoalPosition = true;
         } catch (...) {
             //std::cout << "no score position found" << std::endl;
-            goal = robot.mWorld.field.theirGoal.getMiddle();
+            goal = robot.get_world().field.theirGoal.getMiddle();
         }
         bool theyHaveGoalKeeper = false;
         Robot theirGoalKeeper(-1);
         try {
-            theirGoalKeeper = robot.mTeam->getEnemyofRole(Robot::goal_keeper, robot.mWorld.enemies);
+            theirGoalKeeper = robot.get_m_team()->getEnemyofRole(Robot::goal_keeper, robot.get_world().enemies);
             theyHaveGoalKeeper = true;
         } catch (...) {}
 
 
-        LineSegment robot_goal = {robot.mWorld.ball.getPosition(), goal};
-        if (robot.mWorld.ball.isMoving() && robot.mWorld.ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/8)) {
+        LineSegment robot_goal = {robot.get_world().ball.getPosition(), goal};
+        if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/8)) {
             intercept.act(robot);
         }
-        else if (robot.mWorld.ball.isMoving() || robot.mWorld.isPointOnOurArea(robot.mWorld.ball.getPosition())) {
+        else if (robot.get_world().ball.isMoving() || robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition())) {
             Point p = getSupportPosition(robot);
             keepLocation.act(robot, p);
-        } else if (robot.mWorld.isPointOnTheirArea(robot.mWorld.ball.getPosition()) && theyHaveGoalKeeper) {    ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
-            blockBall.act(robot, theirGoalKeeper, fabs(robot.mWorld.field.theirDefenseArea.getMajorPoint().getX() - robot.mWorld.field.theirDefenseArea.getMinorPoint().getX()));
+        } else if (robot.get_world().isPointOnTheirArea(robot.get_world().ball.getPosition()) && theyHaveGoalKeeper) {    ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
+            blockBall.act(robot, theirGoalKeeper, fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()));
         }
         else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance()) {
             positionAndKick.act(robot, goal);
         } else {
             try {
-                Robot support = robot.mTeam->getRobotofRole(Robot::support);
+                Robot support = robot.get_m_team()->getRobotofRole(Robot::support);
                 positionAndKick.act(robot, support);
             } catch (...) {
                 positionAndPush.act(robot, goal);

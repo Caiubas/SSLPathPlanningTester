@@ -7,7 +7,7 @@
 
 namespace skills {
 	void SkillStop::act(RobotController& robot) {
-		robot.mtarget_vel = {0, 0};
-		robot.mtarget_vyaw = 0;
+		robot.set_mtarget_vel({0, 0});
+		robot.set_mtarget_vyaw(0);
 	}
 } // skills

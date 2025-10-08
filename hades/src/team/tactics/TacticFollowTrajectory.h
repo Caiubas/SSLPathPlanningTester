@@ -11,7 +11,7 @@ namespace tactics {
 class TacticFollowTrajectory : public TacticBase {
 public:
 	void act(RobotController& robot);
-	void act(RobotController& robot, std::vector<Point>& trajectory);
+	void act(RobotController& robot, std::vector<Point> trajectory);
 };
 
 } // tactics

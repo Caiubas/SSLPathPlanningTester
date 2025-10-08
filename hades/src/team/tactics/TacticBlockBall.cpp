@@ -8,10 +8,10 @@
 namespace tactics {
 	void TacticBlockBall::act(RobotController& robot, Robot toBlock, double block_distance) {
 		LineSegment line(Point(0, 0), Point(0, 0));
-		line = LineSegment(toBlock.getPosition(), robot.mWorld.ball.getPosition());
+		line = LineSegment(toBlock.getPosition(), robot.get_world().ball.getPosition());
 		line = line.getResized(line.getLength() + block_distance);
 		Point p = line.getEnd();
 		moveTo.act(robot, p, false, false);
-		turnTo.act(robot, robot.mWorld.ball.getPosition());
+		turnTo.act(robot, robot.get_world().ball.getPosition());
 	}
 } // tactics

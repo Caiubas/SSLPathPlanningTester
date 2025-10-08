@@ -7,12 +7,12 @@
 
 namespace roles {
 	void RoleCircularTrajectory::act(RobotController& robot) {
-		if (size(robot.mCurrent_trajectory) == 0) {
+		if (size(robot.get_m_current_trajectory()) == 0) {
 			for (int i = 0; i < resolution; i++) {
-				robot.mCurrent_trajectory.emplace_back(radius*sin(2*i*M_PI/resolution + robot.getId()*2*M_PI/size(robot.mWorld.allies)) + center.getX(), radius*cos(2*i*M_PI/resolution + robot.getId()*2*M_PI/size(robot.mWorld.allies)) + center.getY());
+				robot.get_m_current_trajectory().emplace_back(radius*sin(2*i*M_PI/resolution + robot.getId()*2*M_PI/size(robot.get_world().allies)) + center.getX(), radius*cos(2*i*M_PI/resolution + robot.getId()*2*M_PI/size(robot.get_world().allies)) + center.getY());
 			}
 		}
-		robot.mVxy_max = robot.mVxy_min;
-		followTrajectory.act(robot, robot.mCurrent_trajectory);
+		robot.set_m_vxy_min(robot.get_m_vxy_min());
+		followTrajectory.act(robot, robot.get_m_current_trajectory());
     }
 }

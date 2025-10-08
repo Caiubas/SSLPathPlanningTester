@@ -8,11 +8,11 @@
 
 namespace roles {
 	void RoleWatcher::act(RobotController& robot) {
-		if (robot.mTeam->getEvent() == TeamInfo::ourPenalty or robot.mTeam->getEvent() == TeamInfo::theirPenalty) {
-			LineSegment line = {Point(robot.mWorld.ball.getPosition().getX(), 0), Point(0, 0)};
+		if (robot.get_m_team()->getEvent() == TeamInfo::ourPenalty or robot.get_m_team()->getEvent() == TeamInfo::theirPenalty) {
+			LineSegment line = {Point(robot.get_world().ball.getPosition().getX(), 0), Point(0, 0)};
 			line = line.getResized(1000);
 			moveTo.act(robot, {line.getEnd().getX(), robot.getId()*robot.getRadius()*1.2}, true);
-			turnTo.act(robot, robot.mWorld.ball.getPosition());
+			turnTo.act(robot, robot.get_world().ball.getPosition());
 		} else {
 			stop.act(robot);
 		}

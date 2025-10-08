@@ -11,18 +11,18 @@
 
 namespace roles {
     void RoleDefender::act(RobotController& robot) {
-        if (robot.mWorld.isBallMovingRobotDirection(robot) && robot.mWorld.ball.isMoving()) {
+        if (robot.get_world().isBallMovingRobotDirection(robot) && robot.get_world().ball.isMoving()) {
             intercept.act(robot);
-        } else if (robot.mWorld.getClosestAllyToPoint(robot.mWorld.ball.getPosition()).getId() == robot.getId() && false) { //TODO remover
+        } else if (robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getId() == robot.getId() && false) { //TODO remover
             try {
-                positionAndKick.act(robot, robot.mTeam->getRobotToKickTo(robot));
+                positionAndKick.act(robot, robot.get_m_team()->getRobotToKickTo(robot));
             } catch (...) {
-                positionAndKick.act(robot, robot.mWorld.field.theirGoal.getMiddle());
+                positionAndKick.act(robot, robot.get_world().field.theirGoal.getMiddle());
             }
         } else {
             LineSegment line = {Point(0, 0), Point(0, 0)};
-            if (robot.mTeam->getOurSide() == TeamInfo::left) line = LineSegment(robot.mWorld.field.ourDefenseArea.getMajorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMajorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMinorPoint().getY())).getMovedOnX(2*robot.getRadius());
-            else if (robot.mTeam->getOurSide() == TeamInfo::right) line = LineSegment(robot.mWorld.field.ourDefenseArea.getMinorPoint(), Point(robot.mWorld.field.ourDefenseArea.getMinorPoint().getX(), robot.mWorld.field.ourDefenseArea.getMajorPoint().getY())).getMovedOnX(-2*robot.getRadius());
+            if (robot.get_m_team()->getOurSide() == TeamInfo::left) line = LineSegment(robot.get_world().field.ourDefenseArea.getMajorPoint(), Point(robot.get_world().field.ourDefenseArea.getMajorPoint().getX(), robot.get_world().field.ourDefenseArea.getMinorPoint().getY())).getMovedOnX(2*robot.getRadius());
+            else if (robot.get_m_team()->getOurSide() == TeamInfo::right) line = LineSegment(robot.get_world().field.ourDefenseArea.getMinorPoint(), Point(robot.get_world().field.ourDefenseArea.getMinorPoint().getX(), robot.get_world().field.ourDefenseArea.getMajorPoint().getY())).getMovedOnX(-2*robot.getRadius());
             keepXLine.act(robot, line, line.getMiddle().getY());
         }
     }

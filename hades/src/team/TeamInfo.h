@@ -142,7 +142,7 @@ public:
 
     Robot getRobotofRole(enum Robot::role role);
     Robot getEnemyofRole(enum Robot::role role, std::array<Robot, 16> enemies);
-    Robot getRobotToKickTo(RobotController robot);
+    Robot getRobotToKickTo(RobotController& robot);
     double getStopDistanceToBall();
     double getStopMaxSpeed();
     int isRobotActive(int id);

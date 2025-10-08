@@ -11,18 +11,18 @@
 
 namespace tactics {
 	void TacticIntercept::act(RobotController& robot) {
-    	if (robot.mWorld.ball.isStopped()) moveTo.act(robot, robot.mWorld.ball.getPosition(), true);
+    	if (robot.get_world().ball.isStopped()) moveTo.act(robot, robot.get_world().ball.getPosition(), true);
 
-        if (robot.mWorld.ball.isMoving()) {
-          	LineSegment line = robot.mWorld.ball.getMovementLine();
-        	if (robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition()) < distanceThreshold && line.isPointAligned(robot.getPosition(), angle_tolerance)) {
+        if (robot.get_world().ball.isMoving()) {
+          	LineSegment line = robot.get_world().ball.getMovementLine();
+        	if (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) < distanceThreshold && line.isPointAligned(robot.getPosition(), angle_tolerance)) {
         		cushion.act(robot);
-        	} else if (line.isPointAligned(robot.getPosition(), angle_tolerance) && robot.mWorld.isBallMovingIdDirection(robot.getId(), angle_tolerance)) {
+        	} else if (line.isPointAligned(robot.getPosition(), angle_tolerance) && robot.get_world().isBallMovingIdDirection(robot.getId(), angle_tolerance)) {
         		stop.act(robot);
-        		turnTo.act(robot, robot.mWorld.ball.getPosition());
+        		turnTo.act(robot, robot.get_world().ball.getPosition());
         	}
-        	else moveTo.act(robot, robot.mWorld.ball.getStopPosition(), false);
+        	else moveTo.act(robot, robot.get_world().ball.getStopPosition(), false);
         }
-		turnTo.act(robot, robot.mWorld.ball.getPosition());
+		turnTo.act(robot, robot.get_world().ball.getPosition());
 	}
 } // tactics
