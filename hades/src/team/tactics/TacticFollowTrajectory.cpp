@@ -33,7 +33,7 @@ namespace tactics {
 			return;
 		}
 
-		moveTo.act(robot, trajectory[0], true);
+		moveTo.act(robot, trajectory[0], false); //TODO mudar avoid ball
 
 		robot.positioned = false;
 		robot.mTeam->positioned[robot.getId()] = false;

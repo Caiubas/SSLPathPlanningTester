@@ -11,5 +11,6 @@
 #include "SkillStop.h"
 #include "SkillKick.h"
 #include "SkillCushion.h"
+#include "SkillPushBall.h"
 
 #endif //SKILLS_H

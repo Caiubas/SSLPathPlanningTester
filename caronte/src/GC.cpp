@@ -72,6 +72,12 @@ void recebe_dados_GC() {
                     my_gc_data.team_blue = false;
                 }
                 my_gc_data.current_command = referee.command(); // enum command
+                if(referee.has_next_command()){
+                    my_gc_data.next_command = referee.next_command();
+                }
+                else{
+                    my_gc_data.next_command = -1; // Indica que não há próximo comando
+                }
                 my_gc_data.blue_team_on_positive_half = referee.blue_team_on_positive_half();
             }
         }
@@ -101,6 +107,7 @@ void recebe_dados_GC() {
         lcm.publish("GC", &my_gc_data);
         //std::cout << "iris_as_gc: " << int(han.new_tartarus.iris_as_GC) << std::endl;
         //std::cout << "Game command: " << my_gc_data.current_command << std::endl;
+        //std::cout << "Next command: " << my_gc_data.next_command << std::endl;
         //std::cout << "Game event: " << my_gc_data.game_event << std::endl;
         //std::cout << "Designated position: (" << my_gc_data.designated_position_x << ", " << my_gc_data.designated_position_y << ")" << std::endl;
         //std::cout << "tartarus Designated position: (" << han.new_tartarus.iris_gc.designated_position_x << ", " << han.new_tartarus.iris_gc.designated_position_y << ")" << std::endl;

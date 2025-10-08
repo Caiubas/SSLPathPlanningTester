@@ -10,9 +10,9 @@
 
 
 class PlayTheirKickOff : public PlayBase {
+public:
 	std::array<Robot::role, 16> role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) override;
 	int calc_score(WorldModel world, TeamInfo team) override;
-public:
 	PlayTheirKickOff() {
 		name = "theirKickOff";
 		required_robots = 3;

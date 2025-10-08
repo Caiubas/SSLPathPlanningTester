@@ -1,16 +1,16 @@
 //
-// Created by caiu on 25/08/25.
+// Created by caiu on 06/10/25.
 //
 
-#ifndef SKILLKICK_H
-#define SKILLKICK_H
+#ifndef SKILLPUSHBALL_H
+#define SKILLPUSHBALL_H
 #include "SkillBase.h"
 
 class Point;
 
 namespace skills {
 
-class SkillKick {
+class SkillPushBall {
 private:
 	double distancethreshold = 350;
 	double find_angle_error(RobotController robot, Point goal);
@@ -20,4 +20,4 @@ public:
 
 } // skills
 
-#endif //SKILLKICK_H
+#endif //SKILLPUSHBALL_H

@@ -31,8 +31,7 @@ public:
 
     bool active = false;
 
-    double mRadius = 160;
-    double mBall_avoidance_radius = 0;
+    double mBall_avoidance_radius = 100;
 
     //target movimentation
     double mtarget_yaw = 0;
@@ -64,9 +63,9 @@ public:
 
     //extreme params
     double mVxy_max = 0.7;
-    double mVxy_min = 0.4;
-    double mA_xy_max = 1;
-    double mA_xy_brake = 2;
+    double mVxy_min = 0.1;
+    double mA_xy_max = 2;
+    double mA_xy_brake = 500;
     double mVyaw_max = 5;
     double mVyaw_min = 0.3;
     double mA_ang_max = 150;
@@ -78,28 +77,31 @@ public:
     double mDribbler_min = 0.5;
 
     //angle and position tolerance
-    double mStatic_position_tolarance = mRadius/4;
-    double mDynamic_position_tolarance = mRadius/4;
-    double mStatic_angle_tolarance = 0.2;
+    double mStatic_position_tolarance = radius/2;
+    double mDynamic_position_tolarance = radius/2;
+    double mStatic_angle_tolarance = 0.1;
 
     //PID control
-    double mKP_ang = 400;
-    double mKI_ang = 400;
-    double mKD_ang = 400;
+    double mKP_ang = 0.05;
+    double mKI_ang = 0;
+    double mKD_ang = 0;
     double mI_ang = 0;
+    double mI_ang_max = 1;
     double mLast_delta_vyaw = 0;
 
     double mI_vx = 0;
     double mI_vy = 0;
-    double mI_vxy_max = 1;
+    double mI_vxy_max = 0;
     double mLast_delta_vx = 0;
     double mLast_delta_vy = 0;
 
     double mKP_vxy = 0;
-    double mKI_vxy = 1;
+    double mKI_vxy = 0;
     double mKD_vxy = 0;
 
     //field info
+    bool double_touch = false;
+    bool double_touch_waiting = false;
     WorldModel mWorld;
     int64_t mLast_time_stamp = 0;
 
@@ -113,11 +115,12 @@ private:
 
     void receive_vision();
     void receive_field_geometry();
+    void receive_config();
     void publish();
     void loadCalibration();
 
     void select_behavior();
-
+    void debug_mode();
 };
 
 

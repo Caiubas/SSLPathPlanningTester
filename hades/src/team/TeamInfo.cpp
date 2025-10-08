@@ -17,3 +17,10 @@ Robot TeamInfo::getEnemyofRole(enum Robot::role role, std::array<Robot, 16> enem
 	}
 	throw std::runtime_error("No robot of desired role");
 }
+
+Robot TeamInfo::getRobotToKickTo(RobotController robot) {
+	for (Robot r : robots) {
+		if (r.getId() != robot.getId() && r.isDetected() && r.getRole() != Robot::goal_keeper) return robot;
+	}
+	throw std::runtime_error("No robot to kick to");
+}

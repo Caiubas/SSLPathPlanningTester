@@ -9,9 +9,9 @@
 
 
 class PlayTheirPenalty : public PlayBase {
+public:
 	std::array<Robot::role, 16> role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) override;
 	int calc_score(WorldModel world, TeamInfo team) override;
-public:
 	PlayTheirPenalty() {
 		name = "theirPenalty";
 		required_robots = 16;

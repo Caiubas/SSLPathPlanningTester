@@ -50,8 +50,9 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
         if (selected_role == Robot::goal_keeper) {
             if (!world.allies[team.goal_keeper_id].isDetected()) continue;
             roles[team.goal_keeper_id] = Robot::kickoff_goal_keeper;
-            active_allies_ids.erase(active_allies_ids.begin() + team.goal_keeper_id);
-            distances_allies_from_center.erase(distances_allies_from_center.begin() + team.goal_keeper_id);
+            int idx = -1;
+            for (int i = 0; i<active_allies_ids.size(); i++) if (i == team.goal_keeper_id) idx = i;
+            active_allies_ids.erase(active_allies_ids.begin() + idx);
         }
         if (selected_role == Robot::kickoff_kicker || selected_role == Robot::kickoff_support) {
             int closest_idx = 0;

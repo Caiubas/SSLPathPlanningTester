@@ -75,8 +75,7 @@ int main()
     // ============================
     // GET /data
     // ============================
-    CROW_ROUTE(app, "/data").methods("GET"_method)([]
-                                                   {
+    CROW_ROUTE(app, "/data").methods("GET"_method)([] {
         std::lock_guard<std::mutex> lock(data_mutex);
 
         crow::json::wvalue data;
@@ -122,6 +121,7 @@ int main()
         data["yellow"]["fouls"] = latest_data.yellow.fouls;
         data["yellow"]["goalkeeper_id"] = latest_data.yellow.goalkeeper_id;
 
+<<<<<<< HEAD
         // ---- IA Robots ----
         for (size_t i = 0; i < latest_data.robots.size(); ++i) {
             const auto& r = latest_data.robots[i];
@@ -145,6 +145,43 @@ int main()
             robot["role"]  = latest_data.role_by_robot.count(id)  ? latest_data.role_by_robot.at(id)  : 0;
 
             data["robots"][i] = std::move(robot);
+=======
+        // ---- IA Robots (apenas detectados) ----
+        bool team_blue = latest_data.team_blue;
+        const auto& vision_robots = team_blue ? latest_data.robots_blue : latest_data.robots_yellow;
+
+        size_t idx = 0;
+        for (const auto& r : latest_data.robots) {
+            auto it = std::find_if(vision_robots.begin(), vision_robots.end(),
+                                [&](const auto& v) { return v.robot_id == r.id && v.detected; });
+            if (it != vision_robots.end()) {
+                crow::json::wvalue robot;
+                robot["id"] = r.id;
+                robot["spinner"] = r.spinner;
+                robot["kick"] = r.kick;
+                robot["vel_tang"] = r.vel_tang;
+                robot["vel_normal"] = r.vel_normal;
+                robot["vel_ang"] = r.vel_ang;
+                robot["kick_speed_x"] = r.kick_speed_x;
+                robot["kick_speed_z"] = r.kick_speed_z;
+                robot["wheel_speed"] = r.wheel_speed;
+                robot["wheel_fr"] = r.wheel_fr;
+                robot["wheel_fl"] = r.wheel_fl;
+                robot["wheel_bl"] = r.wheel_bl;
+                robot["wheel_br"] = r.wheel_br;
+                int id = r.id;
+                robot["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
+                robot["skill"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
+                robot["role"]  = latest_data.role_by_robot.count(id)  ? latest_data.role_by_robot.at(id)  : 0;
+
+                robot["move_to_x"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
+                robot["move_to_y"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
+                robot["turn_to_x"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
+                robot["turn_to_y"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+
+                data["robots"][idx++] = std::move(robot);
+            }
+>>>>>>> d8c60bd04d9e6a0a6853043723cb8829b6576bc8
         }
 
         // ---- Vision Robots Yellow ----
@@ -155,6 +192,7 @@ int main()
             robot["position_x"] = r.position_x;
             robot["position_y"] = r.position_y;
             robot["orientation"] = r.orientation;
+            robot["detected"] = r.detected;
             data["robots_yellow"][i] = std::move(robot);
         }
 
@@ -166,6 +204,7 @@ int main()
             robot["position_x"] = r.position_x;
             robot["position_y"] = r.position_y;
             robot["orientation"] = r.orientation;
+            robot["detected"] = r.detected;
             data["robots_blue"][i] = std::move(robot);
         }
 
@@ -199,7 +238,9 @@ int main()
         data["robots_size"] = latest_data.robots_size;
         data["cams_number"] = latest_data.cams_number;
 
-        return crow::response{data}; });
+        return crow::response{data};
+    });
+
 
     // ============================
     // POST /command
@@ -266,8 +307,33 @@ int main()
                 }
             }
 
+<<<<<<< HEAD
 
 
+=======
+            if (body.has("has_kicker") && (body["has_kicker"].t() == crow::json::type::True || body["has_kicker"].t() == crow::json::type::False)) {
+                bool hasKicker = body["has_kicker"].b();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    // Atualiza o map de has_kicker
+                    latest_data.has_kicker[robot_id] = hasKicker;
+
+                    // Atualiza o vetor de robôs também, caso já exista
+                    for (auto& robot : latest_data.robots) {
+                        if (robot.id == robot_id) {
+                            robot.has_kicker = hasKicker;
+                            break;
+                        }
+                    }
+
+                    std::cout << "[POST] has_kicker=" << (hasKicker ? "true" : "false")
+                            << " enviado para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] has_kicker recebido mas sem robot_id" << std::endl;
+                }
+            }
+>>>>>>> d8c60bd04d9e6a0a6853043723cb8829b6576bc8
 
             if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
                 latest_data.designated_position_x = static_cast<float>(body["designated_position_x"].d());
@@ -397,19 +463,50 @@ int main()
             for (size_t i = 0; i < 16; ++i) {
                 if (i < latest_data.robots.size()) {
                     int robot_id = latest_data.robots[i].id;
+<<<<<<< HEAD
                     msg.robots[i].id = robot_id;
                     msg.robots[i].has_kicker = latest_data.robots[i].has_kicker;
                     msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
                     msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+=======
+
+                    msg.robots[i].id = robot_id;
+
+                    // Aqui garantimos que o has_kicker vá corretamente
+                    msg.robots[i].has_kicker = latest_data.has_kicker.count(robot_id)
+                                            ? latest_data.has_kicker.at(robot_id)
+                                            : latest_data.robots[i].has_kicker;
+
+                    // Skill e role
+                    msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
+                    msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+
+                    // Move/Turn
+                    msg.robots[i].move_to_x = latest_data.move_x_by_robot.count(robot_id) ? latest_data.move_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].move_to_y = latest_data.move_y_by_robot.count(robot_id) ? latest_data.move_y_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_x = latest_data.turn_x_by_robot.count(robot_id) ? latest_data.turn_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_y = latest_data.turn_y_by_robot.count(robot_id) ? latest_data.turn_y_by_robot.at(robot_id) : 0.0f;
+>>>>>>> d8c60bd04d9e6a0a6853043723cb8829b6576bc8
                 } else {
                     // Robô vazio
                     msg.robots[i].id = -1;
                     msg.robots[i].has_kicker = false;
                     msg.robots[i].skill = 0;
                     msg.robots[i].role = 0;
+<<<<<<< HEAD
                 }
             }
 
+=======
+                    msg.robots[i].move_to_x = 0.0f;
+                    msg.robots[i].move_to_y = 0.0f;
+                    msg.robots[i].turn_to_x = 0.0f;
+                    msg.robots[i].turn_to_y = 0.0f;
+                }
+            }
+
+
+>>>>>>> d8c60bd04d9e6a0a6853043723cb8829b6576bc8
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";
 

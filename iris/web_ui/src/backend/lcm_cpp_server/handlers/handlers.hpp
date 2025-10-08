@@ -57,9 +57,22 @@ struct LatestData
     
     std::map<int, int> role_by_robot;
     std::map<int, int> skill_by_robot;
+<<<<<<< HEAD
     
     int16_t selected_robot_id = -1; // id do robô que deve receber skill/role
     bool has_kicker = false;
+=======
+
+    std::map<int, float> move_x_by_robot;
+    std::map<int, float> move_y_by_robot;
+    std::map<int, float> turn_x_by_robot;
+    std::map<int, float> turn_y_by_robot;
+
+    std::map<int, bool> has_kicker;
+    
+    int16_t selected_robot_id = -1; // id do robô que deve receber skill/role
+    
+>>>>>>> d8c60bd04d9e6a0a6853043723cb8829b6576bc8
 
     bool team_blue_status = false;
 

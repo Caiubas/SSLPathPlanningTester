@@ -38,7 +38,7 @@ void Leader::loop() {
 
         inspect_enemy_team();
         world_analysis();
-        select_plays();
+        if (!han.new_tartarus.debug_mode) select_plays();
         //imprimir_ativos();
 
         //std::cout << team.central_line_x << std::endl;
@@ -414,6 +414,8 @@ void Leader::select_plays() {
         roles = p->role_assign(world, team, roles);
     }
 
+    //TODO mandar play pro tartarus
+
     // Copiar para o time
     team.roles = roles;
     for (int i = 0; i < roles.size(); i++) {
@@ -421,7 +423,82 @@ void Leader::select_plays() {
     }
 }
 
+void Leader::debug_mode() {
+    enum class PlayName
+    {
+        unselected = -1,
+        Attack,
+        BallPlacement,
+        Debug,
+        Defense,
+        Halt,
+        OnTheirGoal,
+        OurFreeKick,
+        OurKickOff,
+        OurPenalty,
+        Retake,
+        TheirKickOff,
+        TheirPenalty
+    };
+    PlayName p = PlayName::Halt; //static_cast<PlayName>(han.new_tartarus.); TODO implementar
+    if (p != PlayName::unselected) {
+        std::array<Robot::role, 16> roles;
+        roles.fill(Robot::unknown);
+        switch (p) {
+            case PlayName::Attack:
+                attack.role_assign(world, team, roles);
+                break;
 
+            case PlayName::BallPlacement:
+                ballPlacement.role_assign(world, team, roles);
+                break;
+
+            case PlayName::Debug:
+                debug.role_assign(world, team, roles);
+                break;
+
+            case PlayName::Defense:
+                defense.role_assign(world, team, roles);
+                break;
+
+            case PlayName::Halt:
+                halt.role_assign(world, team, roles);
+                break;
+
+            case PlayName::OnTheirGoal:
+                onTheirGoal.role_assign(world, team, roles);
+                break;
+
+            case PlayName::OurFreeKick:
+                ourFreeKick.role_assign(world, team, roles);
+                break;
+
+            case PlayName::OurKickOff:
+                ourKickOff.role_assign(world, team, roles);
+                break;
+
+            case PlayName::OurPenalty:
+                ourPenalty.role_assign(world, team, roles);
+                break;
+
+            case PlayName::Retake:
+                retake.role_assign(world, team, roles);
+                break;
+
+            case PlayName::TheirKickOff:
+                theirKickOff.role_assign(world, team, roles);
+                break;
+
+            case PlayName::TheirPenalty:
+                theirPenalty.role_assign(world, team, roles);
+                break;
+        }
+        team.roles = roles;
+        for (int i = 0; i < roles.size(); i++) {
+            team.robots[i].setRole(roles[i]);
+        }
+    }
+}
 
 
 
@@ -432,10 +509,11 @@ void Leader::inspect_enemy_team() {
     if (size(world.enemies) == 0) return;
     for (int i = 0; i < size(world.enemies) ; i++) {
         if (world.enemies[i].isDetected()) {
-            active_enemies_ids.push_back(i);
+            active_enemies_ids.push_back(world.enemies[i].getId());
             distances_enemies_from_ball.push_back(world.enemies[i].getPosition().getDistanceTo(world.ball.getPosition()));
         }
     }
+    if (active_enemies_ids.size() == 0) return;
     if (team.color == TeamInfo::blue) {
         team.enemy_roles[han.new_GC.yellow.goalkeeper_id] = Robot::goal_keeper;
     }
@@ -445,8 +523,8 @@ void Leader::inspect_enemy_team() {
 
     int closest_idx = -1;
     int second_closest_idx = -1;
-    for (int idx = 0; idx < active_enemies_ids.size(); idx++) {
-        if (team.enemy_roles[world.enemies[idx].getId()] == Robot::goal_keeper) continue;
+    for (int idx : active_enemies_ids) {
+        if (team.enemy_roles[idx] == Robot::goal_keeper || !world.enemies[idx].isDetected()) continue;
 
         if (closest_idx == -1 || distances_enemies_from_ball[idx] < distances_enemies_from_ball[closest_idx]) {
             // Atualiza os dois
@@ -459,10 +537,10 @@ void Leader::inspect_enemy_team() {
     }
 
     unsigned int id = world.enemies[closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper) team.enemy_roles[id] = Robot::striker;
+    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::striker;
 
     id = world.enemies[second_closest_idx].getId();
-    if (team.enemy_roles[id] != Robot::goal_keeper) team.enemy_roles[id] = Robot::support;
+    if (team.enemy_roles[id] != Robot::goal_keeper && world.enemies[id].isDetected()) team.enemy_roles[id] = Robot::support;
 
 }
 

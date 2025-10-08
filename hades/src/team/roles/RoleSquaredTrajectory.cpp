@@ -2,7 +2,7 @@
 // Created by caiu on 25/08/25.
 //
 
-#include "RoleSquaredTrajectory.h"
+#include "RoleFieldTrajectory.h"
 #include "../RobotController.h"
 
 namespace roles {

@@ -26,7 +26,7 @@ double Robot::getYaw() const {
 }
 
 Vector2d& Robot::getVelocity() {
-	return vel;
+	return velocity;
 }
 
 double Robot::getVyaw() const {
@@ -77,11 +77,33 @@ void Robot::setYaw(double y) {
 }
 
 void Robot::setVelocity(const Vector2d& v) {
-	vel = v;
+	if (stored_velocities.size() >= max_velocities_stored) {
+		stored_velocities.pop_front();
+	}
+	stored_velocities.push_back(v);
+	double average_x = 0;
+	double average_y = 0;
+	for (int i = 0; i < stored_velocities.size(); i++) {
+		average_x += stored_velocities[i].getX()/stored_velocities.size();
+		average_y += stored_velocities[i].getY()/stored_velocities.size();
+	}
+	velocity = Vector2d(average_x, average_y);
 }
 
 void Robot::setVyaw(double v) {
-	vyaw = v;
+	if (stored_yaw_velocities.size() >= max_yaw_velocities_stored) {
+		stored_yaw_velocities.pop_front();
+	}
+	stored_yaw_velocities.push_back(v);
+	double average = 0;
+	for (int i = 0; i < stored_yaw_velocities.size(); i++) {
+		average += stored_yaw_velocities[i]/stored_yaw_velocities.size();
+	}
+	vyaw = average;
+}
+
+bool Robot::isSpinning() const {
+	return (vyaw > yawVelocityThreshold);
 }
 
 void Robot::setDetected(bool d) {
@@ -90,6 +112,17 @@ void Robot::setDetected(bool d) {
 
 void Robot::setRole(enum Robot::role r) {
 	this_role = r;
+}
+
+bool Robot::isMoving() const {
+	if (velocity.getNorm() > velocityThreshold) {
+	return true;
+	}
+	return false;
+}
+
+bool Robot::isStopped() const {
+	return !isMoving();
 }
 
 // --- Stored Velocities ---

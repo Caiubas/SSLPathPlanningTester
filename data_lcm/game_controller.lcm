@@ -26,6 +26,7 @@ struct game_controller
 	float designated_position_x;
 	float designated_position_y;
 	int16_t current_command;
+	int16_t next_command;
 	int16_t game_event;
 	int16_t stage;
 }

@@ -48,9 +48,12 @@ std::array<Robot::role, 16> PlayTheirPenalty::role_assign(WorldModel& world, Tea
         if (selected_role == Robot::goal_keeper) {
             if (!world.allies[team.goal_keeper_id].isDetected()) continue;
             roles[team.goal_keeper_id] = Robot::goal_keeper;
-            active_allies_ids.erase(active_allies_ids.begin() + team.goal_keeper_id);
-            distances_allies_from_ball.erase(distances_allies_from_ball.begin() + team.goal_keeper_id);
+            int idx = -1;
+            for (int i = 0; i<active_allies_ids.size(); i++) if (i == team.goal_keeper_id) idx = i;
+            active_allies_ids.erase(active_allies_ids.begin() + idx);
+            distances_allies_from_ball.erase(distances_allies_from_ball.begin() + idx);
         }
+
         if (selected_role == Robot::halted) {
             if (roles[active_allies_ids[0]] == Robot::unknown) {
                 roles[active_allies_ids[0]] = selected_role;

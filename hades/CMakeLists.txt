@@ -112,6 +112,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/roles/RoleStriker.h
         src/team/roles/RoleSquaredTrajectory.h
         src/team/roles/RoleSquaredTrajectory.cpp
+        src/team/roles/RoleFieldTrajectory.h
+        src/team/roles/RoleFieldTrajectory.cpp
         src/team/roles/RoleCircularTrajectory.h
         src/team/roles/RoleCircularTrajectory.cpp
         src/team/roles/RoleMarker.h
@@ -146,6 +148,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/tactics/TacticMark.cpp
         src/team/tactics/TacticBlockBall.h
         src/team/tactics/TacticBlockBall.cpp
+        src/team/tactics/TacticPositionAndPush.h
+        src/team/tactics/TacticPositionAndPush.cpp
         src/team/tactics/tactics.h
 
         src/team/skills/SkillBase.h
@@ -160,6 +164,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/skills/SkillStop.cpp
         src/team/skills/SkillCushion.h
         src/team/skills/SkillCushion.cpp
+        src/team/skills/SkillPushBall.h
+        src/team/skills/SkillPushBall.cpp
         src/team/skills/skills.h
 
 )

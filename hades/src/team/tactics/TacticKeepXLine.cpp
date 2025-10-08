@@ -22,19 +22,19 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
             enemy_striker_id = enemy_striker.getId();
             hasStriker = true;
         } catch (...) {
-            std::cout << "no enemy striker" << std::endl;
+            //std::cout << "no enemy striker" << std::endl;
         }
 
         double a = 1000;
         LineSegment line(Point(0, 0), Point(0, 0));
-        if (hasEnemies) {
+        if (true) {
             if (robot.mWorld.ball.isMoving()) {
-                line = robot.mWorld.ball.getMovementLine();
+                line = robot.mWorld.ball.getMovementLine().getResized(robot.mWorld.ball.getMovementLine().getLength()*3);
             }
             else if (robot.mWorld.ball.isStopped() && hasStriker) {    //para bola parada
-                line = LineSegment(enemy_striker.getPosition(), robot.mWorld.ball.getPosition()).getResized(10000);
+                line = LineSegment(enemy_striker.getPosition(), robot.mWorld.ball.getPosition()).getResized(100000);
             } else {
-                line = LineSegment(robot.mWorld.ball.getPosition(), y_segment.getMiddle()).getResized(10000);
+                line = LineSegment(robot.mWorld.ball.getPosition(), y_segment.getMiddle()).getResized(100000);
             }
         }
         Point p = {y_segment.getStart().getX(), y_rest};
@@ -44,8 +44,8 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         }
 
 
-        double y_max = y_segment.getEnd().getY() - robot.mRadius;
-        double y_min = y_segment.getStart().getY() + robot.mRadius;
+        double y_max = y_segment.getEnd().getY() - robot.getRadius();
+        double y_min = y_segment.getStart().getY() + robot.getRadius();
         p.setY(std::clamp(p.getY(), y_min, y_max));
 
         if (robot.mWorld.enemies.size() > 0 && hasStriker) {
@@ -53,6 +53,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
                 p.setY(y_rest);
             }
         }
+
         moveTo.act(robot, p, false);
         robot.mkicker_x = 0;
         turnTo.act(robot, robot.mWorld.ball.getPosition());

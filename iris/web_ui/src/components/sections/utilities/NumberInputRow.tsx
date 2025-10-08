@@ -15,8 +15,8 @@ export function NumberInputRow({
   onSubmit,
 }: NumberInputRowProps) {
   return (
-    <RowWrapper>
-      <p>{label}</p>
+    <RowWrapper className='group'>
+      <p className="transition-colors group-hover:text-purple-600">{label}</p>
       <div className="flex">
         <input
           type="number"
