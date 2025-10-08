@@ -23,7 +23,6 @@ namespace skills {
 	void SkillKick::act(RobotController& robot) {
 		if (robot.hasKicker()) {
 			if (robot.getPosition().getDistanceTo(robot.mWorld.ball.getPosition()) > distancethreshold + robot.getRadius() || robot.mWorld.ball.isMoving()) {
-				std::cout << "aqui entra!" << std::endl;
 				robot.mkicker_x = 0;
 				robot.positioned = false;
 				robot.mTeam->setPositioned(robot.getId(), false);
