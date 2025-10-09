@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DataView } from './components/DataView';
 import { FieldView } from './components/FieldView';
 import { MenuBar } from './components/MenuBar';
@@ -49,9 +49,21 @@ export default function App() {
   );
   const ball = mapBallToFieldCoords(data.vision.balls, centerX, centerY);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(window.innerWidth > 1200);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsFullScreen(window.innerWidth > 1200);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   return (
-    <div className="bg-[#311A52] h-screen w-screen overflow-hidden">
+    <div className="bg-[#311A52] h-screen w-screen overflow-y-scroll">
       <div className="flex flex-col h-screen w-screen">
         <div className="h-auto">
           <MenuBar
@@ -60,7 +72,9 @@ export default function App() {
           />
         </div>
 
-        <div className="flex w-full h-full overflow-hidden">
+        <div className={`flex overflow-y-scroll overflow-x-hidden ${
+            isFullScreen ? 'flex-row' : 'flex-col'
+          }`}>
           {/* Campo ajustado pela divisão selecionada */}
           <FieldView
             data={data}
@@ -71,10 +85,20 @@ export default function App() {
             flipField={flipField}
           />
 
-          <div className="flex flex-1 h-full overflow-hidden">
-            <DataView data={data} reading={reading} setReading={setReading} />
+           <div className={`flex gap-2 w-full ${
+            isFullScreen ? 'flex-row flex-nowrap ' : 'flex-col flex-wrap '
+          }`}>
+            <DataView data={data} reading={reading} setReading={setReading} 
+                  className=
+                    {`${
+                    window.innerWidth > 768 ? "flex-1" : "flex-[1]" // if para mobile (metade da largura)
+                     }`} 
+                      />
             {selectedSoftware && (
               <DataViewAll
+                   className={`${
+                  window.innerWidth < 768 ? "flex-1" : "flex-[2]" // if para desktop (2x maior que o DataView)
+                }`}
                 reading={reading}
                 selected={selectedSoftware}
                 setSelected={setSelectedSoftware}

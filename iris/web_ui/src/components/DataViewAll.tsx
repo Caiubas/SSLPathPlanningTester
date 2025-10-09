@@ -25,6 +25,7 @@ type Props = {
   setSelected: React.Dispatch<React.SetStateAction<keyof DataType>>;
   setSelectedRobotId: React.Dispatch<React.SetStateAction<number | null>>;
   selectedRobotId: number | null;
+  className?: string;
 };
 
 export function DataViewAll({
@@ -35,6 +36,7 @@ export function DataViewAll({
   receptDimensions,
   setReceptDimensions,
   setSelected,
+  className
 }: Props) {
   const data = useFetchLoop(reading, initialData);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
@@ -83,7 +85,9 @@ export function DataViewAll({
   };
 
   return (
-    <div className="ml-0 m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-full max-h-full overflow-y-auto">
+    <div
+      className={`ml-0 m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-full max-h-full overflow-y-auto ${className ?? ""}`}
+    >
       {section[selected]}
     </div>
   );

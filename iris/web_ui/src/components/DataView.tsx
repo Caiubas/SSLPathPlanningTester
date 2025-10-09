@@ -5,6 +5,7 @@ type Props = {
   data: DataType;
   reading: boolean;
   setReading: React.Dispatch<React.SetStateAction<boolean>>;
+  className?: string;
 };
 export function DataView({ reading, setReading, data }: Props) {
   //const [recebendoDoLCM, setRecebendoDoLCM] = useState(true);

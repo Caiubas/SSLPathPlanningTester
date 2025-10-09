@@ -7,6 +7,7 @@ import { MidFieldSVG } from './MidFieldSVG';
 type FieldDimensions = (typeof FIELD_DIMENSIONS)[keyof typeof FIELD_DIMENSIONS];
 
 export type FieldProps = {
+  className?: string;
   data: DataType;
   dimensions: FieldDimensions;
   blueRobots?: DetectionRobot[];
