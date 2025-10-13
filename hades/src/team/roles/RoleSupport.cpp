@@ -11,9 +11,15 @@
 
 namespace roles {
     Point RoleSupport::getSupportPosition(RobotController& robot) {
-        int N = 12;
-        int K = 1;
+        int N = 18;
+        int K = 2;
         int k1 = 1;
+        double d_to_edge = 0;
+        try {
+            d_to_edge = std::clamp(robot.get_m_team()->getRobotofRole(Robot::striker).getKickDistance() - fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()), 0.0, distance_to_edge);
+        } catch (...) {
+            d_to_edge = std::clamp(robot.getKickDistance() - fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()), 0.0, distance_to_edge);
+        }
         std::vector<Point> points;
         points.reserve(N);
         Point goal(0, 0);
@@ -38,9 +44,9 @@ namespace roles {
                 }
                 Point p(x, y);
                 if (!robot.get_world().ball.isVisible(p)) continue;
-                if (!robot.get_world().field.inside_dimensions.getResized(-distance_to_edge).detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
-                if (robot.get_world().field.theirDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
-                if (robot.get_world().field.ourDefenseArea.getResized(distance_to_edge).detectIfContains(p)) continue;
+                if (!robot.get_world().field.inside_dimensions.getResized(-d_to_edge).detectIfContains(p)) continue;    ////TODO problema quando posicoes caem dentro da area de defesa
+                if (robot.get_world().field.theirDefenseArea.getResized(d_to_edge).detectIfContains(p)) continue;
+                if (robot.get_world().field.ourDefenseArea.getResized(d_to_edge).detectIfContains(p)) continue;
                 if (AreaCircular(p, robot.getRadius()*2).detectIfIntercepts(ball_goal)) continue;
                 points.push_back(p);
             }

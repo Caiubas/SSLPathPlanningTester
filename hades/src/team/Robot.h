@@ -50,8 +50,8 @@ protected:
     double vyaw = 0.0;
     double radius = 100;
     bool detected = false;
-    bool kicker = false;
-    double kickDistance = 500;
+    bool kicker = true;
+    double kickDistance = 2000;
     enum role this_role = unknown;
     bool positioned = true;
     bool aligned = true;
