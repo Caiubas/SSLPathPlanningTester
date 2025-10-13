@@ -148,7 +148,7 @@ namespace skills {
         std::vector<Point> SkillMoveTo::find_trajectory(RobotController& robot, Point start, Point goal, bool avoid_ball = true, bool full_field, bool ignore_stop) {
             double minor[2];
             double major[2];
-            if (full_field or robot.getRole()  == Robot::goal_keeper) {
+            if (full_field or robot.getRole() == Robot::goal_keeper) {
                 minor[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMinorPoint().getX();
                 minor[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMinorPoint().getY();
                 major[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMajorPoint().getX();
@@ -234,20 +234,16 @@ namespace skills {
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
 
 
-            if (robot.getId() == 1) std::cout << "rightfisical barrier:" << std::endl;
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
-            if (robot.getId() == 1) std::cout << std::endl << a.getMinorPoint().getX() << ", " << a.getMinorPoint().getY() << std::endl << a.getMajorPoint().getX() << ", " << a.getMajorPoint().getY() << std::endl;
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
-            if (robot.getId() == 1) std::cout << std::endl << a.getMinorPoint().getX() << ", " << a.getMinorPoint().getY() << std::endl << a.getMajorPoint().getX() << ", " << a.getMajorPoint().getY() << std::endl;
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
             a.setMajorPoint({a.getMajorPoint().getX() + 10000, a.getMajorPoint().getY()});
-            if (robot.getId() == 1) std::cout << std::endl << a.getMinorPoint().getX() << ", " << a.getMinorPoint().getY() << std::endl << a.getMajorPoint().getX() << ", " << a.getMajorPoint().getY() << std::endl;
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
+                        obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
 
             auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular, obs_tilted);
             std::vector<Point> trajectory = {};

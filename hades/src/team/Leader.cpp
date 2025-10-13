@@ -56,7 +56,8 @@ void Leader::loop() {
 
         inspect_enemy_team();
         world_analysis();
-        select_plays();
+        if (han.new_tartarus.debug_mode) debug_mode();
+        else select_plays();
         //imprimir_ativos();
 
         //std::cout << team.central_line_x << std::endl;
@@ -403,6 +404,11 @@ void Leader::add_robot(int id) {
         team.getRobotController(id).start(&team);
     }
 }
+
+void Leader::debug_mode() {
+
+}
+
 
 void Leader::select_plays() {
     // Calcular scores

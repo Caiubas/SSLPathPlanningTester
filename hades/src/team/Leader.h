@@ -50,6 +50,7 @@ private:
     void add_robot(int id);
     void imprimir_ativos();
     void select_plays();
+    void debug_mode();
     void inspect_enemy_team();
     void world_analysis();
     void event_FSM();

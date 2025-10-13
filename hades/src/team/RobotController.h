@@ -265,6 +265,7 @@ private:
     void loadCalibration();
     void doubleTouchHandler();
     void select_behavior();
+    void debug_mode();
 
 };
 

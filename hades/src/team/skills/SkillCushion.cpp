@@ -13,5 +13,9 @@ namespace skills {
 void SkillCushion::act(RobotController& robot) {
     Vector2d vector = robot.get_world().ball.getVelocity().getNormalized(robot.get_m_vxy_min());
     robot.set_mtarget_vel(vector.getRotated(-robot.getYaw()));
+
+    if (robot.get_world().ball.isStopped()) {
+        robot.set_mtarget_vel({0, 0});
+    }
 }
 } // skills

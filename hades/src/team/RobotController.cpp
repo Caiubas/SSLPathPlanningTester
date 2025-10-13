@@ -56,7 +56,8 @@ void RobotController::loop() {
         //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
         skills::SkillStop stop;
         try {
-            select_behavior();
+            if (han.new_tartarus.debug_mode) debug_mode();
+            else select_behavior();
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -87,6 +88,139 @@ void RobotController::doubleTouchHandler() {
 
 bool RobotController::isActive() {
     return this->active;
+}
+
+void RobotController::debug_mode() {
+    enum Skill {
+        UNKNOWN = 0,
+        CUSHION = 1,
+        KICK = 2,
+        MOVE_TO = 3,
+        STOP = 4,
+        TURN_TO = 5
+    };
+
+    Robot::role r = static_cast<Robot::role>(han.new_tartarus.robots[getId()].role);
+    switch (r) {
+        case unknown:
+            setRole(unknown);
+        break;
+
+        case goal_keeper:
+            setRole(goal_keeper);
+        break;
+
+        case striker:
+            setRole(striker);
+        break;
+
+        case support:
+            setRole(support);
+        break;
+
+        case defender:
+            setRole(defender);
+        break;
+
+        case halted:
+            setRole(halted);
+        break;
+
+        case kickoff_kicker:
+            setRole(kickoff_kicker);
+        break;
+
+        case kickoff_goal_keeper:
+            setRole(kickoff_goal_keeper);
+        break;
+
+        case kickoff_support:
+            setRole(kickoff_support);
+        break;
+
+        case marker:
+            setRole(marker);
+        break;
+
+        case debug_circular_trajectory:
+            setRole(debug_circular_trajectory);
+        break;
+
+        case debug_squared_trajectory:
+            setRole(debug_squared_trajectory);
+        break;
+
+        case retaker:
+            setRole(retaker);
+        break;
+
+        case penaltier:
+            setRole(penaltier);
+        break;
+
+        case freeKicker:
+            setRole(freeKicker);
+        break;
+
+        case watcher:
+            setRole(watcher);
+        break;
+
+        case placeHolder:
+            setRole(placeHolder);
+        break;
+
+        case placer:
+            setRole(placer);
+        break;
+
+        default:
+            setRole(unknown);
+        break;
+    }
+    if (r != unknown) {
+        mTeam->role_map[getRole()]->act(*this);
+    }
+
+    if (r == unknown) {
+        skills::SkillCushion cushion;
+        skills::SkillKick kick;
+        skills::SkillStop stop;
+        skills::SkillMoveTo moveTo;
+        skills::SkillPushBall pushBall;
+        skills::SkillTurnTo turnTo;
+        Skill s = static_cast<Skill>(han.new_tartarus.robots[getId()].skill);
+        switch (s) {
+            case UNKNOWN:
+                stop.act(*this);
+            break;
+
+            case CUSHION:
+                cushion.act(*this);
+            break;
+
+            case KICK:
+                kick.act(*this);
+            break;
+
+            case MOVE_TO:
+                moveTo.act(*this, Point(han.new_tartarus.robots[getId()].move_to_x, han.new_tartarus.robots[getId()].move_to_y), true);
+            break;
+
+            case STOP:
+                stop.act(*this);
+            break;
+
+            case TURN_TO:
+                turnTo.act(*this, Point(han.new_tartarus.robots[getId()].turn_to_x, han.new_tartarus.robots[getId()].turn_to_y));
+            break;
+
+            default:
+                stop.act(*this);
+            break;
+        }
+
+    }
 }
 
 
