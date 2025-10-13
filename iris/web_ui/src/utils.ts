@@ -1,13 +1,16 @@
 import { competitionData } from './data/competitionData';
 import { sendPost } from './hooks/useSendPost';
-import type { DataType, DetectionBall, DetectionRobot, Robot, RobotField } from './types'; // ajuste o caminho conforme
+import type { DataType, DetectionBall, DetectionRobot, Robot } from './types';
 
-export function detectionRobotToRobot(dr: DetectionRobot): RobotField {
+// -------------------- Conversões --------------------
+
+export function detectionRobotToRobot(dr: DetectionRobot): DetectionRobot {
   return {
-    id: dr.robot_id,
-    x: dr.position_x,
-    y: dr.position_y,
-    orientation: (dr.orientation * 180) / Math.PI, // rad → graus
+    robot_id: dr.robot_id,
+    position_x: dr.position_x,
+    position_y: dr.position_y,
+    orientation: (dr.orientation * 180) / Math.PI,
+    detected: dr.detected, // rad → graus
   };
 }
 
@@ -15,13 +18,14 @@ export function mapRobotsToFieldCoords(
   robots: DetectionRobot[] | undefined,
   centerX: number,
   centerY: number
-): RobotField[] {
+): DetectionRobot[] {
   if (!robots) return [];
   return robots.map((dr) => ({
-    id: dr.robot_id,
-    x: centerX + dr.position_y,
-    y: centerY + dr.position_x,
+    robot_id: dr.robot_id,
+    position_x: centerX + dr.position_y,
+    position_y: centerY + dr.position_x,
     orientation: ((dr.orientation * 180) / Math.PI - 90 + 360) % 360,
+    detected: dr.detected,
   }));
 }
 
@@ -37,7 +41,8 @@ export function mapBallToFieldCoords(
   };
 }
 
-// tipagem mínima para filtro de IDs
+// -------------------- Filtros --------------------
+
 type RobotIdOnly = { id: number };
 
 export function filterRobotsForTeam(
@@ -57,10 +62,12 @@ export function filterRobotsForTeam(
     .slice(0, maxRobots);
 }
 
+// -------------------- Toggles --------------------
+
 export const toggleLocal = async (
   key: keyof DataType['tartarus'],
   value: boolean,
-  setValue: React.Dispatch<React.SetStateAction<boolean>>,
+  setValue: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   try {
     const newValue = !value;
@@ -80,38 +87,77 @@ export const toggleLocal = async (
   }
 };
 
+let half_field = false; // variável global/local
+
 export const toggleBoolean = async (key: string, currentValue: boolean) => {
-    try {
-      let payload;
+  try {
+    let payload;
+    let newValue = !currentValue;
 
-      if (key === 'competition_mode') {
-        if (!currentValue) {
-          // ativando modo competição → manda o preset inteiro
-          payload = competitionData;
-        } else {
-          // desativando → só desliga o campo
-          payload = { competition_mode: false };
-        }
+    if (key === 'competition_mode') {
+      if (!currentValue) {
+        payload = competitionData;
       } else {
-        // demais toggles → comportamento padrão
-        payload = { [key]: !currentValue };
+        payload = { competition_mode: false };
       }
-
-      const success = await sendPost('http://localhost:5000/command', payload);
-
-      if (!success) {
-        console.error(`Erro ao alternar ${key}`);
-      }
-    } catch (err) {
-      console.error(`Erro ao enviar ${key}:`, err);
+    } 
+    
+    else if (key === 'half_field') {
+      half_field = !half_field;
+      newValue = half_field;
+      payload = { [key]: newValue };
+      console.log("half_field agora é:", half_field);
+    } 
+    
+    else {
+      payload = { [key]: newValue };
     }
-  };
 
-  export const updateNumber = async (key: string, value: number) => {
-      const success = await sendPost('http://localhost:5000/command', {
-        [key]: value,
-      });
-      if (!success) {
-        console.error(`Erro ao atualizar ${key} para ${value}`);
-      }
+    const success = await sendPost('http://localhost:5000/command', payload);
+
+    if (!success) {
+      console.error(`Erro ao alternar ${key}`);
+    }
+  } catch (err) {
+    console.error(`Erro ao enviar ${key}:`, err);
+  }
+};
+
+
+export const toggleBooleanWithId = async (
+  key: string,
+  currentValue: boolean,
+  robotId: number
+) => {
+  try {
+    const payload = {
+      robot_id: robotId,
+      [key]: !currentValue,
     };
+
+    const success = await sendPost('http://localhost:5000/command', payload);
+
+    if (!success) {
+      console.error(`Erro ao alternar ${key} para robô ${robotId}`);
+    }
+  } catch (err) {
+    console.error(`Erro ao enviar ${key} para robô ${robotId}:`, err);
+  }
+};
+
+// -------------------- Update Numérico --------------------
+
+export const updateNumber = async (key: string, value: number) => {
+  const success = await sendPost('http://localhost:5000/command', {
+    [key]: value,
+  });
+
+  if (!success) {
+    console.error(`Erro ao atualizar ${key} para ${value}`);
+  }
+};
+
+export function getMidField() {
+  return half_field;
+}
+

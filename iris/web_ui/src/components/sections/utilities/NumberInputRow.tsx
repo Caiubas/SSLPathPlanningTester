@@ -15,14 +15,14 @@ export function NumberInputRow({
   onSubmit,
 }: NumberInputRowProps) {
   return (
-    <RowWrapper>
-      <p>{label}</p>
+    <RowWrapper className='group'>
+      <p className="transition-colors group-hover:text-purple-600">{label}</p>
       <div className="flex">
         <input
           type="number"
           value={value}
           onChange={(e) => setValue(Number(e.target.value))}
-          className="border rounded px-2 py-1 mr-2 w-24"
+          className="border rounded px-2 py-1 mr-2 w-24 "
         />
         <ActionButton onClick={onSubmit} label="Alterar" />
       </div>

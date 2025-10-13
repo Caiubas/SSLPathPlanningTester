@@ -78,10 +78,19 @@ export function useFetchLoop(reading: boolean, initialData: DataType): DataType 
             current_command: json.current_command ?? initialData.irisGC.current_command,
             game_event: json.game_event ?? initialData.irisGC.game_event,
           },
-          skills: {
-            ...initialData.skills,
-            id: json.id ?? initialData.skills.id,
+          robot: {
+            id: json.robot?.id ?? initialData.robot.id,
+            skill_robot: json.robot?.skill_robot ?? initialData.robot.skill_robot,
+            role: json.robot?.role ?? initialData.robot.role,
+            movex: json.robot?.movex ?? initialData.robot.movex,
+            movey: json.robot?.movey ?? initialData.robot.movey,
+            turnx: json.robot?.turnx ?? initialData.robot.turnx,
+            turny: json.robot?.turny ?? initialData.robot.turny,
+            has_kicker: json.robot?.has_kicker ?? initialData.robot.has_kicker,
           },
+
+
+
           competition: (() => {
             const competitionMode = json.competition_mode ?? initialData.tartarus.competition_mode;
 

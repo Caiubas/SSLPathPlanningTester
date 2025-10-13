@@ -10,8 +10,9 @@ import VisionSection from './sections/VisionSection';
 import TartarusSection from './sections/TartarusSection';
 import CaronteSection from './sections/CaronteSection';
 import FieldSection from './sections/FieldSection';
-import SkillsSection from './sections/SkillsSection';
+import RobotSection from './sections/RobotSection';
 import CompetitionSection from './sections/CompetitionSection';
+import IrisGCTemplate from './sections/templates/IrisGCTemplate';
 
 type Props = {
   reading: boolean;
@@ -24,6 +25,7 @@ type Props = {
   setSelected: React.Dispatch<React.SetStateAction<keyof DataType>>;
   setSelectedRobotId: React.Dispatch<React.SetStateAction<number | null>>;
   selectedRobotId: number | null;
+  className?: string;
 };
 
 export function DataViewAll({
@@ -34,6 +36,7 @@ export function DataViewAll({
   receptDimensions,
   setReceptDimensions,
   setSelected,
+  className
 }: Props) {
   const data = useFetchLoop(reading, initialData);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
@@ -59,10 +62,10 @@ export function DataViewAll({
     ),
     caronte: <CaronteSection data={data} />,
     field: <FieldSection data={data} />,
-    skills:
-      selected === 'skills' ? (
+    robot:
+      selected === 'robot' ? (
         selectedRobotId !== null ? (
-          <SkillsSection
+          <RobotSection
             data={data}
             robotId={selectedRobotId}
             setSelected={setSelected}
@@ -76,10 +79,15 @@ export function DataViewAll({
         data={data}
       />
     ),
+    irisGC: (
+      <IrisGCTemplate/>
+    ),
   };
 
   return (
-    <div className="ml-0 m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-full max-h-full overflow-y-auto">
+    <div
+      className={`ml-0 m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-full max-h-full overflow-y-auto ${className ?? ""}`}
+    >
       {section[selected]}
     </div>
   );

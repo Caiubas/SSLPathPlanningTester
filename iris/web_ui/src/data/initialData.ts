@@ -59,6 +59,7 @@ export const initialData: DataType = {
     debug_mode: false,
     half_field: false,
     iris_as_GC: false,
+    right_field: false,
     stm_port: 0,
     mcast_port_gc: 0,// default 10003
     mcast_port_vision_sslvision: 0, // default 10006
@@ -67,8 +68,15 @@ export const initialData: DataType = {
     goalkeeper_id: 0,
     cams_number: 0,
   },
-  skills: {
+  robot: {
     id: 0,
+    skill_robot: 0,
+    role: 0,
+    movey: 0,
+    movex: 0,
+    turny: 0,
+    turnx: 0,
+    has_kicker: false,
   },
   competition: {
     ssl_vision: true,
@@ -94,5 +102,5 @@ export const initialData: DataType = {
     designated_position_y: 0,
     current_command: 0,
     game_event: 0,
-  }
+  },
 };

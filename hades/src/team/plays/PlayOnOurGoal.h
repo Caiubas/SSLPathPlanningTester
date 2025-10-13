@@ -15,7 +15,7 @@ class PlayOnOurGoal : public PlayBase {
 	int calc_score(WorldModel world, TeamInfo& team) override;
 public:
 	PlayOnOurGoal() {
-		name = "onTheirGoal";
+		name = "onOurGoal";
 		required_robots = 3;
 		required_roles = {Robot::goal_keeper, Robot::striker, Robot::support};
 	}

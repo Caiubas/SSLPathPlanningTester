@@ -1,14 +1,17 @@
 import type { FIELD_DIMENSIONS } from '../data/fieldDimensions';
-import type { BallField, DataType } from '../types';
-import { FieldSVG, type Robot } from './FieldSVG';
+import type { BallField, DataType, DetectionRobot } from '../types';
+import { getMidField } from '../utils';
+import { FieldSVG } from './FieldSVG';
+import { MidFieldSVG } from './MidFieldSVG';
 
 type FieldDimensions = (typeof FIELD_DIMENSIONS)[keyof typeof FIELD_DIMENSIONS];
 
 export type FieldProps = {
+  className?: string;
   data: DataType;
   dimensions: FieldDimensions;
-  blueRobots?: Robot[];
-  yellowRobots?: Robot[];
+  blueRobots?: DetectionRobot[];
+  yellowRobots?: DetectionRobot[];
   ball?: BallField;
   flipField: boolean;
 };
@@ -21,6 +24,7 @@ export function FieldView({
   ball,
   flipField,
 }: FieldProps) {
+  const midField = getMidField();
   return (
     <div
       className="h-full flex justify-center items-center bg-[#3B3B3B]"
@@ -39,14 +43,25 @@ export function FieldView({
             (dimensions.field_length + 2 * dimensions.goal_depth),
         }}
       >
-        <FieldSVG
-          data={data}
-          dimensions={dimensions}
-          blueRobots={blueRobots}
-          yellowRobots={yellowRobots}
-          ball={ball}
-          flipField={flipField}
-        />
+        {midField ? (
+          <MidFieldSVG
+            data={data}
+            dimensions={dimensions}
+            blueRobots={blueRobots}
+            yellowRobots={yellowRobots}
+            ball={ball}
+            flipField={flipField}
+          />
+        ) : (
+          <FieldSVG
+            data={data}
+            dimensions={dimensions}
+            blueRobots={blueRobots}
+            yellowRobots={yellowRobots}
+            ball={ball}
+            flipField={flipField}
+          />
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,8 @@ import { ActionButton } from './utilities/ActionButton';
 import { CompetitionOverlay } from './utilities/CompetitionOverlay';
 import GoalkeeperIdInput from './utilities/GoalkeeperIdInput';
 import { useTartarusState } from '../../hooks/useTartarusState';
-import { toggleBoolean, updateNumber } from '../../utils';
+import { getMidField, toggleBoolean, updateNumber } from '../../utils';
+import { sendPost } from '../../hooks/useSendPost';
 
 type Props = {
   data: DataType;
@@ -25,19 +26,21 @@ export default function TartarusSection({
 }: Props) {
   const { tartarus } = data;
 
+  const value = getMidField();
+
   const {
     stmPort,
     setStmPort,
-    mcastGCPort: mcastGCPort,
-    setMcastPortGC: setMcastGCPort,
-    mcastSslVisionPort: mcastSslVisionPort,
-    setSslVisionPort: setMcastSslVisionPort,
-    mcastTrackedPort: mcastTrackedPort,
-    setTrackedPort: setMcastTrackedPort,
+    mcastGCPort,
+    setMcastPortGC,
+    mcastSslVisionPort,
+    setSslVisionPort,
+    mcastTrackedPort,
+    setTrackedPort,
     camsNumber,
     setCamsNumber,
-    mcastGrsimPort: mcastGrsimPort,
-    setMcastGrsimPort: setMcastGrsimPort,
+    mcastGrsimPort,
+    setMcastGrsimPort,
   } = useTartarusState(tartarus);
 
   return (
@@ -49,24 +52,22 @@ export default function TartarusSection({
 
       <h2 className="text-lg font-bold mb-4">Tartarus</h2>
 
-      <RowWrapper>
-        <p>SSL Vision: </p>
+      {/* Toggles */}
+      <RowWrapper title="SSL Vision:">
         <ToggleSwitch
           value={tartarus.ssl_vision}
           onToggle={() => toggleBoolean('ssl_vision', tartarus.ssl_vision)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Auto Referee: </p>
+      <RowWrapper title="Auto Referee:">
         <ToggleSwitch
           value={tartarus.autoreferee}
           onToggle={() => toggleBoolean('autoreferee', tartarus.autoreferee)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Modo Competição: </p>
+      <RowWrapper title="Modo Competição:">
         <ToggleSwitch
           value={tartarus.competition_mode}
           onToggle={() =>
@@ -75,47 +76,50 @@ export default function TartarusSection({
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Modo Controller: </p>
-        <ToggleSwitch
-          value={tartarus.bool_controller}
-          onToggle={() =>
-            toggleBoolean('bool_controller', tartarus.bool_controller)
-          }
-        />
-      </RowWrapper>
-
-      <RowWrapper>
-        <p>Modo Debug: </p>
-        <ToggleSwitch
-          value={tartarus.debug_mode}
-          onToggle={() => toggleBoolean('debug_mode', tartarus.debug_mode)}
-        />
-      </RowWrapper>
-
-      <RowWrapper>
-        <p>Meio Campo: </p>
-        <ToggleSwitch
-          value={tartarus.half_field}
-          onToggle={() => toggleBoolean('half_field', tartarus.half_field)}
-        />
-      </RowWrapper>
-
-      <RowWrapper>
-        <p>Iris GC: </p>
+      <RowWrapper title="Iris GC:">
         <ToggleSwitch
           value={tartarus.iris_as_GC}
           onToggle={() => toggleBoolean('iris_as_GC', tartarus.iris_as_GC)}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>
-          Time Azul:{' '}
-          <span className="font-mono">
-            {tartarus.team_blue ? 'Sim' : 'Não'}
-          </span>
-        </p>
+      <RowWrapper title="Controlar o robô em:">
+        <select
+          className="ml-2 rounded border border-gray-300 px-3 py-1 shadow-md outline-none transition focus:border-purple-700 focus:ring-1 focus:ring-[#6805F2]"
+          value={
+            tartarus.bool_controller
+              ? 'controller'
+              : tartarus.debug_mode
+                ? 'debug'
+                : 'hades'
+          }
+          onChange={(e) => {
+            const value = e.target.value;
+
+            if (value === 'controller') {
+              toggleBoolean('bool_controller', tartarus.bool_controller);
+              if (tartarus.debug_mode)
+                toggleBoolean('debug_mode', tartarus.debug_mode);
+            } else if (value === 'debug') {
+              toggleBoolean('debug_mode', tartarus.debug_mode);
+              if (tartarus.bool_controller)
+                toggleBoolean('bool_controller', tartarus.bool_controller);
+            } else {
+              if (tartarus.bool_controller)
+                toggleBoolean('bool_controller', tartarus.bool_controller);
+              if (tartarus.debug_mode)
+                toggleBoolean('debug_mode', tartarus.debug_mode);
+            }
+          }}
+        >
+          <option value="hades">Hades</option>
+          <option value="controller">Modo Controller</option>
+          <option value="debug">Modo Debug</option>
+        </select>
+      </RowWrapper>
+
+      <RowWrapper title="Time Azul:">
+        <span className="font-mono">{tartarus.team_blue ? 'Sim' : 'Não'}</span>
       </RowWrapper>
 
       <GoalkeeperIdInput />
@@ -131,32 +135,27 @@ export default function TartarusSection({
       <NumberInputRow
         label="GC Port:"
         value={mcastGCPort}
-        setValue={setMcastGCPort}
+        setValue={setMcastPortGC}
         onSubmit={() => updateNumber('mcast_port_gc', mcastGCPort)}
       />
       <NumberInputRow
         label="SSL Vision Port:"
         value={mcastSslVisionPort}
-        setValue={setMcastSslVisionPort}
+        setValue={setSslVisionPort}
         onSubmit={() =>
-          updateNumber(
-            'mcast_port_vision_sslvision',
-            mcastSslVisionPort,
-          )
+          updateNumber('mcast_port_vision_sslvision', mcastSslVisionPort)
         }
       />
       <NumberInputRow
         label="GrSim Port:"
         value={mcastGrsimPort}
         setValue={setMcastGrsimPort}
-        onSubmit={() =>
-          updateNumber('mcast_port_vision_grsim', mcastGrsimPort)
-        }
+        onSubmit={() => updateNumber('mcast_port_vision_grsim', mcastGrsimPort)}
       />
       <NumberInputRow
         label="AutoReferee Port:"
         value={mcastTrackedPort}
-        setValue={setMcastTrackedPort}
+        setValue={setTrackedPort}
         onSubmit={() =>
           updateNumber('mcast_port_vision_tracked', mcastTrackedPort)
         }
@@ -164,18 +163,29 @@ export default function TartarusSection({
 
       <h2 className="text-lg font-bold mb-4">Campo</h2>
 
-      <RowWrapper>
-        <p>Orientação do Campo:</p>
+      <RowWrapper title="Orientação do Campo:">
         <ActionButton
-          onClick={() => setFlipField(!flipField)} // precisa passar o estado atual para o pai, invertido
+          onClick={async () => {
+            const newFlip = !flipField;
+            setFlipField(newFlip);
+
+            if (tartarus.half_field) {
+              const payload = { right_field: newFlip };
+              const success = await sendPost(
+                'http://localhost:5000/command',
+                payload,
+              );
+              if (!success) console.error('Erro ao enviar left_field');
+              else console.log('left_field enviado:', newFlip);
+            }
+          }}
           label={flipField ? 'Normal' : 'Inverter'}
         />
       </RowWrapper>
 
-      <RowWrapper>
-        <p>Dimensões do Campo:</p>
+      <RowWrapper title="Dimensões do Campo:">
         <ActionButton
-          onClick={() => setReceptDimensions(!receptDimensions)} // precisa passar o estado atual para o pai, invertido
+          onClick={() => setReceptDimensions(!receptDimensions)}
           label={receptDimensions ? 'Fixas' : 'SSL-Vision'}
         />
       </RowWrapper>
@@ -186,6 +196,13 @@ export default function TartarusSection({
         setValue={setCamsNumber}
         onSubmit={() => updateNumber('cams_number', camsNumber)}
       />
+
+      <RowWrapper title="Meio Campo:">
+        <ToggleSwitch
+          value={value}
+          onToggle={() => toggleBoolean('half_field', tartarus.half_field)}
+        />
+      </RowWrapper>
     </div>
   );
 }

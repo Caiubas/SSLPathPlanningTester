@@ -36,8 +36,15 @@ export type CompetitionData = {
   team_blue: boolean,
 }
 
-export type SkillsData = {
+export type RobotData = {
   id: number;
+  skill_robot: number;
+  role: number;
+  movey: number;
+  movex: number;
+  turny: number;
+  turnx: number;
+  has_kicker: boolean;
 }
 
 export type IAData = {
@@ -71,14 +78,8 @@ export type DetectionRobot = {
   position_x: number; // mm
   position_y: number; // mm
   orientation: number; // rad
+  detected: boolean;
 };
-
-export type RobotField = {
-  id: number;
-  x: number;
-  y: number;
-  orientation: number; // graus
-}
 
 export type DetectionBall = {
   position_x: number; // mm
@@ -129,6 +130,8 @@ export type TartarusData = {
   debug_mode: boolean;
   half_field: boolean;
   iris_as_GC: boolean;
+  right_field: boolean;
+
   stm_port: number;
   mcast_port_gc: number;// default 10003
 	mcast_port_vision_sslvision: number; // default 10006
@@ -160,7 +163,7 @@ export type DataType = {
   vision: VisionData;
   gc: GCType;
   tartarus: TartarusData;
-  skills: SkillsData;
+  robot: RobotData;
   competition: CompetitionData;
   irisGC: IrisGCData;
 };

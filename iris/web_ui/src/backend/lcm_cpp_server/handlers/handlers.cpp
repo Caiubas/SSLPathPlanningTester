@@ -67,6 +67,7 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.debug_mode = msg->debug_mode;
     latest_data.half_field = msg->half_field;
     latest_data.iris_as_GC = msg->iris_as_GC;
+    latest_data.right_field = msg->right_field;
     
     latest_data.stm_port = msg->stm_port;
     latest_data.mcast_port_gc = msg->mcast_port_gc;
@@ -79,34 +80,93 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.designated_position_y = msg->iris_gc.designated_position_y;
     latest_data.current_command = msg->iris_gc.current_command;
     latest_data.game_event = msg->iris_gc.game_event;
+
+    for (const auto& robot : msg->robots) {
+        int id    = robot.id;
+        int skill = robot.skill;
+        int role  = robot.role;
+
+        float movex = robot.move_to_x;
+        float movey = robot.move_to_y;
+        float turnx = robot.turn_to_x;
+        float turny = robot.turn_to_y;
+
+        bool has_kicker = robot.has_kicker;
+
+        latest_data.skill_by_robot[id] = skill;
+        latest_data.role_by_robot[id]  = role;
+        latest_data.has_kicker[id] = has_kicker;
+
+        // Se usar mapas separados
+        latest_data.move_x_by_robot[id] = movex;
+        latest_data.move_y_by_robot[id] = movey;
+        latest_data.turn_x_by_robot[id] = turnx;
+        latest_data.turn_y_by_robot[id] = turny;
+
+        // OU, se usar TargetPose
+        // latest_data.target_pose_by_robot[id] = {movex, movey, turnx, turny};
+
+        latest_data.has_kicker[id] = has_kicker;
+    }
+
+
+    latest_data.selected_robot_id = msg->robots->id;
 }
 
 
 void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, const vision_t *msg)
 {
     std::lock_guard<std::mutex> lock(data_mutex);
-    msg_vision = *msg;
+
+    // Atualiza timestamp
     latest_data.timestamp = msg->timestamp;
 
-    // Copiar robôs amarelos
-    latest_data.robots_yellow.clear();
-    for (int i = 0; i < msg->robots_yellow_size; ++i)
-    {
-        latest_data.robots_yellow.push_back(msg->robots_yellow[i]);
-    }
-    latest_data.robots_yellow_size = msg->robots_yellow_size;
-
-    // Copiar robôs azuis
-    latest_data.robots_blue.clear();
-    for (int i = 0; i < msg->robots_blue_size; ++i)
-    {
-        latest_data.robots_blue.push_back(msg->robots_blue[i]);
-    }
-    latest_data.robots_blue_size = msg->robots_blue_size;
-
+    // Atualiza bola
     latest_data.balls = msg->balls;
+
+    // Atualiza campo
     latest_data.field = msg->field;
+
+    // ----- Robôs Amarelos -----
+    latest_data.robots_yellow.clear();
+    latest_data.robots_yellow.reserve(msg->robots_yellow_size);
+
+    for (int i = 0; i < msg->robots_yellow_size; ++i) {
+        const auto &src = msg->robots_yellow[i];
+        if (!src.detected) continue;  // só adiciona robôs detectados
+
+        data::detection_robots robot;
+        robot.robot_id   = src.robot_id;
+        robot.position_x = src.position_x;
+        robot.position_y = src.position_y;
+        robot.orientation = src.orientation;
+        robot.detected   = src.detected;
+
+        latest_data.robots_yellow.push_back(robot);
+    }
+    latest_data.robots_yellow_size = latest_data.robots_yellow.size();
+
+    // ----- Robôs Azuis -----
+    latest_data.robots_blue.clear();
+    latest_data.robots_blue.reserve(msg->robots_blue_size);
+
+    for (int i = 0; i < msg->robots_blue_size; ++i) {
+        const auto &src = msg->robots_blue[i];
+        if (!src.detected) continue;  // só adiciona robôs detectados
+
+        data::detection_robots robot;
+        robot.robot_id   = src.robot_id;
+        robot.position_x = src.position_x;
+        robot.position_y = src.position_y;
+        robot.orientation = src.orientation;
+        robot.detected   = src.detected;
+
+        latest_data.robots_blue.push_back(robot);
+    }
+    latest_data.robots_blue_size = latest_data.robots_blue.size();
 }
+
+
 
 void Handler::handleIA(const lcm::ReceiveBuffer *, const std::string &, const ia_t *msg)
 {

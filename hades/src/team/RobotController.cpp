@@ -120,8 +120,13 @@ void RobotController::check_connection() {
 
 void RobotController::receive_config() {
     if (!han.new_tartarus.ssl_vision) {
+<<<<<<< HEAD
         mKP_ang = 1;
         mKD_ang = 0;
+=======
+        mKP_ang = 2;
+        mKD_ang = 0.5;
+>>>>>>> 0ff8d929619e556decd7d668ada64239d8c8b102
         mKI_ang = 0;
         kickDistance = 2000;
         mStatic_position_tolarance = radius/8;

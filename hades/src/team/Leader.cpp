@@ -26,7 +26,10 @@ Leader::Leader() {
     plays.push_back(std::make_unique<PlayTheirPenalty>());
     plays.push_back(std::make_unique<PlayRetake>());
     plays.push_back(std::make_unique<PlayOnTheirGoal>());
+<<<<<<< HEAD
     plays.push_back(std::make_unique<PlayOnOurGoal>());
+=======
+>>>>>>> 0ff8d929619e556decd7d668ada64239d8c8b102
     plays.push_back(std::make_unique<PlayBallPlacement>());
 }
 

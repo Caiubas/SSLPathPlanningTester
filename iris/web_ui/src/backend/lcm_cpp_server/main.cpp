@@ -1,6 +1,7 @@
 #define CROW_MAIN
 #include "crow_all.h"
 
+#include <unordered_set>
 #include <lcm/lcm-cpp.hpp>
 #include <mutex>
 #include <thread>
@@ -91,6 +92,7 @@ int main()
         data["iris_as_GC"] = latest_data.iris_as_GC;
         data["team_blue"] = latest_data.team_blue;
         data["team_blue_status"] = latest_data.team_blue_status;
+        data["right_field"] = latest_data.right_field;
 
         // ---- Configuração de portas ----
         data["stm_port"] = latest_data.stm_port;
@@ -122,11 +124,31 @@ int main()
         data["yellow"]["fouls"] = latest_data.yellow.fouls;
         data["yellow"]["goalkeeper_id"] = latest_data.yellow.goalkeeper_id;
 
-        // ---- IA Robots ----
-        for (size_t i = 0; i < latest_data.robots.size(); ++i) {
-            const auto& r = latest_data.robots[i];
+        // Constrói sets com os IDs que a visão detectou (por cor)
+        // ---- IA Robots (apenas detectados) ----
+        std::unordered_set<int> detected_blue;
+        std::unordered_set<int> detected_yellow;
+
+        for (const auto &v : latest_data.robots_blue)
+            if (v.detected) detected_blue.insert(v.robot_id);
+
+        for (const auto &v : latest_data.robots_yellow)
+            if (v.detected) detected_yellow.insert(v.robot_id);
+
+        size_t idx = 0;
+        const size_t MAX_ROBOTS_SEND = 16; // opcional
+
+        for (const auto &r : latest_data.robots) {
+            int id = r.id;
+
+            bool is_blue_detected = detected_blue.count(id) > 0;
+            bool is_yellow_detected = detected_yellow.count(id) > 0;
+            bool detected = is_blue_detected || is_yellow_detected;
+            if (!detected) continue;
+            if (idx >= MAX_ROBOTS_SEND) break;
+
             crow::json::wvalue robot;
-            robot["id"] = r.id;
+            robot["id"] = id;
             robot["spinner"] = r.spinner;
             robot["kick"] = r.kick;
             robot["vel_tang"] = r.vel_tang;
@@ -139,7 +161,19 @@ int main()
             robot["wheel_fl"] = r.wheel_fl;
             robot["wheel_bl"] = r.wheel_bl;
             robot["wheel_br"] = r.wheel_br;
-            data["robots"][i] = std::move(robot);
+
+            robot["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
+            robot["skill_robot"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
+            robot["role"] = latest_data.role_by_robot.count(id) ? latest_data.role_by_robot.at(id) : 0;
+            robot["move_to_x"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
+            robot["move_to_y"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
+            robot["turn_to_x"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
+            robot["turn_to_y"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+
+            robot["detected"] = true;
+            robot["vision_team"] = is_blue_detected ? "blue" : "yellow";
+
+            data["robots"][idx++] = std::move(robot);
         }
 
         // ---- Vision Robots Yellow ----
@@ -150,6 +184,7 @@ int main()
             robot["position_x"] = r.position_x;
             robot["position_y"] = r.position_y;
             robot["orientation"] = r.orientation;
+            robot["detected"] = r.detected;
             data["robots_yellow"][i] = std::move(robot);
         }
 
@@ -161,7 +196,34 @@ int main()
             robot["position_x"] = r.position_x;
             robot["position_y"] = r.position_y;
             robot["orientation"] = r.orientation;
+            robot["detected"] = r.detected;
             data["robots_blue"][i] = std::move(robot);
+        }
+
+        // ---- Dados do robô selecionado ----
+        if (latest_data.selected_robot_id >= 0) {
+            int id = latest_data.selected_robot_id;
+
+            crow::json::wvalue robotSkill;
+            robotSkill["id"] = id;
+            robotSkill["skill_robot"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
+            robotSkill["role"] = latest_data.role_by_robot.count(id) ? latest_data.role_by_robot.at(id) : 0;
+            robotSkill["movex"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
+            robotSkill["movey"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
+            robotSkill["turnx"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
+            robotSkill["turny"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+            robotSkill["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
+
+            data["robot"] = std::move(robotSkill);
+        } else {
+            data["robot"]["id"] = -1;
+            data["robot"]["skill_robot"] = 0;
+            data["robot"]["role"] = 0;
+            data["robot"]["movex"] = 0.0;
+            data["robot"]["movey"] = 0.0;
+            data["robot"]["turnx"] = 0.0;
+            data["robot"]["turny"] = 0.0;
+            data["robot"]["has_kicker"] = false;
         }
 
         // ---- Bola ----
@@ -190,6 +252,8 @@ int main()
         data["timestamp"] = latest_data.timestamp;
         data["robots_size"] = latest_data.robots_size;
         data["cams_number"] = latest_data.cams_number;
+
+
 
         return crow::response{data}; });
 
@@ -228,6 +292,58 @@ int main()
                 std::cout << "[POST] game_event atualizado para " << cmd << std::endl;
             }
 
+            if (body.has("skill") && body["skill"].t() == crow::json::type::Number) {
+                int cmd = body["skill"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.skill_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] skill " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] skill recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+            if (body.has("role") && body["role"].t() == crow::json::type::Number) {
+                int cmd = body["role"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.role_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] role " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] role recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+            if (body.has("has_kicker") && (body["has_kicker"].t() == crow::json::type::True || body["has_kicker"].t() == crow::json::type::False)) {
+                bool hasKicker = body["has_kicker"].b();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    // Atualiza o map de has_kicker
+                    latest_data.has_kicker[robot_id] = hasKicker;
+
+                    // Atualiza o vetor de robôs também, caso já exista
+                    for (auto& robot : latest_data.robots) {
+                        if (robot.id == robot_id) {
+                            robot.has_kicker = hasKicker;
+                            break;
+                        }
+                    }
+
+                    std::cout << "[POST] has_kicker=" << (hasKicker ? "true" : "false")
+                            << " enviado para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] has_kicker recebido mas sem robot_id" << std::endl;
+                }
+            }
 
             if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
                 latest_data.designated_position_x = static_cast<float>(body["designated_position_x"].d());
@@ -303,6 +419,10 @@ int main()
                 latest_data.iris_as_GC = body["iris_as_GC"].b();
                 std::cout << "[POST] iris_as_GC atualizado para " << (latest_data.iris_as_GC ? "true" : "false") << std::endl;
             }
+            if (body.has("right_field") && (body["right_field"].t() == crow::json::type::True || body["right_field"].t() == crow::json::type::False)) {
+                latest_data.right_field = body["right_field"].b();
+                std::cout << "[POST] right_field atualizado para " << (latest_data.right_field ? "true" : "false") << std::endl;
+            }
 
             // ---- Portas ----
             if (body.has("stm_port") && body["stm_port"].t() == crow::json::type::Number) {
@@ -339,6 +459,8 @@ int main()
             msg.debug_mode = latest_data.debug_mode;
             msg.half_field = latest_data.half_field;
             msg.iris_as_GC = latest_data.iris_as_GC;
+            msg.right_field = latest_data.right_field;
+
             msg.goalkeeper_id = latest_data.team_blue ? latest_data.blue.goalkeeper_id : latest_data.yellow.goalkeeper_id;
             msg.stm_port = latest_data.stm_port;
             msg.mcast_port_gc = latest_data.mcast_port_gc;
@@ -353,8 +475,44 @@ int main()
             msg.iris_gc.designated_position_y = latest_data.designated_position_y;
             msg.iris_gc.current_command = latest_data.current_command;
 
+            // Preencher robôs (até 16)
+            for (size_t i = 0; i < 16; ++i) {
+                if (i < latest_data.robots.size()) {
+                    int robot_id = latest_data.robots[i].id;
+
+                    msg.robots[i].id = robot_id;
+
+                    // Aqui garantimos que o has_kicker vá corretamente
+                    msg.robots[i].has_kicker = latest_data.has_kicker.count(robot_id)
+                                            ? latest_data.has_kicker.at(robot_id)
+                                            : latest_data.robots[i].has_kicker;
+
+                    // Skill e role
+                    msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
+                    msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+
+                    // Move/Turn
+                    msg.robots[i].move_to_x = latest_data.move_x_by_robot.count(robot_id) ? latest_data.move_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].move_to_y = latest_data.move_y_by_robot.count(robot_id) ? latest_data.move_y_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_x = latest_data.turn_x_by_robot.count(robot_id) ? latest_data.turn_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_y = latest_data.turn_y_by_robot.count(robot_id) ? latest_data.turn_y_by_robot.at(robot_id) : 0.0f;
+                } else {
+                    // Robô vazio
+                    msg.robots[i].id = -1;
+                    msg.robots[i].has_kicker = false;
+                    msg.robots[i].skill = 0;
+                    msg.robots[i].role = 0;
+                    msg.robots[i].move_to_x = 0.0f;
+                    msg.robots[i].move_to_y = 0.0f;
+                    msg.robots[i].turn_to_x = 0.0f;
+                    msg.robots[i].turn_to_y = 0.0f;
+                }
+            }
+
+
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";
+
         }
         catch (const std::exception &e)
         {

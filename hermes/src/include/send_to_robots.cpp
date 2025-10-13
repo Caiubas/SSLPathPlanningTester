@@ -102,7 +102,8 @@ void robots_sender::send_control() { // global function to send control commands
                             r->vel_tang = pct.Vy;
                             r->vel_normal = pct.Vx;
                             r->vel_ang = pct.Vang;
-                            std::cout << "Controlled robot - " << "Robot I: " << (int)r->id << " Vy: " << r->vel_tang << " Vx: " << r->vel_normal << " Vang: " << r->vel_ang << std::endl;
+                            r->kick_speed_x = pct.kicker;
+                            std::cout << "Controlled robot - " << "Robot ID: " << (int)r->id << " Vy: " << r->vel_tang << " Vx: " << r->vel_normal << " Vang: " << r->vel_ang << " kick_speed: " << r->kick_speed_x << std::endl;
                         }
                         else {
                             r->vel_tang = 0;
@@ -148,7 +149,7 @@ void robots_sender::send_control() { // global function to send control commands
                                     pct.config = 0;
                                     pct.param = 0;
 
-                                    std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << std::endl;
+                                std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << " kick_speed: " << pct.kicker << std::endl;
                                     memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
                                     write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
                                     usleep(5000);
