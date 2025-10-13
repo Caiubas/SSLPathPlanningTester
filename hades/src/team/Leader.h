@@ -19,6 +19,7 @@
 #include "plays/PlayOurPenalty.h"
 #include "plays/PlayRetake.h"
 #include "plays/PlayTheirPenalty.h"
+#include "plays/PlayOnOurGoal.h"
 
 class Leader {
 public:

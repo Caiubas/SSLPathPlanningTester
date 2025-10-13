@@ -86,6 +86,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/team/plays/PlayRetake.h
         src/team/plays/PlayOnTheirGoal.cpp
         src/team/plays/PlayOnTheirGoal.h
+        src/team/plays/PlayOnOurGoal.cpp
+        src/team/plays/PlayOnOurGoal.h
         src/team/plays/PlayBallPlacement.cpp
         src/team/plays/PlayBallPlacement.h
         src/team/plays/PlayBase.cpp

@@ -224,25 +224,25 @@ namespace skills {
             AreaRectangular a({0, 0}, {0, 0});
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMajorPoint({a.getMinorPoint().getX() + wall_thickness, a.getMajorPoint().getY()});
             a.setMinorPoint({a.getMinorPoint().getX() - 10000, a.getMinorPoint().getY()});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
 
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
             a.setMajorPoint({a.getMajorPoint().getX() + 10000, a.getMajorPoint().getY()});
-            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
+            obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
 
             auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular, obs_tilted);
             std::vector<Point> trajectory = {};

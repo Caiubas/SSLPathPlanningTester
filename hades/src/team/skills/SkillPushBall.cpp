@@ -32,6 +32,11 @@ namespace skills {
 		v_vet = v_vet.getNormalized(robot.get_m_vxy_max());
 		robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
 
+		LineSegment robot_goal(robot.getPosition(), robot.get_world().ball.getPosition());
+		if (robot_goal.getResized(100000).intersects(robot.get_world().field.ourGoal)) {	//NAO FAZER GOL CONTRA
+			robot.set_mtarget_vel({0, 0});
+		}
+
 		double angle_error = find_angle_error(robot, robot.get_world().ball.getPosition());	//TODO TESTAR ISSO AQUI
 		if (fabs(angle_error) > 2*robot.get_m_static_angle_tolarance()) {
 			robot.set_mtarget_vyaw(angle_error*robot.get_m_vyaw_min());
