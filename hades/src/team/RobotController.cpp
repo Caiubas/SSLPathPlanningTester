@@ -58,6 +58,8 @@ void RobotController::loop() {
         try {
             if (han.new_tartarus.debug_mode) debug_mode();
             else select_behavior();
+            //if (getId() == 1 && mTeam->getEvent() != TeamInfo::halt) mTeam->role_map[debug_squared_trajectory]->act(*this);
+            //else stop.act(*this);
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -91,6 +93,10 @@ bool RobotController::isActive() {
 }
 
 void RobotController::debug_mode() {
+    setRole(unknown);
+    skills::SkillStop stop;
+    stop.act(*this);
+
     enum Skill {
         UNKNOWN = 0,
         CUSHION = 1,
