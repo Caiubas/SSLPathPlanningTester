@@ -344,6 +344,57 @@ int main()
                     std::cout << "[POST] has_kicker recebido mas sem robot_id" << std::endl;
                 }
             }
+            // Log para move_to_x e move_to_y
+            if (body.has("move_to_x")) {
+                std::cout << "[POST] move_to_x recebido: " << body["move_to_x"].d() << std::endl;
+            }
+            if (body.has("move_to_y")) {
+                std::cout << "[POST] move_to_y recebido: " << body["move_to_y"].d() << std::endl;
+            }
+
+            // Log para turn_to_x e turn_to_y
+            if (body.has("turn_to_x")) {
+                std::cout << "[POST] turn_to_x recebido: " << body["turn_to_x"].d() << std::endl;
+            }
+            if (body.has("turn_to_y")) {
+                std::cout << "[POST] turn_to_y recebido: " << body["turn_to_y"].d() << std::endl;
+            }
+
+            // Processando move_to_x e move_to_y
+            if (body.has("move_to_x") && body["move_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_x_by_robot[robot_id] = static_cast<float>(body["move_to_x"].d());
+                    std::cout << "[POST] move_to_x para robô " << robot_id << " atualizado para " << latest_data.move_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("move_to_y") && body["move_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_y_by_robot[robot_id] = static_cast<float>(body["move_to_y"].d());
+                    std::cout << "[POST] move_to_y para robô " << robot_id << " atualizado para " << latest_data.move_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            // Processando turn_to_x e turn_to_y
+            if (body.has("turn_to_x") && body["turn_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_x_by_robot[robot_id] = static_cast<float>(body["turn_to_x"].d());
+                    std::cout << "[POST] turn_to_x para robô " << robot_id << " atualizado para " << latest_data.turn_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("turn_to_y") && body["turn_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_y_by_robot[robot_id] = static_cast<float>(body["turn_to_y"].d());
+                    std::cout << "[POST] turn_to_y para robô " << robot_id << " atualizado para " << latest_data.turn_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
+
 
             if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
                 latest_data.designated_position_x = static_cast<float>(body["designated_position_x"].d());
