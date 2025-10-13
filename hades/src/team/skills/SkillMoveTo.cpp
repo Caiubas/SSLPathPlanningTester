@@ -224,17 +224,15 @@ namespace skills {
             AreaRectangular a({0, 0}, {0, 0});
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
-<<<<<<< HEAD
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
-=======
+
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
->>>>>>> 0ff8d929619e556decd7d668ada64239d8c8b102
             a = robot.get_world().field.leftFisicalBarrier;
             a.setMajorPoint({a.getMinorPoint().getX() + wall_thickness, a.getMajorPoint().getY()});
             a.setMinorPoint({a.getMinorPoint().getX() - 10000, a.getMinorPoint().getY()});
@@ -242,17 +240,14 @@ namespace skills {
 
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMajorPoint({a.getMajorPoint().getX(), a.getMinorPoint().getY() + wall_thickness});
-<<<<<<< HEAD
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
-=======
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMinorPoint().getX(), a.getMajorPoint().getY() - wall_thickness});
             obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius()/2)));
->>>>>>> 0ff8d929619e556decd7d668ada64239d8c8b102
             a = robot.get_world().field.rightFisicalBarrier;
             a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
             a.setMajorPoint({a.getMajorPoint().getX() + 10000, a.getMajorPoint().getY()});

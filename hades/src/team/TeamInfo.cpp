@@ -3,15 +3,13 @@
 
 Robot TeamInfo::getRobotofRole(enum Robot::role role) {
     std::lock_guard<std::recursive_mutex> lock(mtx);
-<<<<<<< HEAD
     for (int i = 0; i < std::ranges::size(robots) ; i++) {
         if (!isRobotActive(robots[i].getId())) continue;
         if (robots[i].getRole() == role) return robots[i];
-=======
+    }
     for (Robot robot : robots) {
         if (!isRobotActive(robot.getId())) continue;
         if (robot.getRole() == role) return robot;
->>>>>>> 0ff8d929619e556decd7d668ada64239d8c8b102
     }
     throw std::runtime_error("No robot of desired role");
 }
