@@ -27,7 +27,7 @@ run_with_restart() {
             else
                 echo "[$(date '+%H:%M:%S')] $APP_NAME terminou com código $EXIT_CODE. Reiniciando em 2s..."
             fi
-            sleep 2
+            #sleep 2 # Espera 2 segundos antes de reiniciar(se der merda tem que descomentar isso)
         fi
     done
 }
