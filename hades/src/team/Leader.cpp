@@ -424,10 +424,8 @@ void Leader::select_plays() {
     std::array<Robot::role, 16> roles;
     roles.fill(Robot::unknown);
 
-    //std::cout << "plays: " << std::endl;
     // Aplicar roles de todas as plays em ordem de score
     for (auto& p : plays) {
-        //std::cout << p->get_name() << std::endl;
         roles = p->role_assign(world, team, roles);
     }
 

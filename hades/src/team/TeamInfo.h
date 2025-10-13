@@ -171,7 +171,7 @@ public:
     void setColor(colors c);
 
 private:
-    mutable std::mutex mtx;
+    mutable std::recursive_mutex mtx;
     double stop_distance_to_ball = 500;
     double stop_max_speed = 0.5;
     std::array<bool, 16> active_robots = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};

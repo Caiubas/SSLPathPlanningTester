@@ -138,8 +138,45 @@ public:
     void set_m_last_time_stamp(int64_t m_last_time_stamp);
     void set_last_role(enum role last_role);
 
+
+    void setRole(enum role r);
+    enum role getRole() const;
+
+    bool isAlly() const;
+    bool isPositioned() const;
+    bool isOriented() const;
+    bool isAligned() const;
+    int getId() const;
+    Point getOldPosition() const;
+    Point getPosition() const;
+    double getYaw() const;
+    Vector2d& getVelocity();
+    double getVyaw() const;
+    bool isDetected() const;
+    bool hasKicker();
+    bool isStopped() const;
+    bool isMoving() const;
+    bool isSpinning() const;
+    const std::deque<Vector2d>& getStoredVelocities() const;
+    double getRadius() const;
+    double getKickDistance() const {return kickDistance;};
+
+    // --- Setters ---
+    void setAlly(bool is);
+    void setPositioned(bool is);
+    void setOriented(bool is);
+    void setAligned(bool is);
+    void setKicker(bool kicker);
+    void setId(int id);
+    void setPosition(const Point& p);
+    void setYaw(double y);
+    void setVelocity(const Vector2d& v);
+    void setVyaw(double v);
+    void setDetected(bool d);
+    void setStoredVelocities(const std::deque<Vector2d>& vels);
+
 private:
-    mutable std::mutex mtx;
+    mutable std::recursive_mutex mtx;
     bool active = false;
     double mBall_avoidance_radius = 100;
 
