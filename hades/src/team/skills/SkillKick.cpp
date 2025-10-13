@@ -52,6 +52,7 @@ namespace skills {
 			Vector2d v_vet = {robot.get_world().ball.getPosition(), robot.getPosition()};
 			v_vet = v_vet.getNormalized(robot.get_m_vxy_max());
 			robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
+			robot.set_mkicker_x(3.5);
 			//sleep(1); // Gambiarra braba mas NAO funciona
 		}
 

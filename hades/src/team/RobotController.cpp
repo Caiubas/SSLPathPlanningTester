@@ -263,7 +263,6 @@ void RobotController::receive_config() {
         mStatic_angle_tolarance = 0.01;
         mVyaw_min = 1;
         mVxy_min = 0.4;
-        kicker = true;
     }
     if (han.new_tartarus.ssl_vision) { //TODO REMOVER E NO OUTRO LUGAR
         mKP_ang = 0.35;
@@ -277,8 +276,10 @@ void RobotController::receive_config() {
         mVxy_max = 0.7;
         mVyaw_min = 0.25;
         mVyaw_max = 3;
-        kicker = true;
     }
+    kicker = han.new_tartarus.robots[getId()].has_kicker;
+    if (kicker) kickDistance = 2000;
+    else kickDistance = 500;
 }
 
 
