@@ -63,40 +63,40 @@ public:
     //flags
 
     // --- Getters ---
-    bool isAlly() const;
-    bool isPositioned() const;
-    bool isOriented() const;
-    bool isAligned() const;
-    int getId() const;
-    Point getOldPosition() const;
-    Point getPosition() const;
-    double getYaw() const;
-    Vector2d& getVelocity();
-    double getVyaw() const;
-    bool isDetected() const;
-    bool hasKicker();
-    bool isStopped() const;
-    bool isMoving() const;
-    bool isSpinning() const;
-    enum role getRole() const;
-    const std::deque<Vector2d>& getStoredVelocities() const;
-    double getRadius() const;
-    double getKickDistance() const {return kickDistance;};
+    virtual bool isAlly() const;
+    virtual bool isPositioned() const;
+    virtual bool isOriented() const;
+    virtual bool isAligned() const;
+    virtual int getId() const;
+    virtual Point getOldPosition() const;
+    virtual Point getPosition() const;
+    virtual double getYaw() const;
+    virtual Vector2d& getVelocity();
+    virtual double getVyaw() const;
+    virtual bool isDetected() const;
+    virtual bool hasKicker();
+    virtual bool isStopped() const;
+    virtual bool isMoving() const;
+    virtual bool isSpinning() const;
+    virtual enum role getRole() const;
+    virtual const std::deque<Vector2d>& getStoredVelocities() const;
+    virtual double getRadius() const;
+    virtual double getKickDistance() const {return kickDistance;};
 
     // --- Setters ---
-    void setAlly(bool is);
-    void setPositioned(bool is);
-    void setOriented(bool is);
-    void setAligned(bool is);
-    void setKicker(bool kicker);
-    void setId(int id);
-    void setPosition(const Point& p);
-    void setYaw(double y);
-    void setVelocity(const Vector2d& v);
-    void setVyaw(double v);
-    void setDetected(bool d);
-    void setRole(enum role r);
-    void setStoredVelocities(const std::deque<Vector2d>& vels);
+    virtual void setAlly(bool is);
+    virtual void setPositioned(bool is);
+    virtual void setOriented(bool is);
+    virtual void setAligned(bool is);
+    virtual void setKicker(bool kicker);
+    virtual void setId(int id);
+    virtual void setPosition(const Point& p);
+    virtual void setYaw(double y);
+    virtual void setVelocity(const Vector2d& v);
+    virtual void setVyaw(double v);
+    virtual void setDetected(bool d);
+    virtual void setRole(enum role r);
+    virtual void setStoredVelocities(const std::deque<Vector2d>& vels);
 
 };
 
