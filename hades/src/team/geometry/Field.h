@@ -21,7 +21,7 @@ public:
 				center_circle_radius(1000),
 				left_penalty_mark(-2000, 0),
 				right_penalty_mark(2000, 0),
-				goalBarrierThickness(0)
+				goalBarrierThickness(1)
 	{}
 
 	AreaRectangular full_dimensions;

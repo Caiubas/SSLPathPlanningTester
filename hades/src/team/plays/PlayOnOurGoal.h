@@ -17,7 +17,7 @@ public:
 	PlayOnOurGoal() {
 		name = "onOurGoal";
 		required_robots = 3;
-		required_roles = {Robot::goal_keeper, Robot::striker, Robot::support};
+		required_roles = {Robot::goal_keeper, Robot::defender, Robot::support};
 	}
 };
 

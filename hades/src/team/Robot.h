@@ -48,7 +48,7 @@ protected:
     double velocityThreshold = 0.1;
     double yawVelocityThreshold = 0.001;
     double vyaw = 0.0;
-    double radius = 160;
+    double radius = 100;
     bool detected = false;
     bool kicker = false;
     double kickDistance = 500;

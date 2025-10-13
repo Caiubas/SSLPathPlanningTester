@@ -178,7 +178,7 @@ public:
 private:
     mutable std::recursive_mutex mtx;
     bool active = false;
-    double mBall_avoidance_radius = 100;
+    double mBall_avoidance_radius = 50;
 
     //target movimentation
     double mtarget_yaw = 0;

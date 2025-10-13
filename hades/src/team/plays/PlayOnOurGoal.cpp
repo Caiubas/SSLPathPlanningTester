@@ -50,7 +50,7 @@ std::array<Robot::role, 16> PlayOnOurGoal::role_assign(WorldModel& world, TeamIn
             avaiable_robots.erase(avaiable_robots.begin() + goal_keeper_idx);
         }
 
-        if (selected_role == Robot::striker) { //Mais proximo da bola
+        if (selected_role == Robot::defender) { //Mais proximo da bola
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
