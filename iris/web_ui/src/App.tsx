@@ -8,6 +8,7 @@ import { initialData } from './data/initialData';
 import { useFetchLoop } from './hooks/useFetchLoop';
 import { mapBallToFieldCoords, mapRobotsToFieldCoords } from './utils';
 import type { DataType } from './types';
+import { useSendLoop } from './hooks/useSendLoop';
 
 export type SoftwareOption = 'ia' | 'gc' | 'vision' | 'tartarus' | 'caronte' | 'robot' | 'irisGC' | 'competition';
 
@@ -18,12 +19,13 @@ export default function App() {
 
   const [selectedSoftware, setSelectedSoftware] =
     useState<keyof DataType>('tartarus');
-
   const [reading, setReading] = useState(false);
   const [selectedDivision, setSelectedDivision] =
     useState<Division>('Entry Level');
 
   const data = useFetchLoop(reading, initialData);
+  useSendLoop(reading, data);
+  
 
   let dimensions = initialData.vision.field;
 

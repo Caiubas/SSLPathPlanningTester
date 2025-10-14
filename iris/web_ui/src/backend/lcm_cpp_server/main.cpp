@@ -124,107 +124,109 @@ int main()
         data["yellow"]["fouls"] = latest_data.yellow.fouls;
         data["yellow"]["goalkeeper_id"] = latest_data.yellow.goalkeeper_id;
 
-        // Constrói sets com os IDs que a visão detectou (por cor)
-        // ---- IA Robots (apenas detectados) ----
-        std::unordered_set<int> detected_blue;
-        std::unordered_set<int> detected_yellow;
+        // ---- IA Robots (fixo em 16) ----
+        constexpr size_t MAX_ROBOTS_SEND = 16;
 
-        for (const auto &v : latest_data.robots_blue)
-            if (v.detected) detected_blue.insert(v.robot_id);
-
-        for (const auto &v : latest_data.robots_yellow)
-            if (v.detected) detected_yellow.insert(v.robot_id);
-
-        size_t idx = 0;
-        const size_t MAX_ROBOTS_SEND = 16; // opcional
-
-        for (const auto &r : latest_data.robots) {
-            int id = r.id;
-
-            bool is_blue_detected = detected_blue.count(id) > 0;
-            bool is_yellow_detected = detected_yellow.count(id) > 0;
-            bool detected = is_blue_detected || is_yellow_detected;
-            if (!detected) continue;
-            if (idx >= MAX_ROBOTS_SEND) break;
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
+            const auto it = std::find_if(
+                latest_data.robots.begin(), latest_data.robots.end(),
+                [i](const auto& r) { return r.id == static_cast<int>(i); });
 
             crow::json::wvalue robot;
-            robot["id"] = id;
-            robot["spinner"] = r.spinner;
-            robot["kick"] = r.kick;
-            robot["vel_tang"] = r.vel_tang;
-            robot["vel_normal"] = r.vel_normal;
-            robot["vel_ang"] = r.vel_ang;
-            robot["kick_speed_x"] = r.kick_speed_x;
-            robot["kick_speed_z"] = r.kick_speed_z;
-            robot["wheel_speed"] = r.wheel_speed;
-            robot["wheel_fr"] = r.wheel_fr;
-            robot["wheel_fl"] = r.wheel_fl;
-            robot["wheel_bl"] = r.wheel_bl;
-            robot["wheel_br"] = r.wheel_br;
 
-            robot["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
-            robot["skill_robot"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
-            robot["role"] = latest_data.role_by_robot.count(id) ? latest_data.role_by_robot.at(id) : 0;
-            robot["move_to_x"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
-            robot["move_to_y"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
-            robot["turn_to_x"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
-            robot["turn_to_y"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
+            if (it != latest_data.robots.end()) {
+                const auto& r = *it;
+                robot["id"] = r.id;
+                robot["spinner"] = r.spinner;
+                robot["kick"] = r.kick;
+                robot["vel_tang"] = r.vel_tang;
+                robot["vel_normal"] = r.vel_normal;
+                robot["vel_ang"] = r.vel_ang;
+                robot["kick_speed_x"] = r.kick_speed_x;
+                robot["kick_speed_z"] = r.kick_speed_z;
+                robot["wheel_speed"] = r.wheel_speed;
+                robot["wheel_fr"] = r.wheel_fr;
+                robot["wheel_fl"] = r.wheel_fl;
+                robot["wheel_bl"] = r.wheel_bl;
+                robot["wheel_br"] = r.wheel_br;
+                robot["has_kicker"] = latest_data.has_kicker.count(r.id) ? latest_data.has_kicker.at(r.id) : false;
+                robot["skill_robot"] = latest_data.skill_by_robot.count(r.id) ? latest_data.skill_by_robot.at(r.id) : 0;
+                robot["role"] = latest_data.role_by_robot.count(r.id) ? latest_data.role_by_robot.at(r.id) : 0;
+                robot["move_to_x"] = latest_data.move_x_by_robot.count(r.id) ? latest_data.move_x_by_robot.at(r.id) : 0.0;
+                robot["move_to_y"] = latest_data.move_y_by_robot.count(r.id) ? latest_data.move_y_by_robot.at(r.id) : 0.0;
+                robot["turn_to_x"] = latest_data.turn_x_by_robot.count(r.id) ? latest_data.turn_x_by_robot.at(r.id) : 0.0;
+                robot["turn_to_y"] = latest_data.turn_y_by_robot.count(r.id) ? latest_data.turn_y_by_robot.at(r.id) : 0.0;
+            } else {
+                // robô ausente -> placeholder
+                robot["id"] = static_cast<int>(i);
+                robot["spinner"] = 0;
+                robot["kick"] = 0;
+                robot["vel_tang"] = 0.0;
+                robot["vel_normal"] = 0.0;
+                robot["vel_ang"] = 0.0;
+                robot["kick_speed_x"] = 0.0;
+                robot["kick_speed_z"] = 0.0;
+                robot["wheel_speed"] = 0.0;
+                robot["wheel_fr"] = 0.0;
+                robot["wheel_fl"] = 0.0;
+                robot["wheel_bl"] = 0.0;
+                robot["wheel_br"] = 0.0;
+                robot["has_kicker"] = false;
+                robot["skill_robot"] = 0;
+                robot["role"] = 0;
+                robot["move_to_x"] = 0.0;
+                robot["move_to_y"] = 0.0;
+                robot["turn_to_x"] = 0.0;
+                robot["turn_to_y"] = 0.0;
+            }
 
-            robot["detected"] = true;
-            robot["vision_team"] = is_blue_detected ? "blue" : "yellow";
+            robot["detected"] = detected_blue.count(i) || detected_yellow.count(i);
+            robot["vision_team"] = detected_blue.count(i) ? "blue" :
+                                detected_yellow.count(i) ? "yellow" : "none";
 
-            data["robots"][idx++] = std::move(robot);
+            data["robots"][i] = std::move(robot);
         }
 
-        // ---- Vision Robots Yellow ----
-        for (size_t i = 0; i < latest_data.robots_yellow.size(); ++i) {
-            const auto& r = latest_data.robots_yellow[i];
+        // ---- Vision Robots Yellow (16 fixos) ----
+        for (size_t i = 0; i < 16; ++i) {
             crow::json::wvalue robot;
-            robot["robot_id"] = r.robot_id;
-            robot["position_x"] = r.position_x;
-            robot["position_y"] = r.position_y;
-            robot["orientation"] = r.orientation;
-            robot["detected"] = r.detected;
+            if (i < latest_data.robots_yellow.size()) {
+                const auto& r = latest_data.robots_yellow[i];
+                robot["robot_id"] = r.robot_id;
+                robot["position_x"] = r.position_x;
+                robot["position_y"] = r.position_y;
+                robot["orientation"] = r.orientation;
+                robot["detected"] = r.detected;
+            } else {
+                robot["robot_id"] = static_cast<int>(i);
+                robot["position_x"] = 0.0;
+                robot["position_y"] = 0.0;
+                robot["orientation"] = 0.0;
+                robot["detected"] = false;
+            }
             data["robots_yellow"][i] = std::move(robot);
         }
 
-        // ---- Vision Robots Blue ----
-        for (size_t i = 0; i < latest_data.robots_blue.size(); ++i) {
-            const auto& r = latest_data.robots_blue[i];
+        // ---- Vision Robots Blue (16 fixos) ----
+        for (size_t i = 0; i < 16; ++i) {
             crow::json::wvalue robot;
-            robot["robot_id"] = r.robot_id;
-            robot["position_x"] = r.position_x;
-            robot["position_y"] = r.position_y;
-            robot["orientation"] = r.orientation;
-            robot["detected"] = r.detected;
+            if (i < latest_data.robots_blue.size()) {
+                const auto& r = latest_data.robots_blue[i];
+                robot["robot_id"] = r.robot_id;
+                robot["position_x"] = r.position_x;
+                robot["position_y"] = r.position_y;
+                robot["orientation"] = r.orientation;
+                robot["detected"] = r.detected;
+            } else {
+                robot["robot_id"] = static_cast<int>(i);
+                robot["position_x"] = 0.0;
+                robot["position_y"] = 0.0;
+                robot["orientation"] = 0.0;
+                robot["detected"] = false;
+            }
             data["robots_blue"][i] = std::move(robot);
         }
 
-        // ---- Dados do robô selecionado ----
-        if (latest_data.selected_robot_id >= 0) {
-            int id = latest_data.selected_robot_id;
-
-            crow::json::wvalue robotSkill;
-            robotSkill["id"] = id;
-            robotSkill["skill_robot"] = latest_data.skill_by_robot.count(id) ? latest_data.skill_by_robot.at(id) : 0;
-            robotSkill["role"] = latest_data.role_by_robot.count(id) ? latest_data.role_by_robot.at(id) : 0;
-            robotSkill["movex"] = latest_data.move_x_by_robot.count(id) ? latest_data.move_x_by_robot.at(id) : 0.0;
-            robotSkill["movey"] = latest_data.move_y_by_robot.count(id) ? latest_data.move_y_by_robot.at(id) : 0.0;
-            robotSkill["turnx"] = latest_data.turn_x_by_robot.count(id) ? latest_data.turn_x_by_robot.at(id) : 0.0;
-            robotSkill["turny"] = latest_data.turn_y_by_robot.count(id) ? latest_data.turn_y_by_robot.at(id) : 0.0;
-            robotSkill["has_kicker"] = latest_data.has_kicker.count(id) ? latest_data.has_kicker.at(id) : false;
-
-            data["robot"] = std::move(robotSkill);
-        } else {
-            data["robot"]["id"] = -1;
-            data["robot"]["skill_robot"] = 0;
-            data["robot"]["role"] = 0;
-            data["robot"]["movex"] = 0.0;
-            data["robot"]["movey"] = 0.0;
-            data["robot"]["turnx"] = 0.0;
-            data["robot"]["turny"] = 0.0;
-            data["robot"]["has_kicker"] = false;
-        }
 
         // ---- Bola ----
         data["balls"]["position_x"] = latest_data.balls.position_x;
