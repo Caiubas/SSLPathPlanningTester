@@ -132,7 +132,8 @@ void robots_sender::send_control() { // global function to send control commands
                     usleep(5000);
                 }
                 else{
-                    for (int i = 0; i < 16; i++) {
+                    int our_team_size = han.data_ia_copy.robots_size;
+                    for (int i = 0; i < our_team_size; i++) {
                         if(han.updated_tartarus != sender.updated) {
                             sender.updated = !sender.updated;
                         }
