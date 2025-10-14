@@ -11,10 +11,6 @@
 
 namespace tactics {
 	void TacticFollowTrajectory::act(RobotController& robot, std::vector<Point> trajectory) {
-		std::cout << "trajectory: " << std::endl;
-		for (int i = 0; i < trajectory.size(); i++) {
-			std::cout << trajectory[i].getX() << " " << trajectory[i].getY() << std::endl;
-		}
 		int i = 0;
 		while (size(trajectory) > 0) {
 			double distance = robot.getPosition().getDistanceTo(trajectory[0]);
