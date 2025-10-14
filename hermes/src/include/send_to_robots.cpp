@@ -133,29 +133,41 @@ void robots_sender::send_control() { // global function to send control commands
                 }
                 else{
                     int our_team_size = han.data_ia_copy.robots_size;
-                    for (int i = 0; i < our_team_size; i++) {
+                    std::vector<data::robot> robots_ia;
+                    for (int i = 0; i < 16; i++) {
                         if(han.updated_tartarus != sender.updated) {
                             sender.updated = !sender.updated;
                         }
-
                         else {
                             pct.id = han.data_ia_copy.robots[i].id;
-                            const auto our_robot = han.data_gc_copy.team_blue ? han.data_vision_copy.robots_blue[pct.id] : han.data_vision_copy.robots_yellow[pct.id];
-                            {
-                                if(our_robot.detected){
-                                    pct.Vx = han.data_ia_copy.robots[i].vel_tang; //vx é o vel_tang
-                                    pct.Vy = han.data_ia_copy.robots[i].vel_normal; //vy é o vel_normal
-                                    pct.Vang = -han.data_ia_copy.robots[i].vel_ang;
-                                    pct.kicker = han.data_ia_copy.robots[i].kick_speed_x;
-                                    pct.config = 0;
-                                    pct.param = 0;
+                            const auto& our_robot = han.data_gc_copy.team_blue ? han.data_vision_copy.robots_blue[i] : han.data_vision_copy.robots_yellow[i];
+                            if(our_robot.detected){
+                                data::robot robot_ia;
+                                robot_ia.id = han.data_ia_copy.robots[i].id;
+                                robot_ia.vel_tang = han.data_ia_copy.robots[i].vel_tang;
+                                robot_ia.vel_normal = han.data_ia_copy.robots[i].vel_normal;
+                                robot_ia.vel_ang = han.data_ia_copy.robots[i].vel_ang;
+                                robot_ia.kick_speed_x = han.data_ia_copy.robots[i].kick_speed_x;
+                                robots_ia.push_back(robot_ia);
+                            }   
+                        }
+                    }
+                    for(int i = 0; i < robots_ia.size(); i++) {
+                        if(han.updated_tartarus != sender.updated) {
+                            sender.updated = !sender.updated;
+                        }
+                        else {
+                            pct.Vx = robots_ia[i].vel_tang; //vx é o vel_tang
+                            pct.Vy = robots_ia[i].vel_normal; //vy é o vel_normal
+                            pct.Vang = -robots_ia[i].vel_ang;
+                            pct.kicker = robots_ia[i].kick_speed_x;
+                            pct.config = 0;
+                            pct.param = 0;
 
-                                std::cout << "Controlled robot - Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << " kick_speed: " << pct.kicker << std::endl;
-                                    memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
-                                    write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
-                                    usleep(5000);
-                                }
-                            }
+                            std::cout << "Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << " kick_speed: " << (int)pct.kicker << std::endl;
+                            memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
+                            write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
+                            usleep(5000);
                         }
                     }
                 }
