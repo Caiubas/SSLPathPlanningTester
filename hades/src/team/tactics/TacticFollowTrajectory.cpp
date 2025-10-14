@@ -11,7 +11,10 @@
 
 namespace tactics {
 	void TacticFollowTrajectory::act(RobotController& robot, std::vector<Point> trajectory) {
-
+		std::cout << "trajectory: " << std::endl;
+		for (int i = 0; i < trajectory.size(); i++) {
+			std::cout << trajectory[i].getX() << " " << trajectory[i].getY() << std::endl;
+		}
 		int i = 0;
 		while (size(trajectory) > 0) {
 			double distance = robot.getPosition().getDistanceTo(trajectory[0]);
@@ -31,6 +34,7 @@ namespace tactics {
 			robot.set_mtarget_vel({0, 0});
 			robot.setPositioned(true);
 			robot.get_m_team()->setPositioned(robot.getId(), true);
+			robot.set_m_current_trajectory(trajectory);
 			return;
 		}
 
@@ -38,6 +42,7 @@ namespace tactics {
 
 		robot.setPositioned(false);
 		robot.get_m_team()->setPositioned(robot.getId(), false);
+		robot.set_m_current_trajectory(trajectory);
 	}
 	void TacticFollowTrajectory::act(RobotController& robot) {
 		std::cout << "this is a dummy method" << std::endl;
