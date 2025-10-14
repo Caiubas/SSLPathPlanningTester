@@ -127,44 +127,57 @@ void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, cons
     // Atualiza campo
     latest_data.field = msg->field;
 
+    constexpr int NUM_ROBOTS = 16;
+
     // ----- Robôs Amarelos -----
     latest_data.robots_yellow.clear();
-    latest_data.robots_yellow.reserve(msg->robots_yellow_size);
+    latest_data.robots_yellow.reserve(NUM_ROBOTS);
 
-    for (int i = 0; i < msg->robots_yellow_size; ++i) {
-        const auto &src = msg->robots_yellow[i];
-        if (!src.detected) continue;  // só adiciona robôs detectados
-
-        data::detection_robots robot;
-        robot.robot_id   = src.robot_id;
-        robot.position_x = src.position_x;
-        robot.position_y = src.position_y;
-        robot.orientation = src.orientation;
-        robot.detected   = src.detected;
-
+    for (int i = 0; i < NUM_ROBOTS; ++i) {
+        data::detection_robots robot{};
+        if (i < msg->robots_yellow_size) {
+            const auto &src = msg->robots_yellow[i];
+            robot.robot_id   = src.robot_id;
+            robot.position_x = src.position_x;
+            robot.position_y = src.position_y;
+            robot.orientation = src.orientation;
+            robot.detected   = src.detected;
+        } else {
+            robot.robot_id   = i;
+            robot.position_x = 0.0f;
+            robot.position_y = 0.0f;
+            robot.orientation = 0.0f;
+            robot.detected   = false;
+        }
         latest_data.robots_yellow.push_back(robot);
     }
     latest_data.robots_yellow_size = latest_data.robots_yellow.size();
 
     // ----- Robôs Azuis -----
     latest_data.robots_blue.clear();
-    latest_data.robots_blue.reserve(msg->robots_blue_size);
+    latest_data.robots_blue.reserve(NUM_ROBOTS);
 
-    for (int i = 0; i < msg->robots_blue_size; ++i) {
-        const auto &src = msg->robots_blue[i];
-        if (!src.detected) continue;  // só adiciona robôs detectados
-
-        data::detection_robots robot;
-        robot.robot_id   = src.robot_id;
-        robot.position_x = src.position_x;
-        robot.position_y = src.position_y;
-        robot.orientation = src.orientation;
-        robot.detected   = src.detected;
-
+    for (int i = 0; i < NUM_ROBOTS; ++i) {
+        data::detection_robots robot{};
+        if (i < msg->robots_blue_size) {
+            const auto &src = msg->robots_blue[i];
+            robot.robot_id   = src.robot_id;
+            robot.position_x = src.position_x;
+            robot.position_y = src.position_y;
+            robot.orientation = src.orientation;
+            robot.detected   = src.detected;
+        } else {
+            robot.robot_id   = i;
+            robot.position_x = 0.0f;
+            robot.position_y = 0.0f;
+            robot.orientation = 0.0f;
+            robot.detected   = false;
+        }
         latest_data.robots_blue.push_back(robot);
     }
     latest_data.robots_blue_size = latest_data.robots_blue.size();
 }
+
 
 
 

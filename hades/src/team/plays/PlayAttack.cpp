@@ -26,7 +26,7 @@ int PlayAttack::calc_score(WorldModel world, TeamInfo& team) {
 
 std::array<Robot::role, 16> PlayAttack::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
     std::vector<Robot*> avaiable_robots = {};
-    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+    for (int i = 0 ; i < 16 ; i++) { //TODO FAZER ISSO EM TODOS
         if (team.isRobotActive(i) == 1) {
             if (roles[i] != Robot::unknown) {
                 continue;
