@@ -191,13 +191,13 @@ export function MidFieldSVG({
           const adjustedOrientation = 180 + (robot.orientation ?? 0); // Ajusta conforme seu padrão
           return (
             <image
-              key={`blue-${robot.id}`}
-              href={`/img/blue_team/id${robot.id}.png`}
-              x={robot.y - robotSize / 2}
-              y={robot.x - robotSize / 2}
+              key={`blue-${robot.robot_id}`}
+              href={`/img/blue_team/id${robot.robot_id}.png`}
+              x={robot.position_x - robotSize / 2}
+              y={robot.position_x - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.y}, ${robot.x})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_y}, ${robot.position_x})`}
               pointerEvents="none"
             />
           );
@@ -209,13 +209,13 @@ export function MidFieldSVG({
 
           return (
             <image
-              key={`yellow-${robot.id}`}
-              href={`/img/yellow_team/id${robot.id}.png`}
-              x={robot.y - robotSize / 2}
-              y={robot.x - robotSize / 2}
+              key={`yellow-${robot.robot_id}`}
+              href={`/img/yellow_team/id${robot.robot_id}.png`}
+              x={robot.position_y - robotSize / 2}
+              y={robot.position_x - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.y}, ${robot.x})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_y}, ${robot.position_x})`}
               pointerEvents="none"
             />
           );

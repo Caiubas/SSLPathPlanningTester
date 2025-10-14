@@ -1,16 +1,20 @@
 // src/components/sections/IASection.tsx
-import type { DataType } from '../../types';
+import type { DataType, DetectionRobot } from '../../types';
 
 type Props = {
   data: DataType;
   setSelected: React.Dispatch<React.SetStateAction<keyof DataType>>;
   setSelectedRobotId: React.Dispatch<React.SetStateAction<number | null>>;
+
+  blueRobots: DetectionRobot[];
+  yellowRobots: DetectionRobot[];
 };
 
 export default function IASection({
   data,
   setSelected,
   setSelectedRobotId,
+  blueRobots, yellowRobots,
 }: Props) {
   const teamBlueSelected = data.gc.team_blue;
   const team = teamBlueSelected ? 'blue_team' : 'yellow_team';
@@ -18,7 +22,7 @@ export default function IASection({
 
   // Pega os IDs dos robôs detectados pelo LCM de visão
   const detectedIds = new Set(
-    (teamBlueSelected ? data.vision.robots_blue : data.vision.robots_yellow)
+    (teamBlueSelected ? blueRobots: yellowRobots)
       ?.filter((r) => r.detected)
       .map((r) => r.robot_id) || [],
   );

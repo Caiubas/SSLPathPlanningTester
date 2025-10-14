@@ -51,6 +51,8 @@ export function DataViewAll({
         data={data}
         setSelected={setSelected}
         setSelectedRobotId={setSelectedRobotId}
+        blueRobots={blueRobots}
+        yellowRobots={yellowRobots}
       />
     ),
     gc: <GCSection data={data} />,
