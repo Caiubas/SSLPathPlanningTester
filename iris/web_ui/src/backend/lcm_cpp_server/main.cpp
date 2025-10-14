@@ -127,6 +127,15 @@ int main()
         // ---- IA Robots (fixo em 16) ----
         constexpr size_t MAX_ROBOTS_SEND = 16;
 
+        std::unordered_set<int> detected_blue;
+        std::unordered_set<int> detected_yellow;
+
+        for (const auto &v : latest_data.robots_blue)
+            if (v.detected) detected_blue.insert(v.robot_id);
+
+        for (const auto &v : latest_data.robots_yellow)
+            if (v.detected) detected_yellow.insert(v.robot_id);
+
         for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
             const auto it = std::find_if(
                 latest_data.robots.begin(), latest_data.robots.end(),
