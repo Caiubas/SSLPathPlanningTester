@@ -7,7 +7,7 @@ import { FIELD_DIMENSIONS, type Division } from './data/fieldDimensions';
 import { initialData } from './data/initialData';
 import { useFetchLoop } from './hooks/useFetchLoop';
 import { mapBallToFieldCoords, mapRobotsToFieldCoords } from './utils';
-import type { DataType } from './types';
+import type { DataType, DetectionRobot } from './types';
 import { useSendLoop } from './hooks/useSendLoop';
 
 export type SoftwareOption = 'ia' | 'gc' | 'vision' | 'tartarus' | 'caronte' | 'robot' | 'irisGC' | 'competition';
@@ -39,11 +39,10 @@ export default function App() {
   const centerX = dimensions.field_width / 2;
   const centerY = totalFieldLength / 2;
 
-  const yellowRobots = data.vision.robots_yellow
+  const yellowRobots : DetectionRobot[] = data.vision.robots_yellow
     .filter((r) => r.detected == true)
     .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
-
-  const blueRobots = data.vision.robots_blue
+  const blueRobots : DetectionRobot[] = data.vision.robots_blue
     .filter((r) => r.detected == true)
     .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
 
@@ -108,6 +107,8 @@ export default function App() {
                 setReceptDimensions={setReceptDimensions}
                 selectedRobotId={selectedRobotId}
                 setSelectedRobotId={setSelectedRobotId}
+                blueRobots={blueRobots}
+                yellowRobots={yellowRobots}
               />
             )}
           </div>
