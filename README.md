@@ -129,3 +129,7 @@ no software da tigers:
 ## Orientação utilizada pela equipe:
 
 ![Robot Orientation](Robot_orientation.png "robot orientation")
+
+## Código de cores:
+
+![Código de cores](Código de cores.png "Código de cores")
