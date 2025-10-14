@@ -427,12 +427,25 @@ void RobotController::receive_vision() {
 
 void RobotController::receive_field_geometry() {
     //TODO implementar urgente
-    mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
-    mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
-    if (han.new_tartarus.half_field) {
-        if (han.new_tartarus.right_field) mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(0), static_cast<double>(-han.new_vision.field.field_width/2)});
-        else mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(0), static_cast<double>(han.new_vision.field.field_width/2)});
+    if (!han.new_tartarus.half_field) {
+        mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
+        mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
     }
+    if (han.new_tartarus.half_field) {
+        if (han.new_tartarus.right_field) std::cout << "right" << std::endl;
+        if (han.new_tartarus.right_field) {
+            mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(0.0), static_cast<double>(-han.new_vision.field.field_width/2)});
+            mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
+        } else {
+            mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
+            mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(0.0), static_cast<double>(han.new_vision.field.field_width/2)});
+        }
+        if (getId() == 1){
+            std::cout << "inside: " << mWorld.field.inside_dimensions.getMinorPoint().getX() << " " << mWorld.field.inside_dimensions.getMinorPoint().getY() << std::endl;
+            std::cout  << mWorld.field.inside_dimensions.getMajorPoint().getX() << " " << mWorld.field.inside_dimensions.getMajorPoint().getY() << std::endl;
+            std::cout << han.new_vision.field.field_length << " " << han.new_vision.field.field_width << std::endl;
+        }
+    }   //TODO resolver isso aqui
 
     AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
     AreaRectangular rightDefenseArea = {{han.new_vision.field.field_length/2 - han.new_vision.field.defense_area_height, -han.new_vision.field.defense_area_width/2}, {han.new_vision.field.field_length/2, han.new_vision.field.defense_area_width/2}};
