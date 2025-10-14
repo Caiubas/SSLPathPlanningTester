@@ -9,8 +9,8 @@ type Props = {
 export default function GameEventButton({ label, value, color }: Props) {
   const handleClick = async () => {
     // sempre reseta para 0 antes de enviar o novo evento
-    await sendPost("http://localhost:5000/command", { game_event: 0 });
-    await sendPost("http://localhost:5000/command", { game_event: value });
+    await sendPost("http://localhost:5000/data", { game_event: 0 });
+    await sendPost("http://localhost:5000/data", { game_event: value });
   };
 
   const bgColor =

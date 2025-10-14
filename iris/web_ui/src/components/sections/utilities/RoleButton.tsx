@@ -10,7 +10,7 @@ type Props = {
 export default function RoleButton({ label, value, color, robotId }: Props) {
   const handleClick = async () => {
     console.log('Enviando role', value, 'para robô', robotId);
-    await sendPost('http://localhost:5000/command', {
+    await sendPost('http://localhost:5000/data', {
       role: value,
       robot_id: robotId,
     });

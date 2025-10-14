@@ -11,7 +11,7 @@ export default function GoalkeeperIdInput() {
       value={goalieInput}
       setValue={setGoalieInput}
       onSubmit={async () => {
-        await sendPost('http://localhost:5000/command', {
+        await sendPost('http://localhost:5000/data', {
           goalkeeper_id: goalieInput,
           goalkeeper_from_lcm: false, // essencial para impedir sobrescrita
         });

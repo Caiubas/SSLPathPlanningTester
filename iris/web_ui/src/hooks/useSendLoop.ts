@@ -1,25 +1,24 @@
 import { useEffect } from 'react';
-import axios from 'axios';
 import type { DataType } from '../types';
+import { sendPost } from './useSendPost';
 
 export function useSendLoop(sending: boolean, data: Partial<DataType>) {
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
+    const url = 'http://localhost:5000/data'; // ou outro endpoint real/mock
 
     const sendData = async () => {
-      try {
-        await axios.post('http://localhost:5000/data', data, {
-          headers: { 'Content-Type': 'application/json' },
-        });
-        console.log('Dados enviados:', data);
-      } catch (error) {
-        console.error('Erro ao enviar dados:', error);
+      const success = await sendPost(url, data);
+      if (success) {
+        console.log('✅ Dados enviados com sucesso:', data);
+      } else {
+        console.warn('⚠️ Falha ao enviar dados.');
       }
     };
 
     if (sending) {
-      sendData(); // envia imediatamente
-      interval = setInterval(sendData, 33); // envia a cada 33ms
+      sendData(); // Envia imediatamente
+      interval = setInterval(sendData, 1000); // Envia a cada 33ms
     }
 
     return () => {

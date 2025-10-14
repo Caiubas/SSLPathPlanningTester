@@ -14,7 +14,7 @@ export function DataView({ reading, setReading, data }: Props) {
     const novoEstado = !recebendoDoLCM;
     setRecebendoDoLCM(novoEstado);
 
-    const success = await sendPost('http://localhost:5000/command', {
+    const success = await sendPost('http://localhost:5000/data', {
       team_blue_from_lcm: novoEstado,
       goalkeeper_from_lcm: novoEstado,
     });

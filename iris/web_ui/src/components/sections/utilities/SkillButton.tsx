@@ -10,8 +10,8 @@ type Props = {
 
 export default function SkillButton({ label, value, color = 'default', robotId }: Props) {
   const handleClick = async () => {
-    await sendPost('http://localhost:5000/command', { skill: 0, robot_id: robotId });
-    await sendPost('http://localhost:5000/command', { skill: value, robot_id: robotId });
+    await sendPost('http://localhost:5000/data', { skill: 0, robot_id: robotId });
+    await sendPost('http://localhost:5000/data', { skill: value, robot_id: robotId });
   };
 
   const bgColor = color === 'default' ? 'bg-white hover:bg-[#acacac] text-black' : '';

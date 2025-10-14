@@ -2,7 +2,7 @@ import { sendPost } from '../../../hooks/useSendPost';
 
 function TeamSelector() {
   const handleChangeTeam = async (isBlue: boolean) => {
-    const success = await sendPost('http://localhost:5000/command', {
+    const success = await sendPost('http://localhost:5000/data', {
       team_blue: isBlue,
     });
     alert(success ? 'Time alterado' : 'Erro ao alterar time');

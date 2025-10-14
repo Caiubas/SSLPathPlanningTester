@@ -13,8 +13,8 @@ export default function MoveToButton({ label, value, robotId }: Props) {
   const [y, setY] = useState<number>(0);
 
   const handleClick = async () => {
-    await sendPost('http://localhost:5000/command', { skill: 0, robot_id: robotId });
-    await sendPost('http://localhost:5000/command', {
+    await sendPost('http://localhost:5000/data', { skill: 0, robot_id: robotId });
+    await sendPost('http://localhost:5000/data', {
       skill: value,
       robot_id: robotId,
       move_to_x: x,

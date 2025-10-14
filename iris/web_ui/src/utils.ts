@@ -1,6 +1,6 @@
 import { competitionData } from './data/competitionData';
 import { sendPost } from './hooks/useSendPost';
-import type { DataType, DetectionBall, DetectionRobot, Robot } from './types';
+import type { DataType, DetectionBall, DetectionRobot } from './types';
 
 // -------------------- Conversões --------------------
 
@@ -9,7 +9,7 @@ export function detectionRobotToRobot(dr: DetectionRobot): DetectionRobot {
     robot_id: dr.robot_id,
     position_x: dr.position_x,
     position_y: dr.position_y,
-    orientation: (dr.orientation * 180) / Math.PI,
+    orientation: dr.orientation,
     detected: dr.detected, // rad → graus
   };
 }
@@ -43,24 +43,6 @@ export function mapBallToFieldCoords(
 
 // -------------------- Filtros --------------------
 
-type RobotIdOnly = { id: number };
-
-export function filterRobotsForTeam(
-  iaRobots: Robot[],
-  robotsBlueVision: RobotIdOnly[] | undefined,
-  robotsYellowVision: RobotIdOnly[] | undefined,
-  teamBlueSelected: boolean,
-  maxRobots: number
-): Robot[] {
-  const blueIds = new Set(robotsBlueVision?.map((r) => r.id) ?? []);
-  const yellowIds = new Set(robotsYellowVision?.map((r) => r.id) ?? []);
-
-  return iaRobots
-    .filter((robot) => (teamBlueSelected ? blueIds.has(robot.id) : yellowIds.has(robot.id)))
-    .filter((robot, index, arr) => arr.findIndex((r) => r.id === robot.id) === index) // remove duplicados
-    .sort((a, b) => a.id - b.id)
-    .slice(0, maxRobots);
-}
 
 // -------------------- Toggles --------------------
 
@@ -73,7 +55,7 @@ export const toggleLocal = async (
     const newValue = !value;
     setValue(newValue);
 
-    const success = await sendPost('http://localhost:5000/command', {
+    const success = await sendPost('http://localhost:5000/data', {
       [key]: newValue,
     });
 
@@ -113,7 +95,7 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
       payload = { [key]: newValue };
     }
 
-    const success = await sendPost('http://localhost:5000/command', payload);
+    const success = await sendPost('http://localhost:5000/data', payload);
 
     if (!success) {
       console.error(`Erro ao alternar ${key}`);
@@ -135,7 +117,7 @@ export const toggleBooleanWithId = async (
       [key]: !currentValue,
     };
 
-    const success = await sendPost('http://localhost:5000/command', payload);
+    const success = await sendPost('http://localhost:5000/data', payload);
 
     if (!success) {
       console.error(`Erro ao alternar ${key} para robô ${robotId}`);
@@ -148,7 +130,7 @@ export const toggleBooleanWithId = async (
 // -------------------- Update Numérico --------------------
 
 export const updateNumber = async (key: string, value: number) => {
-  const success = await sendPost('http://localhost:5000/command', {
+  const success = await sendPost('http://localhost:5000/data', {
     [key]: value,
   });
 

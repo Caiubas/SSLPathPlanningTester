@@ -197,7 +197,7 @@ int main()
         }
 
         // ---- Vision Robots Yellow (16 fixos) ----
-        for (size_t i = 0; i < 16; ++i) {
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
             crow::json::wvalue robot;
             if (i < latest_data.robots_yellow.size()) {
                 const auto& r = latest_data.robots_yellow[i];
@@ -217,7 +217,7 @@ int main()
         }
 
         // ---- Vision Robots Blue (16 fixos) ----
-        for (size_t i = 0; i < 16; ++i) {
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
             crow::json::wvalue robot;
             if (i < latest_data.robots_blue.size()) {
                 const auto& r = latest_data.robots_blue[i];
@@ -269,9 +269,9 @@ int main()
         return crow::response{data}; });
 
     // ============================
-    // POST /command
+    // POST /data
     // ============================
-    CROW_ROUTE(app, "/command").methods("POST"_method)([](const crow::request &req)
+    CROW_ROUTE(app, "/data").methods("POST"_method)([](const crow::request &req)
                                                        {
         auto body = crow::json::load(req.body);
         if (!body)

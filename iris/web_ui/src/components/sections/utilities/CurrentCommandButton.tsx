@@ -9,8 +9,8 @@ type Props = {
 export default function CurrentCommandButton({ label, value, color }: Props) {
   const handleClick = async () => {
     // sempre reseta para 0 antes de enviar o novo evento
-    await sendPost("http://localhost:5000/command", { current_command: 0 });
-    await sendPost("http://localhost:5000/command", { current_command: value });
+    await sendPost("http://localhost:5000/data", { current_command: 0 });
+    await sendPost("http://localhost:5000/data", { current_command: value });
   };
 
   const bgColor =

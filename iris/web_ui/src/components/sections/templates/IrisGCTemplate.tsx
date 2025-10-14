@@ -10,7 +10,7 @@ export default function IrisGCTemplate() {
 
   const applyPosition = async () => {
     try {
-      await sendPost("http://localhost:5000/command", {
+      await sendPost("http://localhost:5000/data", {
         designated_position_x: posX,
         designated_position_y: posY,
       });

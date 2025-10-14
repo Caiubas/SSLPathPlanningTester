@@ -172,7 +172,7 @@ export default function TartarusSection({
             if (tartarus.half_field) {
               const payload = { right_field: newFlip };
               const success = await sendPost(
-                'http://localhost:5000/command',
+                'http://localhost:5000/data',
                 payload,
               );
               if (!success) console.error('Erro ao enviar left_field');
