@@ -153,12 +153,16 @@ namespace skills {
                 minor[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMinorPoint().getY();
                 major[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMajorPoint().getX();
                 major[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()).getMajorPoint().getY();
+                goal.setX(std::clamp(goal.getX(), minor[0], major[0]));
+                goal.setY(std::clamp(goal.getY(), minor[1], major[1]));
 
             } else {
                 minor[0] = robot.get_world().field.inside_dimensions.getResized(-robot.getRadius()).getMinorPoint().getX();
                 minor[1] = robot.get_world().field.inside_dimensions.getResized(-robot.getRadius()).getMinorPoint().getY();
                 major[0] = robot.get_world().field.inside_dimensions.getResized(-robot.getRadius()).getMajorPoint().getX();
                 major[1] = robot.get_world().field.inside_dimensions.getResized(-robot.getRadius()).getMajorPoint().getY();
+                goal.setX(std::clamp(goal.getX(), minor[0], major[0]));
+                goal.setY(std::clamp(goal.getY(), minor[1], major[1]));
             }
             C_trajectory pf(false, false, 0, 100, 50, 0, minor, major);
 
@@ -244,12 +248,11 @@ namespace skills {
             a.setMinorPoint({a.getMajorPoint().getX() - wall_thickness, a.getMinorPoint().getY()});
             a.setMajorPoint({a.getMajorPoint().getX() + 10000, a.getMajorPoint().getY()});
                         obs_rectangular.push_back(getRectangle(a.getResized(robot.getRadius())));
-
             auto trajectory_vector = pf.path_find(start.getVector(), goal.getVector(), obs_circular, obs_rectangular, obs_tilted);
             std::vector<Point> trajectory = {};
             for (int i = 0; i < trajectory_vector.size(); i++) {
                 if (trajectory_vector.size() > 1 && i == 1) {if (trajectory_vector[0][0] == trajectory_vector[1][0] && trajectory_vector[0][1] == trajectory_vector[1][1]) continue;}
-                trajectory.emplace_back(trajectory_vector[i][0], trajectory_vector[i][1]);
+                trajectory.emplace_back(std::clamp(trajectory_vector[i][0], minor[0], major[0]), std::clamp(trajectory_vector[i][1], minor[1], major[1]));
             }
             if (trajectory.size() == 1) return {};
             return trajectory;
