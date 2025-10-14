@@ -1,7 +1,7 @@
 // src/components/DataViewAll.tsx
 import { useState } from 'react';
 import { useFetchLoop } from '../hooks/useFetchLoop';
-import type { DataType } from '../types';
+import type { DataType, DetectionRobot } from '../types';
 import { initialData } from '../data/initialData';
 
 import IASection from './sections/HadesSection';
@@ -26,6 +26,9 @@ type Props = {
   setSelectedRobotId: React.Dispatch<React.SetStateAction<number | null>>;
   selectedRobotId: number | null;
   className?: string;
+
+  blueRobots: DetectionRobot[];
+  yellowRobots: DetectionRobot[];
 };
 
 export function DataViewAll({
@@ -36,7 +39,8 @@ export function DataViewAll({
   receptDimensions,
   setReceptDimensions,
   setSelected,
-  className
+  className,
+  blueRobots, yellowRobots,
 }: Props) {
   const data = useFetchLoop(reading, initialData);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
@@ -47,10 +51,12 @@ export function DataViewAll({
         data={data}
         setSelected={setSelected}
         setSelectedRobotId={setSelectedRobotId}
+        blueRobots={blueRobots}
+        yellowRobots={yellowRobots}
       />
     ),
     gc: <GCSection data={data} />,
-    vision: <VisionSection data={data} />,
+    vision: <VisionSection blueRobots={blueRobots} yellowRobots={yellowRobots} data={data} />,
     tartarus: (
       <TartarusSection
         data={data}
@@ -80,7 +86,7 @@ export function DataViewAll({
       />
     ),
     irisGC: (
-      <IrisGCTemplate/>
+      <IrisGCTemplate />
     ),
   };
 
