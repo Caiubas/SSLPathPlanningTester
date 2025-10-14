@@ -39,16 +39,14 @@ export default function App() {
   const centerX = dimensions.field_width / 2;
   const centerY = totalFieldLength / 2;
 
-  const yellowRobots = mapRobotsToFieldCoords(
-    data.vision.robots_yellow,
-    centerX,
-    centerY,
-  );
-  const blueRobots = mapRobotsToFieldCoords(
-    data.vision.robots_blue,
-    centerX,
-    centerY,
-  );
+  const yellowRobots = data.vision.robots_yellow
+    .filter((r) => r.detected == true)
+    .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
+
+  const blueRobots = data.vision.robots_blue
+    .filter((r) => r.detected == true)
+    .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
+
   const ball = mapBallToFieldCoords(data.vision.balls, centerX, centerY);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(window.innerWidth > 1200);
