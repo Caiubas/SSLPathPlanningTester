@@ -113,6 +113,7 @@ void Handler::handleTartarus(const lcm::ReceiveBuffer *, const std::string &, co
     latest_data.selected_robot_id = msg->robots->id;
 }
 
+    constexpr int NUM_ROBOTS = 16;
 
 void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, const vision_t *msg)
 {
@@ -127,7 +128,6 @@ void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, cons
     // Atualiza campo
     latest_data.field = msg->field;
 
-    constexpr int NUM_ROBOTS = 16;
 
     // ----- Robôs Amarelos -----
     latest_data.robots_yellow.clear();
@@ -135,7 +135,7 @@ void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, cons
 
     for (int i = 0; i < NUM_ROBOTS; ++i) {
         data::detection_robots robot{};
-        if (i < msg->robots_yellow_size) {
+        if (i < NUM_ROBOTS) {
             const auto &src = msg->robots_yellow[i];
             robot.robot_id   = src.robot_id;
             robot.position_x = src.position_x;
@@ -159,7 +159,7 @@ void Handler::handleVision(const lcm::ReceiveBuffer *, const std::string &, cons
 
     for (int i = 0; i < NUM_ROBOTS; ++i) {
         data::detection_robots robot{};
-        if (i < msg->robots_blue_size) {
+        if (i < NUM_ROBOTS) {
             const auto &src = msg->robots_blue[i];
             robot.robot_id   = src.robot_id;
             robot.position_x = src.position_x;
@@ -191,10 +191,8 @@ void Handler::handleIA(const lcm::ReceiveBuffer *, const std::string &, const ia
     latest_data.estrategia = msg->estrategia;
     latest_data.timestamp = msg->timestamp;
 
-    int safe_size = std::max(0, std::min(static_cast<int>(msg->robots_size), 16));
-
     latest_data.robots.clear();
-    for (int i = 0; i < safe_size; ++i) {
+    for (int i = 0; i < NUM_ROBOTS; ++i) {
         latest_data.robots.push_back(msg->robots[i]);
     }
 }
