@@ -12,7 +12,7 @@ namespace skills {
 
 class SkillKick {
 private:
-	double distancethreshold = 350;
+	double distancethreshold = 500;
 	double find_angle_error(RobotController& robot, Point goal);
 public:
 	void act(RobotController& robot);

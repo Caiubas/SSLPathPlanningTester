@@ -15,11 +15,7 @@ namespace roles {
         int K = 2;
         int k1 = 1;
         double d_to_edge = 0;
-        try {
-            d_to_edge = std::clamp(robot.get_m_team()->getRobotofRole(Robot::striker).getKickDistance() - fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()), 0.0, distance_to_edge);
-        } catch (...) {
-            d_to_edge = std::clamp(robot.getKickDistance() - fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()), 0.0, distance_to_edge);
-        }
+
         std::vector<Point> points;
         points.reserve(N);
         Point goal(0, 0);

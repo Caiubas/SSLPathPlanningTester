@@ -61,7 +61,6 @@ namespace roles {
             theyHaveGoalKeeper = true;
         } catch (...) {}
 
-
         LineSegment robot_goal = {robot.get_world().ball.getPosition(), goal};
         if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/8)) {
             intercept.act(robot);

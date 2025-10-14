@@ -93,6 +93,11 @@ bool RobotController::isActive() {
 }
 
 void RobotController::debug_mode() {
+    if (mTeam->getEvent() == TeamInfo::HALT) {
+        //skills::SkillStop stop;
+        //stop.act(*this);
+        //return;
+    }
     setRole(unknown);
     skills::SkillStop stop;
     stop.act(*this);
@@ -294,6 +299,7 @@ void RobotController::receive_config() {
 void RobotController::receive_vision() {
     std::unordered_set<int> allies_detected = {};
     std::unordered_set<int> enemies_detected = {};
+
     for (auto blue_robot : han.new_vision.robots_blue) {
         if (!blue_robot.detected) continue;
         if (mTeam->getColor() == TeamInfo::blue) {
@@ -439,12 +445,12 @@ void RobotController::receive_field_geometry() {
             mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
             mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(0.0), static_cast<double>(han.new_vision.field.field_width/2)});
         }
-        if (getId() == 1){
-            if (han.new_tartarus.right_field) std::cout << "right" << std::endl;
-            std::cout << "inside: " << mWorld.field.inside_dimensions.getMinorPoint().getX() << " " << mWorld.field.inside_dimensions.getMinorPoint().getY() << std::endl;
-            std::cout  << mWorld.field.inside_dimensions.getMajorPoint().getX() << " " << mWorld.field.inside_dimensions.getMajorPoint().getY() << std::endl;
-            std::cout << han.new_vision.field.field_length << " " << han.new_vision.field.field_width << std::endl;
+        if (getId() == 1) {
+            std::cout << "inside: " <<  mWorld.field.inside_dimensions.getMajorPoint().getX() << " " <<  mWorld.field.inside_dimensions.getMajorPoint().getY() << std::endl;
+            std::cout << mWorld.field.inside_dimensions.getMinorPoint().getX() << " " <<  mWorld.field.inside_dimensions.getMinorPoint().getY() << std::endl;
+
         }
+
     }   //TODO resolver isso aqui
 
     AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
@@ -466,13 +472,9 @@ void RobotController::receive_field_geometry() {
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
         mWorld.field.ourGoal = rightGoal;
-        mWorld.field.theirGoal = leftGoal;
+        mWorld.field.theirGoal = rightGoal; //TODO REMOVER
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
-    }
-
-    if (han.new_tartarus.half_field != 0) {
-            //TODO implementar
     }
 }
 
@@ -483,6 +485,7 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
+    if (getId() == 1) std::cout << mtarget_vel.getX() << " " << mtarget_vel.getY() << std::endl;
     if (han.new_tartarus.ssl_vision) {
         mtarget_vel = mtarget_vel.getRotated(3.14156/2);
         han.new_ia.robots[id].vel_normal = mtarget_vel.getY();
