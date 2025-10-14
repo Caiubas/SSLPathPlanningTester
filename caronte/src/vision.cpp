@@ -62,11 +62,11 @@ void vision_master::recebe_dados_vision() {
                         my_vision_data.field.defense_area_height = 1800.0;
                     }
                 }
-            }
-
-            if(han.new_tartarus.half_field == true){
-                my_vision_data.field.field_length = field.field_length()/2;
                 
+                if(han.new_tartarus.half_field == true){
+                    my_vision_data.field.field_length = field.field_length() / 2.0;
+                
+                }
             }
 
             if(vision.has_detection()){
