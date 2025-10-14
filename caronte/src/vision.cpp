@@ -27,44 +27,6 @@ void vision_master::recebe_dados_vision() {
             // Parse dos dados recebidos (Vision)
             vision.ParseFromArray(buffer_vision, bytes_received_vision);
 
-            if(vision.has_detection()){
-                my_vision_data.timestamp = vision.detection().frame_number();
-                detection = vision.detection();
-                if(han.new_tartarus.autoreferee == false){
-                    if (detection.robots_blue_size() > 0) {
-                        for (int i = 0; i < detection.robots_blue_size(); i++) {
-                            int id = detection.robots_blue(i).robot_id();
-                            if(my_vision_data.robots_blue[id].detected == false) {
-                                my_vision_data.robots_blue[id].detected = true;
-                                my_vision_data.robots_blue[id].robot_id = id;
-                                my_vision_data.robots_blue[id].position_x = detection.robots_blue(i).x();
-                                my_vision_data.robots_blue[id].position_y = detection.robots_blue(i).y();
-                                my_vision_data.robots_blue[id].orientation = detection.robots_blue(i).orientation();
-                                vision_master_instance.blue_ids.insert(id);
-                            }
-                        }
-                    }
-
-                    // Para os robôs amarelos, repita o mesmo processo
-                    if (detection.robots_yellow_size() > 0) {
-                        for (int i = 0; i < detection.robots_yellow_size(); i++) {
-                            int id = detection.robots_yellow(i).robot_id();
-                            if(my_vision_data.robots_yellow[id].detected == false) {
-                                my_vision_data.robots_yellow[id].detected = true;
-                                my_vision_data.robots_yellow[id].robot_id = id;
-                                my_vision_data.robots_yellow[id].position_x = detection.robots_yellow(i).x();
-                                my_vision_data.robots_yellow[id].position_y = detection.robots_yellow(i).y();
-                                my_vision_data.robots_yellow[id].orientation = detection.robots_yellow(i).orientation();
-                                vision_master_instance.yellow_ids.insert(id);
-                            }
-                        }
-                    }
-                    if (vision.detection().balls_size() > 0) {
-                        my_vision_data.balls.position_x = detection.balls(0).x();
-                        my_vision_data.balls.position_y = detection.balls(0).y();
-                    }
-                }
-            }
             if (vision.has_geometry()) {
                 geometry = vision.geometry();
                 field = geometry.field();
@@ -101,6 +63,69 @@ void vision_master::recebe_dados_vision() {
                     }
                 }
             }
+
+            if(han.new_tartarus.half_field == true){
+                my_vision_data.field.field_length = field.field_length()/2;
+                
+            }
+
+            if(vision.has_detection()){
+                my_vision_data.timestamp = vision.detection().frame_number();
+                detection = vision.detection();
+                if(han.new_tartarus.autoreferee == false){
+                    if (detection.robots_blue_size() > 0) {
+                        for (int i = 0; i < detection.robots_blue_size(); i++) {
+                            int id = detection.robots_blue(i).robot_id();
+                            // Se half_field está ativado, só associa robôs do lado correto do campo
+                            if (!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && detection.robots_blue(i).x() > 0) || (!han.new_tartarus.right_field && detection.robots_blue(i).x() < 0)))) {
+                                if(my_vision_data.robots_blue[id].detected == false) {
+                                    my_vision_data.robots_blue[id].detected = true;
+                                    my_vision_data.robots_blue[id].robot_id = id;
+                                    my_vision_data.robots_blue[id].position_x = detection.robots_blue(i).x();
+                                    my_vision_data.robots_blue[id].position_y = detection.robots_blue(i).y();
+                                    my_vision_data.robots_blue[id].orientation = detection.robots_blue(i).orientation();
+                                    vision_master_instance.blue_ids.insert(id);
+                                }
+                            }
+                        }
+                    }
+
+                    // Para os robôs amarelos, repita o mesmo processo
+                    if (detection.robots_yellow_size() > 0) {
+                        for (int i = 0; i < detection.robots_yellow_size(); i++) {
+                            int id = detection.robots_yellow(i).robot_id();
+                            if(!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && detection.robots_yellow(i).x() > 0) || (!han.new_tartarus.right_field && detection.robots_yellow(i).x() < 0)))) {
+                                if(my_vision_data.robots_yellow[id].detected == false) {
+                                    my_vision_data.robots_yellow[id].detected = true;
+                                    my_vision_data.robots_yellow[id].robot_id = id;
+                                    my_vision_data.robots_yellow[id].position_x = detection.robots_yellow(i).x();
+                                    my_vision_data.robots_yellow[id].position_y = detection.robots_yellow(i).y();
+                                    my_vision_data.robots_yellow[id].orientation = detection.robots_yellow(i).orientation();
+                                    vision_master_instance.yellow_ids.insert(id);
+                                }
+                            }
+                        }
+                    }
+                    if (vision.detection().balls_size() > 0) {
+                        int balls_detected = 0;
+                        int max_confidence_idx = -1;
+                        float max_confidence = 0;
+                        for(int i = 0; i < vision.detection().balls_size(); i++) {
+                             // Se half_field está ativado, só associa a bola do lado correto do campo
+                            if(!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && vision.detection().balls(i).x() > 0) || (!han.new_tartarus.right_field && vision.detection().balls(i).x() < 0)))) {
+                                if (detection.balls(i).confidence() > max_confidence) {
+                                    max_confidence = detection.balls(i).confidence();
+                                    max_confidence_idx = i;
+                                }
+                            }
+                        }
+                        if(max_confidence_idx != -1) {
+                            my_vision_data.balls.position_x = detection.balls(max_confidence_idx).x();
+                            my_vision_data.balls.position_y = detection.balls(max_confidence_idx).y();
+                        }
+                    }
+                }
+            }
         }
     }
     my_vision_data.robots_yellow_size = vision_master_instance.yellow_ids.size();
@@ -123,5 +148,5 @@ void vision_master::recebe_dados_vision() {
     //std::this_thread::sleep_for(std::chrono::milliseconds(16));
     //envia apenas dados de geometria de campo, alternando entre o sslvision e o grsim
     //lcm.publish("vision", &my_vision_data);
-}  
+}
 
