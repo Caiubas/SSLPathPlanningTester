@@ -157,6 +157,7 @@ void robots_sender::send_control() { // global function to send control commands
                             sender.updated = !sender.updated;
                         }
                         else {
+                            pct.id = robots_ia[i].id;
                             pct.Vx = robots_ia[i].vel_tang; //vx é o vel_tang
                             pct.Vy = robots_ia[i].vel_normal; //vy é o vel_normal
                             pct.Vang = -robots_ia[i].vel_ang;
