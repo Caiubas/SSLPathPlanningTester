@@ -14,8 +14,6 @@ class robots_sender {
 
         grSim_Commands commands;
         grSim_Packet packet_grsim;
-
-        bool updated = false;
 };
 
 extern robots_sender sender;

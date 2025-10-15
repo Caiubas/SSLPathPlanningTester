@@ -76,9 +76,6 @@ void robots_sender::send_to_grsim() { // function to send data to grSim
 void robots_sender::send_control() { // global function to send control commands
     setupSocket_grsim();
     while(true) {
-        if(han.updated_tartarus != sender.updated) {
-            sender.updated = !sender.updated;
-        }
         //control_obj.connect_controller(); // Conecta o controle
         while(han.data_tartarus_copy.bool_controller == 1 && control_obj.joy == nullptr) { //only works with UI
             control_obj.connect_controller(); // try to connect the controller
@@ -89,10 +86,7 @@ void robots_sender::send_control() { // global function to send control commands
         if (han.data_tartarus_copy.ssl_vision == 0) {
             close(stm_obj.serial_port);
 
-            while(han.data_tartarus_copy.ssl_vision == 0 && han.updated_tartarus == sender.updated) {
-                if(han.updated_tartarus != sender.updated) {
-                    sender.updated = !sender.updated;
-                }
+            while(han.data_tartarus_copy.ssl_vision == 0) {
                 if(han.data_tartarus_copy.bool_controller == 1) {
                     control_obj.control(); // Mantém atualizando
 
@@ -116,11 +110,7 @@ void robots_sender::send_control() { // global function to send control commands
             }
         } else {
             stm_obj.stm_connect();
-            while(han.data_tartarus_copy.ssl_vision == 1 && han.updated_tartarus == sender.updated) {
-                if(han.updated_tartarus != sender.updated) {
-                    sender.updated = !sender.updated;
-                }
-
+            while(han.data_tartarus_copy.ssl_vision == 1) {
                 if(han.data_tartarus_copy.bool_controller == 1) {
                     control_obj.control(); // Mantém atualizando
                     pct.config = 0;
@@ -135,46 +125,36 @@ void robots_sender::send_control() { // global function to send control commands
                     int our_team_size = han.data_ia_copy.robots_size;
                     std::vector<data::robot> robots_ia;
                     for (int i = 0; i < 16; i++) {
-                        if(han.updated_tartarus != sender.updated) {
-                            sender.updated = !sender.updated;
-                        }
-                        else {
-                            pct.id = han.data_ia_copy.robots[i].id;
-                            const auto& our_robot = han.data_gc_copy.team_blue ? han.data_vision_copy.robots_blue[i] : han.data_vision_copy.robots_yellow[i];
-                            if(our_robot.detected){
-                                data::robot robot_ia;
-                                robot_ia.id = han.data_ia_copy.robots[i].id;
-                                robot_ia.vel_tang = han.data_ia_copy.robots[i].vel_tang;
-                                robot_ia.vel_normal = han.data_ia_copy.robots[i].vel_normal;
-                                robot_ia.vel_ang = han.data_ia_copy.robots[i].vel_ang;
-                                robot_ia.kick_speed_x = han.data_ia_copy.robots[i].kick_speed_x;
-                                robots_ia.push_back(robot_ia);
-                            }   
-                        }
+                        pct.id = han.data_ia_copy.robots[i].id;
+                        const auto& our_robot = han.data_gc_copy.team_blue ? han.data_vision_copy.robots_blue[i] : han.data_vision_copy.robots_yellow[i];
+                        if(our_robot.detected){
+                            data::robot robot_ia;
+                            robot_ia.id = han.data_ia_copy.robots[i].id;
+                            robot_ia.vel_tang = han.data_ia_copy.robots[i].vel_tang;
+                            robot_ia.vel_normal = han.data_ia_copy.robots[i].vel_normal;
+                            robot_ia.vel_ang = han.data_ia_copy.robots[i].vel_ang;
+                            robot_ia.kick_speed_x = han.data_ia_copy.robots[i].kick_speed_x;
+                            robots_ia.push_back(robot_ia);
+                        }  
                     }
                     for(int i = 0; i < robots_ia.size(); i++) {
-                        if(han.updated_tartarus != sender.updated) {
-                            sender.updated = !sender.updated;
-                        }
-                        else {
-                            pct.id = robots_ia[i].id;
-                            pct.Vx = robots_ia[i].vel_tang; //vx é o vel_tang
-                            pct.Vy = robots_ia[i].vel_normal; //vy é o vel_normal
-                            pct.Vang = -robots_ia[i].vel_ang;
-                            pct.kicker = robots_ia[i].kick_speed_x;
-                            pct.config = 0;
-                            pct.param = 0;
+                        pct.id = robots_ia[i].id;
+                        pct.Vx = robots_ia[i].vel_tang; //vx é o vel_tang
+                        pct.Vy = robots_ia[i].vel_normal; //vy é o vel_normal
+                        pct.Vang = -robots_ia[i].vel_ang;
+                        pct.kicker = robots_ia[i].kick_speed_x;
+                        pct.config = 0;
+                        pct.param = 0;
 
-                            std::cout << "Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << " kick_speed: " << (int)pct.kicker << std::endl;
-                            memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
-                            write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
-                            usleep(5000);
-                        }
-                    }
+                        std::cout << "Robot ID: " << (int)pct.id << " Vx: " << pct.Vx << " Vy: " << pct.Vy << " Vang: " << pct.Vang << " kick_speed: " << (int)pct.kicker << std::endl;
+                        memcpy(&stm_obj.msg[2], &pct, sizeof(Pacote));
+                        write(stm_obj.serial_port, stm_obj.msg, sizeof(stm_obj.msg));
+                        usleep(5000);
+                    }    
                 }
             }
-            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     close(stm_obj.serial_port);
     close(sock_grsim);

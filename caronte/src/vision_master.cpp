@@ -3,17 +3,12 @@
 
 vision_master vision_master_instance;
 
-void vision_master::tartarus_updated() {
-    if(han.updated_tartarus != vision_master_instance.updated) {
-        vision_master_instance.updated = !vision_master_instance.updated;
-    }
-}
+
 
 void vision_master::vision_main()
 {
     while (true)
     {
-        tartarus_updated();
         //when ssl_vision_atual changes, close the old socket and setup a new one to connect to other software
         if(vision_master_instance.ssl_vision_atual != han.new_tartarus.ssl_vision) {
             close(sock_vision);

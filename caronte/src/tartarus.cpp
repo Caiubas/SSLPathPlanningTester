@@ -9,6 +9,4 @@ void Handler::handle_tartarus(const lcm::ReceiveBuffer* rbuf,
     const data::tartarus* msg_tartarus) {
         
     this->new_tartarus = *msg_tartarus;
-
-    updated_tartarus = !updated_tartarus;
 }

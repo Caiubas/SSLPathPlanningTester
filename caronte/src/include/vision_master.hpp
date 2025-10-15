@@ -17,7 +17,6 @@ public:
     void vision_main();
     void recebe_dados_tracked();
     void recebe_dados_vision();
-    void tartarus_updated();
 
     lcm::LCM lcm;
     bool ssl_vision_atual;
@@ -25,7 +24,6 @@ public:
     int cameras;
     std::unordered_set<int> yellow_ids;
     std::unordered_set<int> blue_ids; // Conjunto para armazenar IDs únicos, de robôs
-    bool updated = false;
 };
 
 extern vision_master vision_master_instance;

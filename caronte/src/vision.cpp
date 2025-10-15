@@ -18,9 +18,6 @@ void vision_master::recebe_dados_vision() {
     socklen_t addr_len = sizeof(sender_addr);       
 
     for(int i = 0; i < vision_master_instance.cameras ; i++){ // usar 4 para grsim e usar 1 para ssl-vision
-        //if(han.updated_tartarus == vision_master_instance.updated) {
-        //    break; // Sai do loop se tartarus tem atualizações
-        //}
         int bytes_received_vision = recvfrom(sock_vision, buffer_vision, BUFFER_SIZE, 0, (struct sockaddr*)&sender_addr, &addr_len);
 
         if (bytes_received_vision > 0) {
