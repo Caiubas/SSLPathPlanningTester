@@ -16,13 +16,13 @@ export function useSendLoop(sending: boolean, data: Partial<DataType>) {
       }
     };
 
-    if (sending) {
-      sendData(); // Envia imediatamente
-      interval = setInterval(sendData, 1000); // Envia a cada 33ms
-    }
+    //if (sending) {
+    //  sendData(); // Envia imediatamente
+    //  interval = setInterval(sendData, 33); // Envia a cada 33ms
+    //}
 
     return () => {
-      if (interval) clearInterval(interval);
+  //   if (interval) clearInterval(interval);
     };
   }, [sending, data]);
 }
