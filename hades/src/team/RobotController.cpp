@@ -57,8 +57,10 @@ void RobotController::loop() {
         skills::SkillStop stop;
         try {
             if (han.new_tartarus.debug_mode) debug_mode();
+            else if (technical_challenge) {do_technical_challenge();}
             else select_behavior();
-            //if (getId() == 1 && mTeam->getEvent() != TeamInfo::halt) mTeam->role_map[debug_squared_trajectory]->act(*this);
+
+
             //else stop.act(*this);
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
@@ -71,6 +73,75 @@ void RobotController::loop() {
         mDelta_time = delta.count();
     }
     std::cout << "Encerrado " << id << std::endl;
+}
+
+void RobotController::do_technical_challenge() {
+    skills::SkillMoveTo moveTo;
+    skills::SkillStop stop;
+    skills::SkillTurnTo turnTo;
+    if (mTeam->getEvent() == TeamInfo::theirFreeKick) {
+        if (getId() == 0) {
+            moveTo.act(*this, Point(2100, 300), true);
+            turnTo.act(*this, Point(2100, 600));
+        } else if (getId() == 1) {
+            moveTo.act(*this, Point(1650, 900), true);
+            turnTo.act(*this, Point(1650, 1100));
+        } else if (getId() == 2) {
+            moveTo.act(*this, Point(1850, 900), true);
+            turnTo.act(*this, Point(1850, 1100));
+        }
+        else {
+            stop.act(*this);
+        }
+    }
+    else if (mTeam->getEvent() == TeamInfo::ourFreeKick) {
+        if (getId() == 0) {
+            moveTo.act(*this, Point(-1850, 1420), true);
+            turnTo.act(*this, Point(-1850, 0));
+        } else if (getId() == 1) {
+            moveTo.act(*this, Point(150, 700), true);
+            turnTo.act(*this, Point(0, 700));
+        } else if (getId() == 2) {
+            moveTo.act(*this, Point(-590, -600), true);
+            turnTo.act(*this, Point(-700, -600));
+        }
+        else {
+            stop.act(*this);
+        }
+    }
+    else if (mTeam->getEvent() == TeamInfo::ourKickOff || mTeam->getEvent() == TeamInfo::prepareOurKickOff) {
+        if (getId() == 0) {
+            moveTo.act(*this, Point(250, 0), true);
+            turnTo.act(*this, Point(0, 0));
+        } else if (getId() == 1) {
+            moveTo.act(*this, Point(250, 700), true);
+            turnTo.act(*this, Point(0, 700));
+        } else if (getId() == 2) {
+            moveTo.act(*this, Point(2100, 0), true);
+            turnTo.act(*this, Point(0, 0));
+        }
+        else {
+            stop.act(*this);
+        }
+    }
+    else if (mTeam->getEvent() == TeamInfo::ourPenalty || mTeam->getEvent() == TeamInfo::prepareOurPenalty) {
+        if (getId() == 0) {
+            moveTo.act(*this, Point(310, 800), true);
+            turnTo.act(*this, Point(0, 800));
+        } else if (getId() == 1) {
+            moveTo.act(*this, Point(-250, 0), true);
+            turnTo.act(*this, Point(-750, 0));
+        } else if (getId() == 2) {
+            moveTo.act(*this, Point(310, -800), true);
+            turnTo.act(*this, Point(0, -800));
+        }
+        else {
+            stop.act(*this);
+        }
+    }
+    else {
+
+    }
 }
 
 void RobotController::setActive(bool active) {
@@ -192,7 +263,6 @@ void RobotController::debug_mode() {
     if (r != unknown) {
         mTeam->role_map[getRole()]->act(*this);
     }
-    if (getId() == 2) std::cout << han.new_tartarus.robots[getId()].skill << han.new_tartarus.robots[getId()].role << std::endl;
 
     if (r == unknown) {
         skills::SkillCushion cushion;
@@ -283,7 +353,7 @@ void RobotController::receive_config() {
         kickDistance = 300000;
         mStatic_position_tolarance = radius/4;
         mDynamic_position_tolarance = radius/2;
-        mStatic_angle_tolarance = 0.05;
+        mStatic_angle_tolarance = 0.1;
         mVxy_min = 0.1;
         mVxy_max = 0.7;
         mVyaw_min = 0.25;
@@ -467,7 +537,7 @@ void RobotController::receive_field_geometry() {
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
         mWorld.field.ourGoal = rightGoal;
-        mWorld.field.theirGoal = leftGoal;
+        mWorld.field.theirGoal = rightGoal; //TODO COMP REMOVER
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
     }

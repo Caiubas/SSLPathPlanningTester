@@ -65,9 +65,10 @@ std::array<Robot::role, 16> PlayAttack::role_assign(WorldModel& world, TeamInfo&
                 }
             }
             int closest_id = avaiable_robots[closest_idx]->getId();
-            avaiable_robots[closest_idx]->setRole(Robot::striker);
-            roles[closest_id] = Robot::striker;
+            avaiable_robots[closest_idx]->setRole(selected_role);
+            roles[closest_id] = selected_role;
             avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
+            continue;
         }
 
         if (selected_role == Robot::support) {

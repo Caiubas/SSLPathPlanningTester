@@ -56,7 +56,7 @@ namespace skills {
 
 		LineSegment robot_goal(robot.getPosition(), robot.get_world().ball.getPosition());
 		if (robot_goal.getResized(100000).intersects(robot.get_world().field.ourGoal)) {	//NAO FAZER GOL CONTRA
-			robot.set_mtarget_vel({0, 0});
+			//robot.set_mtarget_vel({0, 0});
 		}
 
 

@@ -91,6 +91,9 @@ namespace skills {
             if (std::isnan(vel_cmd.getX())) vel_cmd.setX(0);
             if (std::isnan(vel_cmd.getY())) vel_cmd.setY(0);
 
+            /*if (fabs(vel_cmd.getNorm()) < robot.get_m_vxy_min() && vel_cmd.getNorm() != 0) {
+                vel_cmd = vel_cmd.getNormalized(robot.get_m_vxy_min()*vel_cmd.getNorm()/fabs(vel_cmd.getNorm()));
+            }*/
             robot.set_mlast_target_vel(vel_cmd);
             return vel_cmd;
         }
@@ -227,7 +230,7 @@ namespace skills {
                 // --- Dynamic predictive obstacles based on velocity ---
                 Vector2d vel = ally.getVelocity();
                 double speed = vel.getNorm(); // mm/s
-                if (speed > 50.0) { // ignora se velocidade muito baixa
+                if (ally.isMoving()) { // ignora se velocidade muito baixa
                     // parâmetros de predição
                     int num_extra = std::clamp(int(speed / 300.0), 1, 5); // até 5 círculos
                     double step_dist = speed * 0.05;      // mm (distância entre círculos)
@@ -257,7 +260,7 @@ namespace skills {
                 // --- Dynamic predictive obstacles based on velocity ---
                 Vector2d vel = enemy.getVelocity();
                 double speed = vel.getNorm(); // mm/s
-                if (speed > 50.0) {
+                if (enemy.isMoving()) {
                     int num_extra = std::clamp(int(speed / 300.0), 1, 5);
                     double step_dist = speed * 0.05;
                     double radius_growth = speed * 0.02;

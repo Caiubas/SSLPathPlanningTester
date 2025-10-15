@@ -253,6 +253,8 @@ private:
     WorldModel mWorld;
     int64_t mLast_time_stamp = 0;
 
+    bool technical_challenge = false;
+
     enum role lastRole = unknown;
     void check_connection();
     void dynamic_calculations();
@@ -266,6 +268,7 @@ private:
     void doubleTouchHandler();
     void select_behavior();
     void debug_mode();
+    void do_technical_challenge();
 
 };
 

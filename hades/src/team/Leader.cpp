@@ -240,6 +240,8 @@ void Leader::event_FSM() {
         if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
     }
 
+    if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+
     if (team.getEvent() == TeamInfo::stop) {
         GC_timer = 0;
         if (team.getCurrentCommand() == TeamInfo::PREPARE_KICKOFF_BLUE) {

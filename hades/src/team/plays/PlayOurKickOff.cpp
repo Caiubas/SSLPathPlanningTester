@@ -47,7 +47,7 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
         if (active_allies_ids.empty()) {
             return roles;
         }
-        if (selected_role == Robot::goal_keeper) {
+        if (selected_role == Robot::kickoff_goal_keeper) {
             if (!world.allies[team.getGoalKeeperId()].isDetected()) continue;
             roles[team.getGoalKeeperId()] = Robot::kickoff_goal_keeper;
             int idx = -1;
