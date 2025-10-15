@@ -13,7 +13,7 @@ namespace roles {
     void RoleDefender::act(RobotController& robot) {
         if (robot.get_world().isBallMovingRobotDirection(robot) && robot.get_world().ball.isMoving()) {
             intercept.act(robot);
-        } else if (robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getId() == robot.getId() && false) { //TODO remover
+        } else if (robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getId() == robot.getId()) {
             try {
                 positionAndKick.act(robot, robot.get_m_team()->getRobotToKickTo(robot));
             } catch (...) {

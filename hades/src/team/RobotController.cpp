@@ -192,6 +192,7 @@ void RobotController::debug_mode() {
     if (r != unknown) {
         mTeam->role_map[getRole()]->act(*this);
     }
+    if (getId() == 2) std::cout << han.new_tartarus.robots[getId()].skill << han.new_tartarus.robots[getId()].role << std::endl;
 
     if (r == unknown) {
         skills::SkillCushion cushion;
@@ -275,11 +276,11 @@ void RobotController::receive_config() {
         mVyaw_min = 1;
         mVxy_min = 0.4;
     }
-    if (han.new_tartarus.ssl_vision) { //TODO REMOVER E NO OUTRO LUGAR
+    if (han.new_tartarus.ssl_vision) {
         mKP_ang = 0.35;
         mKD_ang = 0;
         mKI_ang = 0;
-        kickDistance = 300000;   //TODO REVER
+        kickDistance = 300000;
         mStatic_position_tolarance = radius/4;
         mDynamic_position_tolarance = radius/2;
         mStatic_angle_tolarance = 0.01;
@@ -472,7 +473,7 @@ void RobotController::receive_field_geometry() {
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
         mWorld.field.ourGoal = rightGoal;
-        mWorld.field.theirGoal = rightGoal; //TODO REMOVER
+        mWorld.field.theirGoal = leftGoal;
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
     }
@@ -485,7 +486,7 @@ void RobotController::loadCalibration() {
 
 void RobotController::publish() {
     han.new_ia.robots[id].id = id;
-    if (getId() == 1) std::cout << mtarget_vel.getX() << " " << mtarget_vel.getY() << std::endl;
+    //if (getId() == 1) std::cout << mtarget_vel.getX() << " " << mtarget_vel.getY() << std::endl;
     if (han.new_tartarus.ssl_vision) {
         mtarget_vel = mtarget_vel.getRotated(3.14156/2);
         han.new_ia.robots[id].vel_normal = mtarget_vel.getY();

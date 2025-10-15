@@ -195,7 +195,7 @@ namespace skills {
                 Circle c({robot.get_world().ball.getPosition().getX(), robot.get_world().ball.getPosition().getY()}, robot.get_m_ball_avoidance_radius() + robot.getRadius());
                 obs_circular.push_back(c);
             }
-
+            /*
             //add static allies to obstacles
             for (int i = 0; i < size(robot.get_world().allies) ; i++) {
                 if (!robot.get_world().allies[i].isDetected() || i == robot.getId()) {
@@ -212,6 +212,65 @@ namespace skills {
                 }
                 Circle c({robot.get_world().enemies[i].getPosition().getX(), robot.get_world().enemies[i].getPosition().getY()}, robot.getRadius() + robot.get_world().enemies[i].getRadius());
                 obs_circular.push_back(c);
+            }
+            */
+
+            // --- add static allies to obstacles ---
+            for (int i = 0; i < size(robot.get_world().allies); i++) {
+                if (!robot.get_world().allies[i].isDetected() || i == robot.getId()) continue;
+
+                auto& ally = robot.get_world().allies[i];
+                double base_radius = robot.getRadius() + ally.getRadius();
+                Point pos = ally.getPosition();
+                obs_circular.push_back(Circle({pos.getX(), pos.getY()}, base_radius));
+
+                // --- Dynamic predictive obstacles based on velocity ---
+                Vector2d vel = ally.getVelocity();
+                double speed = vel.getNorm(); // mm/s
+                if (speed > 50.0) { // ignora se velocidade muito baixa
+                    // parâmetros de predição
+                    int num_extra = std::clamp(int(speed / 300.0), 1, 5); // até 5 círculos
+                    double step_dist = speed * 0.05;      // mm (distância entre círculos)
+                    double radius_growth = speed * 0.02;  // mm (aumento do raio por círculo)
+
+                    // direção normalizada
+                    Vector2d dir = vel.getNormalized(1.0);
+
+                    for (int k = 1; k <= num_extra; k++) {
+                        double ahead_x = pos.getX() + dir.getX() * (step_dist * k);
+                        double ahead_y = pos.getY() + dir.getY() * (step_dist * k);
+                        double expanded_radius = base_radius + radius_growth * k;
+                        obs_circular.push_back(Circle({ahead_x, ahead_y}, expanded_radius));
+                    }
+                }
+            }
+
+            // --- add static enemies to obstacles ---
+            for (int i = 0; i < size(robot.get_world().enemies); i++) {
+                if (!robot.get_world().enemies[i].isDetected()) continue;
+
+                auto& enemy = robot.get_world().enemies[i];
+                double base_radius = robot.getRadius() + enemy.getRadius();
+                Point pos = enemy.getPosition();
+                obs_circular.push_back(Circle({pos.getX(), pos.getY()}, base_radius));
+
+                // --- Dynamic predictive obstacles based on velocity ---
+                Vector2d vel = enemy.getVelocity();
+                double speed = vel.getNorm(); // mm/s
+                if (speed > 50.0) {
+                    int num_extra = std::clamp(int(speed / 300.0), 1, 5);
+                    double step_dist = speed * 0.05;
+                    double radius_growth = speed * 0.02;
+
+                    Vector2d dir = vel.getNormalized(1.0);
+
+                    for (int k = 1; k <= num_extra; k++) {
+                        double ahead_x = pos.getX() + dir.getX() * (step_dist * k);
+                        double ahead_y = pos.getY() + dir.getY() * (step_dist * k);
+                        double expanded_radius = base_radius + radius_growth * k;
+                        obs_circular.push_back(Circle({ahead_x, ahead_y}, expanded_radius));
+                    }
+                }
             }
 
             if (!((robot.getRole() == Robot::placer || robot.getRole() == Robot::placeHolder) && robot.get_m_team()->getEvent() == TeamInfo::ourballPlacement)) {
