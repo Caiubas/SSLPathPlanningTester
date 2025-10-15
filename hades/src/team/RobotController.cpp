@@ -93,7 +93,7 @@ bool RobotController::isActive() {
 }
 
 void RobotController::debug_mode() {
-    if (mTeam->getEvent() == TeamInfo::HALT) {
+    if (mTeam->getEvent() == TeamInfo::halt) {
         //skills::SkillStop stop;
         //stop.act(*this);
         //return;
@@ -283,7 +283,7 @@ void RobotController::receive_config() {
         kickDistance = 300000;
         mStatic_position_tolarance = radius/4;
         mDynamic_position_tolarance = radius/2;
-        mStatic_angle_tolarance = 0.01;
+        mStatic_angle_tolarance = 0.05;
         mVxy_min = 0.1;
         mVxy_max = 0.7;
         mVyaw_min = 0.25;
@@ -446,12 +446,6 @@ void RobotController::receive_field_geometry() {
             mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
             mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(0.0), static_cast<double>(han.new_vision.field.field_width/2)});
         }
-        if (getId() == 1) {
-            std::cout << "inside: " <<  mWorld.field.inside_dimensions.getMajorPoint().getX() << " " <<  mWorld.field.inside_dimensions.getMajorPoint().getY() << std::endl;
-            std::cout << mWorld.field.inside_dimensions.getMinorPoint().getX() << " " <<  mWorld.field.inside_dimensions.getMinorPoint().getY() << std::endl;
-
-        }
-
     }   //TODO resolver isso aqui
 
     AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};

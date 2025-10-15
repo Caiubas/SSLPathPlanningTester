@@ -18,7 +18,7 @@ private:
 	double deceleration = 0.4;
 	Point position;
 	Vector2d velocity;
-	int max_velocities_stored = 30;
+	int max_velocities_stored = 60;
 	std::deque<Vector2d> stored_velocities = {};
 	Point stopPosition = Point(0, 0);
 	double velocityThreshold = 0.1;

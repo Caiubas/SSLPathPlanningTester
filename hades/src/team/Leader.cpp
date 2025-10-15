@@ -227,7 +227,7 @@ void Leader::receive_field_geometry() {
 }
 void Leader::event_FSM() {
     if (team.getCurrentCommand() == TeamInfo::HALT) team.setEvent(TeamInfo::halt);
-
+    //std::cout << team.getCurrentCommand() << team.getEvent() << std::endl;
     if (team.getEvent() == TeamInfo::halt) {
         GC_timer = 0;
         if (team.getCurrentCommand() == TeamInfo::STOP) {
@@ -434,6 +434,12 @@ void Leader::select_plays() {
     // Aplicar roles de todas as plays em ordem de score
     for (auto& p : plays) {
         roles = p->role_assign(world, team, roles);
+    }
+    if (team.getEvent() == TeamInfo::halt) {
+        for (int i = 0; i < roles.size(); i++) {
+            team.setAllyRole(i, Robot::halted);
+        }
+        return;
     }
 
     // Copiar para o time

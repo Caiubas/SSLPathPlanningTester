@@ -22,6 +22,7 @@ int PlayDefense::calc_score(WorldModel world, TeamInfo& team) {
     if (team.getEvent() == TeamInfo::theirFreeKick) {
         score += 1000;
     }
+    score = 0;
     this->score = score;
     return score;
 }

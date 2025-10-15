@@ -40,7 +40,7 @@ namespace skills {
 
 		double angle_error = find_angle_error(robot, robot.get_world().ball.getPosition());	//TODO TESTAR ISSO AQUI
 		if (fabs(angle_error) > 2*robot.get_m_static_angle_tolarance()) {
-			robot.set_mtarget_vyaw(angle_error*robot.get_m_vyaw_min());
+			robot.set_mtarget_vyaw(angle_error*robot.get_m_vyaw_min()/(2*fabs(angle_error)));
 		}
 	}
 } // skills

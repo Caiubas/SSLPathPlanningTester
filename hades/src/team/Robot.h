@@ -41,8 +41,8 @@ protected:
     Point pos = {0, 0};
     double yaw = 0.0;
     Vector2d velocity = Vector2d(0,0);
-	int max_velocities_stored = 30;
-	int max_yaw_velocities_stored = 30;
+	int max_velocities_stored = 60;
+	int max_yaw_velocities_stored = 60;
     std::deque<Vector2d> stored_velocities = {};
     std::deque<double> stored_yaw_velocities = {};
     double velocityThreshold = 0.1;

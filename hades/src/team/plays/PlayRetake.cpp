@@ -12,6 +12,7 @@ int PlayRetake::calc_score(WorldModel world, TeamInfo& team) {
     if (team.getEvent() == TeamInfo::run && !world.getBallOwner().isAlly()) {
         score += 500;
     }
+    score = 0;
     this->score = score;
     return score;
 }
