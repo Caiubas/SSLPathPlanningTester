@@ -143,3 +143,13 @@ export function getMidField() {
   return half_field;
 }
 
+// technicalMoveState.ts
+
+export let technicalMove = 0; // valor inicial
+
+export const setTechnicalMove = (value: number) => {
+  technicalMove = value;
+  console.log("Move Action selecionada:", value);
+};
+
+
