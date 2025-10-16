@@ -22,7 +22,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
             enemy_striker_id = enemy_striker.getId();
             hasStriker = true;
         } catch (...) {
-            //std::cout << "no enemy striker" << std::endl;
+            std::cout << "no enemy striker" << std::endl;
         }
 
         double a = 1000;
@@ -49,7 +49,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         p.setY(std::clamp(p.getY(), y_min, y_max));
 
         if (robot.get_world().enemies.size() > 0 && hasStriker) {
-            if ((robot.get_world().enemies[enemy_striker_id].getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > 500 && robot.get_world().ball.isStopped())) {
+            if ((robot.get_world().enemies[enemy_striker_id].getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > 1000 && robot.get_world().ball.isStopped())) {
                 p.setY(y_rest);
             }
         }

@@ -51,6 +51,7 @@ protected:
     double radius = 100;
     bool detected = false;
     bool kicker = true;
+    bool kickOnVision = true;
     double kickDistance = 2000;
     enum role this_role = unknown;
     bool positioned = true;
@@ -63,6 +64,7 @@ public:
     //flags
 
     // --- Getters ---
+    virtual bool isKickingOnVision() const;
     virtual bool isAlly() const;
     virtual bool isPositioned() const;
     virtual bool isOriented() const;
