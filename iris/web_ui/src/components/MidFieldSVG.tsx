@@ -27,13 +27,13 @@ export function MidFieldSVG({
 
   const designatedPosition = data.tartarus.iris_as_GC
     ? {
-        x: data?.irisGC?.designated_position_x ?? 0,
-        y: data?.irisGC?.designated_position_y ?? 0,
-      }
+      x: data?.irisGC?.designated_position_x ?? 0,
+      y: data?.irisGC?.designated_position_y ?? 0,
+    }
     : {
-        x: data?.gc?.gc_designated_position_x ?? 0,
-        y: data?.gc?.gc_designated_position_y ?? 0,
-      };
+      x: data?.gc?.gc_designated_position_x ?? 0,
+      y: data?.gc?.gc_designated_position_y ?? 0,
+    };
 
   console.log(
     'flipField:',
@@ -43,6 +43,7 @@ export function MidFieldSVG({
     'centerY:',
     centerY,
   );
+
 
   return (
     <svg
@@ -65,7 +66,7 @@ export function MidFieldSVG({
         />
 
         {/* Campo jogável */}
-        
+
         {/* parte da esquerda */}
         <rect
           x={dimensions.goal_depth}
@@ -95,7 +96,7 @@ export function MidFieldSVG({
           y2={dimensions.field_width}
           x2={centerX}
           stroke="white"
-          strokeWidth={dimensions.line_thickness*1.5}
+          strokeWidth={dimensions.line_thickness * 1.5}
         />
 
         {/* Circulo central */}
@@ -186,6 +187,8 @@ export function MidFieldSVG({
           strokeWidth={strokeWidth}
         />
 
+
+
         {/* Robôs azuis */}
         {blueRobots.map((robot) => {
           const adjustedOrientation = 180 + (robot.orientation ?? 0); // Ajusta conforme seu padrão
@@ -193,7 +196,7 @@ export function MidFieldSVG({
             <image
               key={`blue-${robot.robot_id}`}
               href={`/img/blue_team/id${robot.robot_id}.png`}
-              x={robot.position_x - robotSize / 2}
+              x={robot.position_y - robotSize / 2}
               y={robot.position_x - robotSize / 2}
               width={robotSize}
               height={robotSize}
