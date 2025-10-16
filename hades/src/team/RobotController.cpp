@@ -190,6 +190,7 @@ void RobotController::debug_mode() {
 
         case goal_keeper:
             setRole(goal_keeper);
+            mTeam->setAllyRole(getId(), goal_keeper);
         break;
 
         case striker:
@@ -355,15 +356,16 @@ void RobotController::receive_config() {
         mDynamic_position_tolarance = radius/2;
         mStatic_angle_tolarance = 0.1;
         mVxy_min = 0.1;
-        mVxy_max = 0.7;
+        mVxy_max = 0.8;
         mVyaw_min = 0.25;
         mVyaw_max = 3;
     }
 
 
     kicker = han.new_tartarus.robots[getId()].has_kicker;
+    kicker = true;
     if (kicker) kickDistance = 2000;
-    else kickDistance = 700;
+    else kickDistance = 750;
 }
 
 
@@ -537,7 +539,7 @@ void RobotController::receive_field_geometry() {
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
         mWorld.field.ourGoal = rightGoal;
-        mWorld.field.theirGoal = rightGoal; //TODO COMP REMOVER
+        mWorld.field.theirGoal = leftGoal; //TODO COMP REMOVER
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
     }
@@ -1284,4 +1286,9 @@ bool RobotController::isStopped() const {
 void RobotController::setStoredVelocities(const std::deque<Vector2d>& vels) {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     stored_velocities = vels;
+}
+
+bool RobotController::isKickingOnVision() const {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    return kickOnVision;
 }

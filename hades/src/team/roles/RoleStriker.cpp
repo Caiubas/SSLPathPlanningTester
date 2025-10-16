@@ -60,26 +60,29 @@ namespace roles {
             theirGoalKeeper = robot.get_m_team()->getEnemyofRole(Robot::goal_keeper, robot.get_world().enemies);
             theyHaveGoalKeeper = true;
         } catch (...) {}
-
+        Robot support(-1);
+        bool hasSupport = false;
+        try {
+            support = robot.get_m_team()->getRobotofRole(Robot::support);
+            hasSupport = true;
+        } catch (...) {}
         LineSegment robot_goal = {robot.get_world().ball.getPosition(), goal};
-        if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/8)) {
+        if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/4)) {
             intercept.act(robot);
         }
-        else if (robot.get_world().ball.isMoving() || robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition())) {
+        else if (((robot.get_world().ball.isMoving() && !robot.isKickingOnVision())|| robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition()) && hasSupport)) {
             Point p = getSupportPosition(robot);
             keepLocation.act(robot, p);
+
         } else if (robot.get_world().isPointOnTheirArea(robot.get_world().ball.getPosition()) && theyHaveGoalKeeper) {    ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
             blockBall.act(robot, theirGoalKeeper, fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()));
         }
         else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance()) {
             positionAndKick.act(robot, goal);
+        } else if (hasSupport) {
+            positionAndKick.act(robot, support);
         } else {
-            try {
-                Robot support = robot.get_m_team()->getRobotofRole(Robot::support);
-                positionAndKick.act(robot, support);
-            } catch (...) {
-                positionAndPush.act(robot, goal);
-            }
+            positionAndPush.act(robot, goal);
         }
     }
 } // roles

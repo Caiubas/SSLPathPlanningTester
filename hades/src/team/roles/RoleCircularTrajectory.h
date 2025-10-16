@@ -9,9 +9,9 @@
 namespace roles {
 	class RoleCircularTrajectory : public roles::RoleBase {
 	private:
-		int resolution = 240;
-		double radius = 300;
-		Point center = Point(1000, 500);
+		int resolution = 120;
+		double radius = 500;
+		Point center = Point(1000, 0);
 	public:
 		void act(RobotController& robot);
 	};

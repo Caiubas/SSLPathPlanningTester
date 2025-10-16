@@ -160,6 +160,7 @@ public:
     const std::deque<Vector2d>& getStoredVelocities() const;
     double getRadius() const;
     double getKickDistance() const {return kickDistance;};
+    bool isKickingOnVision() const;
 
     // --- Setters ---
     void setAlly(bool is);

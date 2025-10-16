@@ -154,3 +154,7 @@ void Robot::setStoredVelocities(const std::deque<Vector2d>& vels) {
 	stored_velocities = vels;
 }
 
+
+bool Robot::isKickingOnVision() const {
+	return kickOnVision;
+}

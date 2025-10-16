@@ -34,7 +34,7 @@ namespace tactics {
 			return;
 		}
 
-		moveTo.act(robot, trajectory[0], false); //TODO mudar avoid ball
+		moveTo.act(robot, trajectory[0], true); //TODO mudar avoid ball
 
 		robot.setPositioned(false);
 		robot.get_m_team()->setPositioned(robot.getId(), false);

@@ -20,7 +20,25 @@ namespace skills {
 	}
 
 	void SkillKick::act(RobotController& robot) {
-		if (robot.hasKicker()) {
+		if (robot.isKickingOnVision() && robot.hasKicker()) {
+			if (robot.get_world().ball.getVelocity().getNorm() > 0) {
+				robot.set_mkicker_x(255);
+				std::cout << "kicking on vision" << std::endl;
+			}
+			if (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_max()) {
+				robot.set_mkicker_x(0);
+				robot.setPositioned(false);
+				robot.get_m_team()->setPositioned(robot.getId(), false);
+				robot.set_mtarget_vel({0, 0});
+			}
+			if (robot.get_m_team()->getEvent() == TeamInfo::ourFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningOurFreeKick or robot.get_m_team()->getEvent() == TeamInfo::theirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningTheirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::ourKickOff or robot.get_m_team()->getEvent() == TeamInfo::theirKickOff) {
+				robot.set_will_double_touch(true);
+			}
+			Vector2d v_vet = {robot.get_world().ball.getPosition(), robot.getPosition()};
+			v_vet = v_vet.getNormalized(robot.get_m_vxy_min());
+			robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
+		}
+		else if (robot.hasKicker()) {
 			if (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.isMoving()) {
 				robot.set_mkicker_x(0);
 				robot.setPositioned(false);
@@ -56,7 +74,7 @@ namespace skills {
 
 		LineSegment robot_goal(robot.getPosition(), robot.get_world().ball.getPosition());
 		if (robot_goal.getResized(100000).intersects(robot.get_world().field.ourGoal)) {	//NAO FAZER GOL CONTRA
-			//robot.set_mtarget_vel({0, 0});
+			robot.set_mtarget_vel({0, 0}); //TODO REMOVER COMP
 		}
 
 
