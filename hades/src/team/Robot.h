@@ -51,7 +51,7 @@ protected:
     double radius = 100;
     bool detected = false;
     bool kicker = true;
-    bool kickOnVision = true;
+    bool kickOnVision = false;
     double kickDistance = 2000;
     enum role this_role = unknown;
     bool positioned = true;

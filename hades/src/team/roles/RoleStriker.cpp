@@ -81,8 +81,15 @@ namespace roles {
             positionAndKick.act(robot, goal);
         } else if (hasSupport) {
             positionAndKick.act(robot, support);
-        } else {
+        } else if (hasGoalPosition){
             positionAndPush.act(robot, goal);
+        } else {
+            try {
+                Point p = getSupportPosition(robot);
+                positionAndPush.act(robot, p);
+            } catch (...) {
+                positionAndPush.act(robot, goal);
+            }
         }
     }
 } // roles

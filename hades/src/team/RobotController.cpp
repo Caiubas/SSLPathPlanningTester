@@ -506,6 +506,9 @@ void RobotController::receive_vision() {
 
 void RobotController::receive_field_geometry() {
     //TODO implementar urgente
+    mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width)});
+    mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width)});
+
     if (!han.new_tartarus.half_field) {
         mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
         mWorld.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});

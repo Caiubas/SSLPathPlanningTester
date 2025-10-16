@@ -28,6 +28,7 @@ namespace skills {
 		if (robot.get_m_team()->getEvent() == TeamInfo::ourFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningOurFreeKick or robot.get_m_team()->getEvent() == TeamInfo::theirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningTheirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::ourKickOff or robot.get_m_team()->getEvent() == TeamInfo::theirKickOff) {
 			robot.set_will_double_touch(true);
 		}
+		robot.set_mkicker_x(0);
 		Vector2d v_vet = {robot.get_world().ball.getPosition(), robot.getPosition()};
 		v_vet = v_vet.getNormalized(robot.get_m_vxy_max()/2);
 		robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
