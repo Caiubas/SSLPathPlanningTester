@@ -27,29 +27,33 @@ void vision_master::recebe_dados_tracked() {
                     for (int i = 0; i < tracked_frame.robots_size(); i++) {
                         RobotId new_robot_id = tracked_frame.robots(i).robot_id();
                         if(new_robot_id.team() == 2){ //UNKNOWN = 0, YELLOW = 1, BLUE = 2
-                            my_vision_data.robots_blue[new_robot_id.id()].detected = true;
-                            my_vision_data.robots_blue[new_robot_id.id()].robot_id = new_robot_id.id();
-                            my_vision_data.robots_blue[new_robot_id.id()].position_x = tracked_frame.robots(i).pos().x()*1000; // mm
-                            my_vision_data.robots_blue[new_robot_id.id()].position_y = tracked_frame.robots(i).pos().y()*1000;
-                            my_autoref_data.robots_blue[new_robot_id.id()].vel_x = tracked_frame.robots(i).vel().x()*1000; // mm/s
-                            my_autoref_data.robots_blue[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000;
-                            my_autoref_data.robots_blue[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
-                            my_vision_data.robots_blue[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
-                            vision_master_instance.blue_ids.insert(new_robot_id.id());
+                            if(!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && tracked_frame.robots(i).pos().x() > 0) || (!han.new_tartarus.right_field && tracked_frame.robots(i).pos().x() < 0)))) {
+                                my_vision_data.robots_blue[new_robot_id.id()].detected = true;
+                                my_vision_data.robots_blue[new_robot_id.id()].robot_id = new_robot_id.id();
+                                my_vision_data.robots_blue[new_robot_id.id()].position_x = tracked_frame.robots(i).pos().x()*1000; // mm
+                                my_vision_data.robots_blue[new_robot_id.id()].position_y = tracked_frame.robots(i).pos().y()*1000;
+                                my_autoref_data.robots_blue[new_robot_id.id()].vel_x = tracked_frame.robots(i).vel().x()*1000; // mm/s
+                                my_autoref_data.robots_blue[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000;
+                                my_autoref_data.robots_blue[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
+                                my_vision_data.robots_blue[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
+                                vision_master_instance.blue_ids.insert(new_robot_id.id());
+                            }
                         }
                         
                     
                         else if(new_robot_id.team() == 1){ //UNKNOWN = 0, YELLOW = 1, BLUE = 2
                         // Para os robôs amarelos, repita o mesmo processo
-                            my_vision_data.robots_yellow[new_robot_id.id()].detected = true;
-                            my_vision_data.robots_yellow[new_robot_id.id()].robot_id = new_robot_id.id();
-                            my_vision_data.robots_yellow[new_robot_id.id()].position_x = tracked_frame.robots(i).pos().x()*1000; // mm
-                            my_vision_data.robots_yellow[new_robot_id.id()].position_y = tracked_frame.robots(i).pos().y()*1000; // mm
-                            my_autoref_data.robots_yellow[new_robot_id.id()].vel_x = tracked_frame.robots(i).vel().x()*1000; // mm/s
-                            my_autoref_data.robots_yellow[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000; // mm/s
-                            my_autoref_data.robots_yellow[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
-                            my_vision_data.robots_yellow[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
-                            vision_master_instance.yellow_ids.insert(new_robot_id.id());
+                            if(!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && tracked_frame.robots(i).pos().x() > 0) || (!han.new_tartarus.right_field && tracked_frame.robots(i).pos().x() < 0)))) {
+                                my_vision_data.robots_yellow[new_robot_id.id()].detected = true;
+                                my_vision_data.robots_yellow[new_robot_id.id()].robot_id = new_robot_id.id();
+                                my_vision_data.robots_yellow[new_robot_id.id()].position_x = tracked_frame.robots(i).pos().x()*1000; // mm
+                                my_vision_data.robots_yellow[new_robot_id.id()].position_y = tracked_frame.robots(i).pos().y()*1000; // mm
+                                my_autoref_data.robots_yellow[new_robot_id.id()].vel_x = tracked_frame.robots(i).vel().x()*1000; // mm/s
+                                my_autoref_data.robots_yellow[new_robot_id.id()].vel_y = tracked_frame.robots(i).vel().y()*1000; // mm/s
+                                my_autoref_data.robots_yellow[new_robot_id.id()].vel_angular = tracked_frame.robots(i).vel_angular(); //rad/s
+                                my_vision_data.robots_yellow[new_robot_id.id()].orientation = tracked_frame.robots(i).orientation();
+                            }
+                                vision_master_instance.yellow_ids.insert(new_robot_id.id());
                         }
                         else{
                             std::cout << "!!!! há um robô com ID de time desconhecido !!!!" << std::endl;
@@ -58,16 +62,27 @@ void vision_master::recebe_dados_tracked() {
                 }
             
                 if (tracked_frame.balls_size() > 0) {
+                    int balls_detected = 0;
+                    int max_confidence_idx = -1;
+                    float max_confidence = 0;
                     for(int i = 0; i < tracked_frame.balls_size(); i++) {
-                        if(tracked_frame.balls(i).has_vel()) {
-                            Vector3 ball_vel = tracked_frame.balls(i).vel();
+                        Vector3 ball_pos = tracked_frame.balls(i).pos();
+                         // Se half_field está ativado, só associa a bola do lado correto do campo
+                        if(!han.new_tartarus.half_field || (han.new_tartarus.half_field && ((han.new_tartarus.right_field && ball_pos.x() > 0) || (!han.new_tartarus.right_field && ball_pos.x() < 0)))) {
+                            if (tracked_frame.balls(i).visibility() > max_confidence) {
+                                max_confidence = tracked_frame.balls(i).visibility();
+                                max_confidence_idx = i;
+                            }
+                        }
+                    }
+                    if(han.new_tartarus.autoreferee == true && max_confidence_idx != -1) {
+                        Vector3 ball_pos = tracked_frame.balls(max_confidence_idx).pos();
+                        my_vision_data.balls.position_x = ball_pos.x()*1000;
+                        my_vision_data.balls.position_y = ball_pos.y()*1000;
+                        if(tracked_frame.balls(max_confidence_idx).has_vel()) {
+                            Vector3 ball_vel = tracked_frame.balls(max_confidence_idx).vel();
                             my_autoref_data.balls.vel_x = ball_vel.x()*1000;//multiplicando por 1000 para converter de metros para milimetros
                             my_autoref_data.balls.vel_y = ball_vel.y()*1000;
-                        }
-                        if(han.new_tartarus.autoreferee) {
-                            Vector3 ball_pos = tracked_frame.balls(i).pos();
-                            my_vision_data.balls.position_x = ball_pos.x()*1000;
-                            my_vision_data.balls.position_y = ball_pos.y()*1000;
                         }
                     }
                 }

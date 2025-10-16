@@ -98,7 +98,7 @@ void vision_master::recebe_dados_vision() {
                             }
                         }
                     }
-                    if (vision.detection().balls_size() > 0) {
+                    if (vision.detection().balls_size() > 0 && han.new_tartarus.autoreferee == false) {
                         int balls_detected = 0;
                         int max_confidence_idx = -1;
                         float max_confidence = 0;
