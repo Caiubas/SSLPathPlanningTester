@@ -2,7 +2,7 @@ import type { DataType } from '../../types';
 import { RowWrapper } from './utilities/RowWrapper';
 import { ToggleSwitch } from './utilities/ToggleSwitch';
 import { NumberInputRow } from './utilities/NumberInputRow';
-import { ActionButton } from './utilities/ActionButton';
+import { ActionButton } from './utilities/buttons/ActionButton';
 import { CompetitionOverlay } from './utilities/CompetitionOverlay';
 import GoalkeeperIdInput from './utilities/GoalkeeperIdInput';
 import { useTartarusState } from '../../hooks/useTartarusState';

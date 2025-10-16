@@ -1,7 +1,7 @@
-import SkillButton from '../utilities/SkillButton';
+import SkillButton from '../utilities/buttons/SkillButton';
 import type { Props } from '../utilities/RobotTabs';
-import MoveToButton from '../utilities/MoveToButton';
-import TurnToButton from '../utilities/TurnToButton';
+import MoveToButton from '../utilities/buttons/MoveToButton';
+import TurnToButton from '../utilities/buttons/TurnToButton';
 
 export default function SkillTemplate({ robotId }: Props) {
   return (

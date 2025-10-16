@@ -1,6 +1,6 @@
 // MoveToButton.tsx
 import { useState } from 'react';
-import { sendPost } from '../../../hooks/useSendPost';
+import { sendPost } from '../../../../hooks/useSendPost';
 
 type Props = {
   label: string;
