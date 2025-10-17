@@ -2,11 +2,13 @@ import { useState } from 'react';
 import RoleTemplate from '../templates/RoleTemplate';
 import SkillTemplate from '../templates/SkillTemplate';
 
-export type Props = {
+export type RobotTabsProps = {
   robotId: number;
+  currentPos?: { x: number; y: number };
+  addTrajectory: (robotId: number, from: { x: number; y: number }, to: { x: number; y: number }) => void;
 }
 
-export default function RobotTabs({ robotId } : Props) {
+export default function RobotTabs({ robotId, currentPos, addTrajectory } : RobotTabsProps) {
   const [activeTab, setActiveTab] = useState('ball_left');
 
   const tabs = [
@@ -36,7 +38,7 @@ export default function RobotTabs({ robotId } : Props) {
       {/* Conteúdo das abas */}
       <div className="p-4 bg-[#7e7e7e]">
         {activeTab === 'role' && <RoleTemplate robotId={robotId}/>}
-        {activeTab === 'skill' && <SkillTemplate robotId={robotId}/>}
+        {activeTab === 'skill' && <SkillTemplate robotId={robotId} currentPos={currentPos} addTrajectory={addTrajectory}/>}
       </div>
     </div>
   );

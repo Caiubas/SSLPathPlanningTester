@@ -1,7 +1,7 @@
 import TechnicalMoveButton from '../utilities/buttons/TechnicalMoveButton';
-import type { Props } from '../utilities/RobotTabs';
+import type { RobotTabsProps } from '../utilities/RobotTabs';
 
-export default function TechnicalMoveTemplate({ robotId }: Props) {
+export default function TechnicalMoveTemplate({ robotId }: RobotTabsProps) {
   return (
     <>
       <p>Basic Roles:</p>

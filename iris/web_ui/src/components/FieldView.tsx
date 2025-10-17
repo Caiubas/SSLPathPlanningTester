@@ -6,6 +6,13 @@ import { MidFieldSVG } from './MidFieldSVG';
 
 type FieldDimensions = (typeof FIELD_DIMENSIONS)[keyof typeof FIELD_DIMENSIONS];
 
+export type Point = { x: number; y: number; };
+
+export type Trajectory = {
+  robotId: number;
+  points: Point[];
+};
+
 export type FieldProps = {
   className?: string;
   data: DataType;
@@ -14,6 +21,7 @@ export type FieldProps = {
   yellowRobots?: DetectionRobot[];
   ball?: BallField;
   flipField: boolean;
+  trajectories?: Trajectory[];
 };
 
 export function FieldView({
@@ -23,8 +31,10 @@ export function FieldView({
   yellowRobots = [],
   ball,
   flipField,
+  trajectories,
 }: FieldProps) {
   const midField = getMidField();
+
   return (
     <div
       className="h-full flex justify-center items-center bg-[#3B3B3B]"
@@ -60,6 +70,7 @@ export function FieldView({
             yellowRobots={yellowRobots}
             ball={ball}
             flipField={flipField}
+            trajectories={trajectories}
           />
         )}
       </div>

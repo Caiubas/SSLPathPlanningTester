@@ -6,9 +6,11 @@ type Props = {
   label: string;
   value: number;
   robotId: number;
+  currentPos?: { x: number; y: number }; // posição atual do robô
+  addTrajectory: (robotId: number, from: { x: number; y: number }, to: { x: number; y: number }) => void;
 };
 
-export default function MoveToButton({ label, value, robotId }: Props) {
+export default function MoveToButton({ label, value, robotId, currentPos, addTrajectory }: Props) {
   const [x, setX] = useState<number>(0);
   const [y, setY] = useState<number>(0);
 
@@ -20,6 +22,12 @@ export default function MoveToButton({ label, value, robotId }: Props) {
       move_to_x: x,
       move_to_y: y,
     });
+
+    if (currentPos) {
+
+      const dest = { x: x, y: y};
+      addTrajectory(robotId, currentPos, dest);
+    }
   };
 
   return (
