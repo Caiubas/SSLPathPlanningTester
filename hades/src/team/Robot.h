@@ -48,9 +48,9 @@ protected:
     double velocityThreshold = 0.1;
     double yawVelocityThreshold = 0.001;
     double vyaw = 0.0;
-    double radius = 100;
+    double radius = 120;
     bool detected = false;
-    bool kicker = true;
+    bool kicker = false;
     bool kickOnVision = false;
     double kickDistance = 2000;
     enum role this_role = unknown;

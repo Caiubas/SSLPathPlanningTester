@@ -152,10 +152,10 @@ namespace skills {
             double minor[2];
             double major[2];
             if (full_field or robot.getRole() == Robot::goal_keeper or true) { //TODO REMOVER CAMP
-                minor[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*1.2).getMinorPoint().getX();
-                minor[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*1.2).getMinorPoint().getY();
-                major[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*1.2).getMajorPoint().getX();
-                major[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*1.2).getMajorPoint().getY();
+                minor[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*2).getMinorPoint().getX();
+                minor[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*2).getMinorPoint().getY();
+                major[0] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*2).getMajorPoint().getX();
+                major[1] = robot.get_world().field.full_dimensions.getResized(-robot.getRadius()*2).getMajorPoint().getY();
                 goal.setX(std::clamp(goal.getX(), minor[0], major[0]));
                 goal.setY(std::clamp(goal.getY(), minor[1], major[1]));
 

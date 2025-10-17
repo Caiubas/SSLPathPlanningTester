@@ -47,24 +47,18 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
         if (active_allies_ids.empty()) {
             return roles;
         }
-        if (selected_role == Robot::kickoff_goal_keeper) {
+        if (selected_role == Robot::goal_keeper) {
             if (!world.allies[team.getGoalKeeperId()].isDetected()) continue;
-            roles[team.getGoalKeeperId()] = Robot::kickoff_goal_keeper;
+            roles[team.getGoalKeeperId()] = selected_role;
             int idx = -1;
-            for (int i = 0; i<active_allies_ids.size(); i++) if (i == team.getGoalKeeperId()) idx = i;
+            for (int i = 0; i<active_allies_ids.size(); i++) if (active_allies_ids[i] == team.getGoalKeeperId()) idx = i;
             active_allies_ids.erase(active_allies_ids.begin() + idx);
         }
         if (selected_role == Robot::kickoff_kicker || selected_role == Robot::kickoff_support) {
-            int closest_idx = 0;
-            for (int idx = 0; idx < active_allies_ids.size(); idx++) {
-                if (distances_allies_from_center[idx] < distances_allies_from_center[closest_idx]) {
-                    closest_idx = idx;
-                }
-            }
-            int closest_id = active_allies_ids[closest_idx];
+            int closest_id = active_allies_ids[0];
             roles[closest_id] = selected_role;
-            distances_allies_from_center.erase(distances_allies_from_center.begin() + closest_idx);
-            active_allies_ids.erase(active_allies_ids.begin() + closest_idx);
+            distances_allies_from_center.erase(distances_allies_from_center.begin() + 0);
+            active_allies_ids.erase(active_allies_ids.begin() + 0);
         }
     }
 

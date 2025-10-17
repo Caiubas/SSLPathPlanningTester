@@ -140,7 +140,7 @@ void RobotController::do_technical_challenge() {
         }
     }
     else {
-
+        stop.act(*this);
     }
 }
 
@@ -363,9 +363,8 @@ void RobotController::receive_config() {
 
 
     kicker = han.new_tartarus.robots[getId()].has_kicker;
-    kicker = true;
     if (kicker) kickDistance = 2000;
-    else kickDistance = 750;
+    else kickDistance = 1000;
 }
 
 
@@ -506,8 +505,9 @@ void RobotController::receive_vision() {
 
 void RobotController::receive_field_geometry() {
     //TODO implementar urgente
-    mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width)});
-    mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width)});
+    double correction = 100;
+    mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width + correction), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width + correction)});
+    mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width - correction), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width - correction)});
 
     if (!han.new_tartarus.half_field) {
         mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});

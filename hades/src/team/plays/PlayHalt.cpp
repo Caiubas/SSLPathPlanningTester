@@ -11,7 +11,7 @@
 
 int PlayHalt::calc_score(WorldModel world, TeamInfo& team) {
     int score = 0;
-    if (team.getCurrentCommand() == TeamInfo::HALT) {
+    if (team.getEvent() == TeamInfo::HALT or team.getEvent() == TeamInfo::timeout) {
         score += 999992;
     }
     this->score = score;

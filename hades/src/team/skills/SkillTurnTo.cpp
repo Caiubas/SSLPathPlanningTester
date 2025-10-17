@@ -56,8 +56,8 @@ void SkillTurnTo::act(RobotController& robot, Point goal) {
 
 	robot.setOriented(false);
 	if (robot.get_mlast_target_vel().getNorm() != 0) {
-		robot.set_mtarget_vyaw(0);
-		return;
+		//robot.set_mtarget_vyaw(0); //TODO REMOVER COMP
+		//return;
 	}
 	double new_vyaw = turn_control(robot, delta);
 	if (new_vyaw > robot.get_mtarget_vyaw() + robot.get_m_delta_time()*robot.get_m_a_ang_max()) {

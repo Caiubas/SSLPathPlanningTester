@@ -179,7 +179,7 @@ public:
 private:
     mutable std::recursive_mutex mtx;
     bool active = false;
-    double mBall_avoidance_radius = 50;
+    double mBall_avoidance_radius = 20; //TODO REMOVER COMP TECHNICAL CHALLENGE
 
     //target movimentation
     double mtarget_yaw = 0;
