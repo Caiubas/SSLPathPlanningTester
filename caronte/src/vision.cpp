@@ -98,7 +98,7 @@ void vision_master::recebe_dados_vision() {
                             }
                         }
                     }
-                    if (vision.detection().balls_size() > 0) {
+                    if (vision.detection().balls_size() > 0 && han.new_tartarus.autoreferee == false) {
                         int balls_detected = 0;
                         int max_confidence_idx = -1;
                         float max_confidence = 0;
@@ -112,9 +112,13 @@ void vision_master::recebe_dados_vision() {
                             }
                         }
                         if(max_confidence_idx != -1) {
+                            vision_master_instance.ball_detected = true;
                             my_vision_data.balls.position_x = detection.balls(max_confidence_idx).x();
                             my_vision_data.balls.position_y = detection.balls(max_confidence_idx).y();
                         }
+                    }
+                    else{
+                        vision_master_instance.ball_detected = false;
                     }
                 }
             }

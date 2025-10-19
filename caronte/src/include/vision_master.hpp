@@ -10,6 +10,10 @@
 #include "../../build/ssl_vision_wrapper.pb.h"
 #include "../../data_lcm/autoref.hpp"
 #include "../../build/ssl_vision_wrapper_tracked.pb.h"
+#include <chrono>
+#include <unordered_map>
+
+using namespace std::chrono;
 
 class vision_master
 {
@@ -24,6 +28,10 @@ public:
     int cameras;
     std::unordered_set<int> yellow_ids;
     std::unordered_set<int> blue_ids; // Conjunto para armazenar IDs únicos, de robôs
+
+    steady_clock::time_point last_detected_ball;
+    bool ball_detected_once = false;
+    bool ball_detected = false;
 };
 
 extern vision_master vision_master_instance;

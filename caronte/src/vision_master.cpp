@@ -60,10 +60,27 @@ void vision_master::vision_main()
                 std::cout << "Orientação: " << my_vision_data.robots_yellow[i].orientation << "\n" << std::endl;
             }
         }
+        auto now = std::chrono::steady_clock::now();
 
-        //std::cout << "field length: " << my_vision_data.field.field_length << std::endl;    
-        std::cout << "\nball position_x " << my_vision_data.balls.position_x << std::endl;
-        std::cout << "ball position_y " << my_vision_data.balls.position_y << std::endl;
+        auto &ball = my_vision_data.balls;
+
+        if (vision_master_instance.ball_detected) {
+            last_detected_ball = now;
+            ball_detected_once = true;
+        } else if (ball_detected_once) {
+            auto elapsed = duration_cast<milliseconds>(now - last_detected_ball).count();
+            if (elapsed > 1000) {
+                ball.position_x = 0;
+                ball.position_y = 0;
+                ball_detected_once = false;
+            }
+        }
+
+        // Exibir a bola se ainda tem posição válida
+        if (ball.position_x != 0 || ball.position_y != 0 || ball_detected_once) {
+            std::cout << "ball position_x " << ball.position_x << std::endl;
+            std::cout << "ball position_y " << ball.position_y << std::endl;
+        }
         std::cout << "Robos azuis: " << blue_ids.size() << std::endl;
         std::cout << "Robos amarelos: " << my_vision_data.robots_yellow_size << std::endl;
         std::cout << "iris_as_gc: " << int(han.new_tartarus.iris_as_GC) << std::endl;
@@ -76,8 +93,8 @@ void vision_master::vision_main()
         memset(my_vision_data.robots_yellow, 0, sizeof(my_vision_data.robots_yellow));
         memset(my_autoref_data.robots_blue, 0, sizeof(my_autoref_data.robots_blue));
         memset(my_autoref_data.robots_yellow, 0, sizeof(my_autoref_data.robots_yellow));
-        my_vision_data.balls.position_x = 0;
-        my_vision_data.balls.position_y = 0;
+        //my_vision_data.balls.position_x = 0;
+        //my_vision_data.balls.position_y = 0;
 
         vision_master_instance.yellow_ids.clear();
     	vision_master_instance.blue_ids.clear();
