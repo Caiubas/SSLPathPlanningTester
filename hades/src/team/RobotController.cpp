@@ -49,6 +49,10 @@ void RobotController::loop() {
         receive_vision();
         receive_field_geometry();
         receive_config();
+        if (kicker_timer > 0) {
+            kicker_timer -= mDelta_time;
+        }
+        //std::cout << "kicker timer " << getId() << " " << kicker_timer << std::endl;
         //mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
         //mWorld.field.full_dimensions = AreaRectangular({0, 0}, {2000, 1000});
         //mWorld.field.ourGoal = LineSegment(Point(500, 0), Point(500, 1200));
@@ -345,7 +349,7 @@ void RobotController::receive_config() {
         mDynamic_position_tolarance = radius/8;
         mStatic_angle_tolarance = 0.01;
         mVyaw_min = 1;
-        mVxy_min = 0.4;
+        mVxy_min = 0.1;
     }
     if (han.new_tartarus.ssl_vision) {
         mKP_ang = 0.35;
@@ -356,15 +360,19 @@ void RobotController::receive_config() {
         mDynamic_position_tolarance = radius/2;
         mStatic_angle_tolarance = 0.1;
         mVxy_min = 0.1;
-        mVxy_max = 0.8;
+        mVxy_max = 0.7;
         mVyaw_min = 0.25;
         mVyaw_max = 3;
     }
 
 
     kicker = han.new_tartarus.robots[getId()].has_kicker;
-    if (kicker) kickDistance = 2000;
+    if (getId() == 2) kicker = true;
+    if (getId() == 1) kicker = true;
+    if (kicker) kickDistance = 4000;
     else kickDistance = 1000;
+
+    //if (getId() == 2) std::cout << kicker << " " << kickDistance <<  " " << mWorld.field.theirGoal.getMiddle().getDistanceTo({0, 0}) << std::endl;
 }
 
 
@@ -465,7 +473,7 @@ void RobotController::receive_vision() {
     VisibilityGraph graph;
     for (Robot enemy : mWorld.enemies) {
         if (!enemy.isDetected()) continue;
-        graph.addShadow(CircularShadow(mWorld.ball.getPosition(), {enemy.getPosition(), enemy.getRadius()}));
+        graph.addShadow(CircularShadow(mWorld.ball.getPosition(), {enemy.getPosition(), enemy.getRadius()*1.2}));
     }
 
     AreaRectangular a({0, 0}, {0, 0});
@@ -506,8 +514,19 @@ void RobotController::receive_vision() {
 void RobotController::receive_field_geometry() {
     //TODO implementar urgente
     double correction = 100;
-    mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width + correction), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width + correction)});
-    mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width - correction), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width - correction)});
+    if (!han.new_tartarus.half_field) {
+        mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width + correction), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width + correction)});
+        mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width - correction), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width - correction)});
+    } else {
+        if (han.new_tartarus.right_field) {
+            mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(0.0), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width + correction)});
+            mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width - correction), static_cast<double>(han.new_vision.field.field_width/2 + han.new_vision.field.boundary_width - correction)});
+        } else {
+            mWorld.field.full_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2 - han.new_vision.field.boundary_width + correction), static_cast<double>(-han.new_vision.field.field_width/2 - han.new_vision.field.boundary_width + correction)});
+            mWorld.field.full_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2 + han.new_vision.field.boundary_width - correction), static_cast<double>(0.0)});
+        }
+
+    }
 
     if (!han.new_tartarus.half_field) {
         mWorld.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
@@ -535,16 +554,25 @@ void RobotController::receive_field_geometry() {
     mWorld.field.rightFisicalBarrier = rightFisicalBarrier;
 
     if (mTeam->getOurSide() == TeamInfo::left) {
-        mWorld.field.ourGoal = leftGoal;
+        mWorld.field.ourGoal = {Point(-han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2 - 100), Point(-han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2 + 100)};;
         mWorld.field.theirGoal = rightGoal;
         mWorld.field.ourDefenseArea = leftDefenseArea;
         mWorld.field.theirDefenseArea = rightDefenseArea;
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
-        mWorld.field.ourGoal = rightGoal;
-        mWorld.field.theirGoal = leftGoal; //TODO COMP REMOVER
+        mWorld.field.ourGoal = {Point(han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2 - 100), Point(han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2 + 100)};;
+        mWorld.field.theirGoal = leftGoal;
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
+    }
+    if (han.new_tartarus.half_field) {
+        if (han.new_tartarus.right_field) {
+            mWorld.field.ourGoal = rightGoal;
+            mWorld.field.theirGoal = rightGoal;
+        } else {
+            mWorld.field.ourGoal = leftGoal;
+            mWorld.field.theirGoal = leftGoal;
+        }
     }
 }
 

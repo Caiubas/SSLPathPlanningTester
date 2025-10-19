@@ -29,7 +29,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         LineSegment line(Point(0, 0), Point(0, 0));
         if (true) {
             if (robot.get_world().ball.isMoving()) {
-                line = robot.get_world().ball.getMovementLine().getResized(robot.get_world().ball.getMovementLine().getLength()*3);
+                line = robot.get_world().ball.getMovementLine().getResized(1500000);
             }
             else if (robot.get_world().ball.isStopped() && hasStriker) {    //para bola parada
                 line = LineSegment(enemy_striker.getPosition(), robot.get_world().ball.getPosition()).getResized(100000);
@@ -48,7 +48,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         double y_min = y_segment.getStart().getY() + robot.getRadius();
         p.setY(std::clamp(p.getY(), y_min, y_max));
 
-        if (robot.get_world().enemies.size() > 0 && hasStriker) {
+        if (robot.get_world().enemies.size() > 0 && hasStriker && false) {
             if ((robot.get_world().enemies[enemy_striker_id].getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > 1000 && robot.get_world().ball.isStopped())) {
                 p.setY(y_rest);
             }

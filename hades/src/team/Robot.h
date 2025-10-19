@@ -13,6 +13,7 @@
 
 class Robot {
 public:
+    double push_time = 0;
     enum role {
         unknown = -1,
         goal_keeper,
@@ -58,6 +59,9 @@ protected:
     bool aligned = true;
     bool oriented = true;
 public:
+
+    double kicker_colddown = 5;
+    double kicker_timer = 0;
     // Construtor
     Robot(int id) : id(id) {this_role = unknown;}
 

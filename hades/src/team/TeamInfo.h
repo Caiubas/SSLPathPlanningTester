@@ -190,8 +190,8 @@ private:
     sides our_side = right;
 
     bool debug = false;
-    enum Command current_command = FORCE_START;
-    enum events event = run;
+    enum Command current_command = HALT;
+    enum events event = halt;
     double central_line_x = 0;
     colors color = yellow;
 };

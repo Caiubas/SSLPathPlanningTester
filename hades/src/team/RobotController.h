@@ -179,7 +179,7 @@ public:
 private:
     mutable std::recursive_mutex mtx;
     bool active = false;
-    double mBall_avoidance_radius = 20; //TODO REMOVER COMP TECHNICAL CHALLENGE
+    double mBall_avoidance_radius = 50; //TODO REMOVER COMP TECHNICAL CHALLENGE
 
     //target movimentation
     double mtarget_yaw = 0;
@@ -212,7 +212,7 @@ private:
     //extreme params
     double mVxy_max = 0.7;
     double mVxy_min = 0.1;
-    double mA_xy_max = 2;
+    double mA_xy_max = 2; //TODO REMOVER COMP era 2
     double mA_xy_brake = 500;
     double mVyaw_max = 5;
     double mVyaw_min = 0.3;

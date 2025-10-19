@@ -11,6 +11,7 @@ namespace roles {
 class RoleStriker : public RoleBase {
 public:
     Point getSupportPosition(RobotController& robot);
+    Point find_ball_trajectory(RobotController& robot, Point goal);
     void act(RobotController& robot);
 };
 

@@ -16,7 +16,7 @@ namespace roles {
 			Robot enemy_support = {0};
 			bool supportFound = false;
 			try {
-				enemy_support = robot.get_m_team()->getEnemyofRole(Robot::support, robot.get_world().enemies);
+				enemy_support = robot.get_m_team()->getEnemyofRole(Robot::striker, robot.get_world().enemies);
 				supportFound = true;
 			} catch (...) {
 				std::cout << "no enemy support found" << std::endl;

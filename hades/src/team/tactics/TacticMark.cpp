@@ -14,7 +14,7 @@ void TacticMark::act(RobotController& robot) {
 
 Point TacticMark::findMarkPosition(RobotController& robot, Robot toMark) {
 	LineSegment l(toMark.getPosition(), robot.get_world().ball.getPosition());
-	l = l.getResized(l.getLength()/2);
+	l = l.getResized(l.getLength()*1.5);
 	return l.getEnd();
 }
 

@@ -19,7 +19,10 @@ namespace skills {
 	}
 
 	void SkillPushBall::act(RobotController& robot) {
-		if (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_max()/2) {
+		robot.push_time += robot.get_m_delta_time();
+		std::cout << "push time: " << robot.push_time << std::endl;
+		if (robot.push_time >= 3 || (robot.push_time >= 1.5 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_min()))) {
+			robot.push_time = 0;
 			robot.set_mkicker_x(0);
 			robot.setPositioned(false);
 			robot.get_m_team()->setPositioned(robot.getId(), false);
@@ -34,7 +37,7 @@ namespace skills {
 		robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
 
 		LineSegment robot_goal(robot.getPosition(), robot.get_world().ball.getPosition());
-		if (robot_goal.getResized(100000).intersects(robot.get_world().field.ourGoal)) {
+		if (robot_goal.getResized(10).intersects(robot.get_world().field.ourGoal)) {
 			//NAO FAZER GOL CONTRA
 			robot.set_mtarget_vel({0, 0}); //TODO REMOVER ARRUMAR COMP
 		}

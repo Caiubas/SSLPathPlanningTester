@@ -16,7 +16,7 @@ public:
     PlayDefense() {
         name = "defense";
         required_robots = 3;
-        required_roles = {Robot::goal_keeper, Robot::defender, Robot::striker};
+        required_roles = {Robot::goal_keeper, Robot::defender, Robot::marker};
     }
 };
 

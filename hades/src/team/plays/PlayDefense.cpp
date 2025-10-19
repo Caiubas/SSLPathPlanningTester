@@ -23,6 +23,7 @@ int PlayDefense::calc_score(WorldModel world, TeamInfo& team) {
         score += 1000;
     }
     score = 0;
+    if (team.getEvent() == TeamInfo::theirFreeKick or team.getEvent() == TeamInfo::runningTheirFreeKick) {score = 10000;}
     this->score = score;
     return score;
 }
@@ -60,7 +61,7 @@ std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo
             avaiable_robots.erase(avaiable_robots.begin() + goal_keeper_idx);
         }
 
-        if (selected_role == Robot::striker) {
+        if (selected_role == Robot::marker) {
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {

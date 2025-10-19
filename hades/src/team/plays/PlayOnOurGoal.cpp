@@ -12,7 +12,7 @@ int PlayOnOurGoal::calc_score(WorldModel world, TeamInfo& team) {
     if (team.getEvent() == TeamInfo::run && world.field.ourDefenseArea.detectIfContains(world.ball.getPosition())) {
         score += 1000;
     }
-
+    score = 0;
     this->score = score;
     return score;
 }

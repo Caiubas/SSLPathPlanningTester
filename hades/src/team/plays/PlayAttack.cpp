@@ -60,6 +60,8 @@ std::array<Robot::role, 16> PlayAttack::role_assign(WorldModel& world, TeamInfo&
         if (selected_role == Robot::striker) {
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                if (avaiable_robots[idx]->getId() == 1) {closest_idx = idx; break;}
+                else {continue;}
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
                     closest_idx = idx;
                 }
@@ -92,6 +94,18 @@ std::array<Robot::role, 16> PlayAttack::role_assign(WorldModel& world, TeamInfo&
             int closest_id = avaiable_robots[closest_idx]->getId();
             avaiable_robots[closest_idx]->setRole(Robot::support);
             roles[closest_id] = Robot::support;
+            avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
+        }
+        if (selected_role == Robot::defender) {
+            int closest_idx = 0;
+            for (int idx = 0; idx < avaiable_robots.size(); idx++) {
+                if (avaiable_robots[idx]->getPosition().getDistanceTo(world.field.ourGoal.getMiddle()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.field.ourGoal.getMiddle())) {
+                    closest_idx = idx;
+                }
+            }
+            int closest_id = avaiable_robots[closest_idx]->getId();
+            avaiable_robots[closest_idx]->setRole(selected_role);
+            roles[closest_id] = selected_role;
             avaiable_robots.erase(avaiable_robots.begin() + closest_idx);
         }
     }

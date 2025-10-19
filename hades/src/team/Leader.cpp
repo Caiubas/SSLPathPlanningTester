@@ -489,7 +489,7 @@ void Leader::inspect_enemy_team() {
     }
 
     unsigned int id = world.enemies[closest_idx].getId();
-    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::striker);
+    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) {team.setEnemyRole(id, Robot::striker);};
 
     id = world.enemies[second_closest_idx].getId();
     if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::support);

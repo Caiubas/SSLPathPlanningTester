@@ -233,7 +233,7 @@ namespace skills {
                 if (ally.isMoving()) { // ignora se velocidade muito baixa
                     // parâmetros de predição
                     int num_extra = std::clamp(int(speed / 300.0), 1, 5); // até 5 círculos
-                    double step_dist = speed * 0.05;      // mm (distância entre círculos)
+                    double step_dist = speed * 0.02;      // mm (distância entre círculos) TODO REMOVER COMP era 0.05
                     double radius_growth = speed * 0.02;  // mm (aumento do raio por círculo)
 
                     // direção normalizada
@@ -262,7 +262,7 @@ namespace skills {
                 double speed = vel.getNorm(); // mm/s
                 if (enemy.isMoving()) {
                     int num_extra = std::clamp(int(speed / 300.0), 1, 5);
-                    double step_dist = speed * 0.05;
+                    double step_dist = speed * 0.02; //TODO REMOVER COMP era 0.05
                     double radius_growth = speed * 0.02;
 
                     Vector2d dir = vel.getNormalized(1.0);

@@ -210,9 +210,9 @@ bool WorldModel::isBallHittingTheGoal() {
 Point WorldModel::getGoalPosition(Robot goalkeeper) {
     std::vector<Point> points = {};
     int num = 12;
-    int k1 = 1;
-    int k2 = 5;
-    int k3 = 1;
+    double k1 = 1;
+    double k2 = 0.5; //TODO REMOVER REVER COMP
+    double k3 = 1;
 
     for (int i = 1; i < num; i++) {
         Point p = field.theirGoal.getResized(i*field.theirGoal.getLength()/num).getEnd();
@@ -233,7 +233,9 @@ Point WorldModel::getGoalPosition(Robot goalkeeper) {
             best_idx = i;
         }
     }
-        if (points.size() == 0) throw std::runtime_error("No goals found");
+    if (points.size() == 0) throw std::runtime_error("No goals found");
+
+    //std::cout << points[best_idx].getX() << " " << points[best_idx].getY() << std::endl;
     return points[best_idx];
 }
 
