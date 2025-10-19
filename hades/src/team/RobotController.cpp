@@ -371,6 +371,7 @@ void RobotController::receive_config() {
     if (getId() == 1) kicker = true;
     if (kicker) kickDistance = 4000;
     else kickDistance = 1000;
+    //if (getId() == 2) std::cout << mWorld.ball.isMoving() << std::endl;
 
     //if (getId() == 2) std::cout << kicker << " " << kickDistance <<  " " << mWorld.field.theirGoal.getMiddle().getDistanceTo({0, 0}) << std::endl;
 }

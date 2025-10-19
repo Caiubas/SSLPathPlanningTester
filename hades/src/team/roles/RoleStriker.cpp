@@ -113,7 +113,7 @@ namespace roles {
         } else if (robot.get_world().isPointOnTheirArea(robot.get_world().ball.getPosition()) && theyHaveGoalKeeper) {    ////TODO criar uma play pra quando a bola ta na area de defesa inimiga
             blockBall.act(robot, theirGoalKeeper, fabs(robot.get_world().field.theirDefenseArea.getMajorPoint().getX() - robot.get_world().field.theirDefenseArea.getMinorPoint().getX()));
         }
-        else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance()) {
+        else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance() && robot.get_m_team()->getEvent() != TeamInfo::stop && robot.get_m_team()->getEvent() != TeamInfo::theirFreeKick) {
             positionAndKick.act(robot, goal);
             //std::cout << "kicking on goal: " << goal.getX() << " " << goal.getY() << std::endl;
         } else if (hasSupport) {

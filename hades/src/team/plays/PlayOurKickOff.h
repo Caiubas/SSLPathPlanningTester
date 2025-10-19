@@ -18,7 +18,7 @@ public:
     PlayOurKickOff(){
         name = "OurKickOff";
         required_robots = 3;
-        required_roles = {Robot::goal_keeper, Robot::kickoff_kicker};
+        required_roles = {Robot::goal_keeper, Robot::kickoff_kicker, Robot::defender};
     };
 };
 

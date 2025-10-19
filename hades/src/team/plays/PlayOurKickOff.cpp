@@ -56,9 +56,23 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
         }
         if (selected_role == Robot::kickoff_kicker || selected_role == Robot::kickoff_support) {
             int closest_id = active_allies_ids[0];
+            int closest_idx = 0;
+            for (int i = 0; i<active_allies_ids.size(); i++) {
+                if (active_allies_ids[i] == world.striker_id) {closest_id = active_allies_ids[i]; closest_idx = i;}
+            }
             roles[closest_id] = selected_role;
-            distances_allies_from_center.erase(distances_allies_from_center.begin() + 0);
-            active_allies_ids.erase(active_allies_ids.begin() + 0);
+            distances_allies_from_center.erase(distances_allies_from_center.begin() + closest_idx);
+            active_allies_ids.erase(active_allies_ids.begin() + closest_idx);
+        }
+        if (selected_role == Robot::defender) {
+            int closest_id = active_allies_ids[0];
+            int closest_idx = 0;
+            for (int i = 0; i<active_allies_ids.size(); i++) {
+                if (active_allies_ids[i] == world.defender_id) {closest_id = active_allies_ids[i]; closest_idx = i;}
+            }
+            roles[closest_id] = selected_role;
+            distances_allies_from_center.erase(distances_allies_from_center.begin() + closest_idx);
+            active_allies_ids.erase(active_allies_ids.begin() + closest_idx);
         }
     }
 

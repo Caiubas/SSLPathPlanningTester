@@ -346,16 +346,15 @@ void Leader::event_FSM() {
     if (team.getEvent() == TeamInfo::ourFreeKick or team.getEvent() == TeamInfo::theirFreeKick) {
         GC_timer = 0;
         if (world.ball.isMoving()) {
-            team.setEvent(TeamInfo::run);
+            //team.setEvent(TeamInfo::run);
         }
-        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
             if (team.getEvent() == TeamInfo::ourFreeKick) team.setEvent(TeamInfo::runningOurFreeKick);
             if (team.getEvent() == TeamInfo::theirFreeKick) team.setEvent(TeamInfo::runningTheirFreeKick);
-        }
     }
     if (team.getEvent() == TeamInfo::runningOurFreeKick or team.getEvent() == TeamInfo::runningTheirFreeKick) {
         GC_timer += delta_time;
-        if (world.ball.isMoving() or GC_timer > 10) {
+        std::cout << GC_timer << " " << world.ball.isMoving() << std::endl;
+        if (GC_timer > 10 or world.ball.getVelocity().getNorm() > 0.2) {
             team.setEvent(TeamInfo::run);
         }
     }

@@ -21,7 +21,7 @@ private:
 	int max_velocities_stored = 60;
 	std::deque<Vector2d> stored_velocities = {};
 	Point stopPosition = Point(0, 0);
-	double velocityThreshold = 0.1;
+	double velocityThreshold = 0.15;
 	VisibilityGraph visibility;
 public:
   	Ball(bool detected, Point position, Vector2d velocity) : detected(detected), position(position), velocity(velocity) {stopPosition = getStopPosition();};

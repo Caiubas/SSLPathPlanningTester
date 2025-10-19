@@ -11,6 +11,17 @@
 
 namespace roles {
     void RoleDefender::act(RobotController& robot) {
+        bool has_striker = false;
+        try {
+            robot.get_m_team()->getRobotofRole(Robot::striker);
+            has_striker = true;
+        } catch (...) {
+            try {
+                robot.get_m_team()->getRobotofRole(Robot::marker);
+                has_striker = true;
+            } catch (...) {}
+        }
+
         if (robot.get_world().isBallMovingRobotDirection(robot) && robot.get_world().ball.isMoving()) {
             intercept.act(robot);
         } else if (robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition())) {
@@ -22,13 +33,13 @@ namespace roles {
             p = l.intersection(LineSegment{Point(0, 0), robot.get_world().field.ourGoal.getMiddle()});
             moveTo.act(robot, p, true);
             turnTo.act(robot, robot.get_world().ball.getPosition());
-        } else if (robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getId() == robot.getId() && robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getPosition().getDistanceTo(robot.get_world().ball.getPosition()) < robot.get_world().getClosestEnemyToPoint(robot.get_world().ball.getPosition()).getPosition().getDistanceTo(robot.get_world().ball.getPosition())) {
+        } else if (!has_striker && robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getId() == robot.getId() && robot.get_world().getClosestAllyToPoint(robot.get_world().ball.getPosition()).getPosition().getDistanceTo(robot.get_world().ball.getPosition()) < robot.get_world().getClosestEnemyToPoint(robot.get_world().ball.getPosition()).getPosition().getDistanceTo(robot.get_world().ball.getPosition())) {
             //try {
             //positionAndKick.act(robot, robot.get_m_team()->getRobotofRole(Robot::striker));
             //} catch (...) {
             positionAndKick.act(robot, robot.get_world().field.theirGoal.getMiddle());
             //}
-        }   else if (robot.get_world().isPointOnOurSide(robot.get_world().ball.getPosition()) && !robot.get_world().getBallOwner().isAlly()) {
+        }   else if (!has_striker && robot.get_world().isPointOnOurSide(robot.get_world().ball.getPosition()) && !robot.get_world().getBallOwner().isAlly()) {
             positionAndKick.act(robot, robot.get_world().field.theirGoal.getMiddle());
         } else {
             LineSegment line = {Point(0, 0), Point(0, 0)};

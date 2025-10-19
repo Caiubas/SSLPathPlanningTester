@@ -42,6 +42,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
             p = line.intersection(y_segment);
         } catch (...) {
         }
+    std::cout << p.getX() << " " << p.getY() << std::endl;
 
 
         double y_max = y_segment.getEnd().getY() - robot.getRadius();

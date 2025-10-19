@@ -35,6 +35,8 @@ public:
 
     Ball ball = {false, {0, 0}, {0, 0}};
 
+    int striker_id = 1;
+    int defender_id = 2;
 
     Point getKickingPosition(Point pos_0, Point pos_1, double distance);
     bool isPointOnOurSide(Point p);
