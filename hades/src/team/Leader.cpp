@@ -353,7 +353,6 @@ void Leader::event_FSM() {
     }
     if (team.getEvent() == TeamInfo::runningOurFreeKick or team.getEvent() == TeamInfo::runningTheirFreeKick) {
         GC_timer += delta_time;
-        std::cout << GC_timer << " " << world.ball.isMoving() << std::endl;
         if (GC_timer > 10 or world.ball.getVelocity().getNorm() > 0.2) {
             team.setEvent(TeamInfo::run);
         }

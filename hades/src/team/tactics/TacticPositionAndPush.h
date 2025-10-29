@@ -13,7 +13,7 @@ namespace tactics {
 
 class TacticPositionAndPush : public TacticBase{
 private:
-	double distance_to_kick = 300;
+	double distance_to_kick = 80;
 public:
 	void act(RobotController& robot, Point goal, bool wait = false);
 	void act(RobotController& robot, Robot sup, bool wait = false);

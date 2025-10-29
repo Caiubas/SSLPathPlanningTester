@@ -54,10 +54,11 @@ void RobotController::loop() {
         }
         //std::cout << "kicker timer " << getId() << " " << kicker_timer << std::endl;
         //mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
-        //mWorld.field.full_dimensions = AreaRectangular({0, 0}, {2000, 1000});
-        //mWorld.field.ourGoal = LineSegment(Point(500, 0), Point(500, 1200));
-        //mWorld.field.ourDefenseArea = AreaRectangular({0, 0}, {300, 1000});
-        //mWorld.field.theirGoal = LineSegment(Point(1500, 667), Point(1500, 334));
+        mWorld.field.full_dimensions = AreaRectangular({0, -750}, {2400, 750});
+        mWorld.field.ourGoal = LineSegment(Point(250, -500), Point(250, 500));
+        mWorld.field.theirGoal = LineSegment(Point(250, -300), Point(250, 300));
+        mWorld.field.ourDefenseArea = AreaRectangular({0, -700}, {800, 700});
+        mWorld.field.theirDefenseArea = AreaRectangular({-25000000, 10}, {-50000, 500});
         skills::SkillStop stop;
         try {
             if (han.new_tartarus.debug_mode) debug_mode();
@@ -368,7 +369,7 @@ void RobotController::receive_config() {
 
     kicker = han.new_tartarus.robots[getId()].has_kicker;
     if (getId() == 2) kicker = true;
-    if (getId() == 1) kicker = true;
+    if (getId() == 1) kicker = false;
     if (kicker) kickDistance = 4000;
     else kickDistance = 1000;
     //if (getId() == 2) std::cout << mWorld.ball.isMoving() << std::endl;

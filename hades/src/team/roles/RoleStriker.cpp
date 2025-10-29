@@ -81,6 +81,14 @@ namespace roles {
     }
 
     void RoleStriker::act(RobotController& robot) {
+
+        //TODO REMOVER
+        if (robot.get_world().field.ourDefenseArea.detectIfContains(robot.get_world().ball.getPosition())) {
+            moveTo.act(robot, Point(2000, 0), true);
+            return;
+        }
+        //TODO REMOVER
+
         Point goal = robot.get_world().field.theirGoal.getMiddle();
         bool hasGoalPosition = false;
         try {
