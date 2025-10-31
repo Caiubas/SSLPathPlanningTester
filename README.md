@@ -132,4 +132,17 @@ no software da tigers:
 
 ## Código de cores:
 
-![Código de cores](Código de cores.png "Código de cores")
+![Código de cores](Código_de_cores.png "Código de cores")
+
+## Problemas com o Yarn?
+
+tente:
+
+	sudo apt remove cmdtest yarn
+	npm install -g yarn
+	source ~/.bashrc
+	yarn add react react-dom
+
+E então:
+
+	./build_core
