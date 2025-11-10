@@ -27,7 +27,6 @@ namespace roles {
             goal = robot.get_world().getGoalPosition();
             has_goal = true;
         } catch (...) {}
-    std::cout << robot.get_world().ball.isMoving() << std::endl;
         if (!robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition()) || robot.get_world().ball.isMoving()) {
             LineSegment line = robot.get_world().field.ourGoal;
             if (line.getStart().getX() < 0) line = line.getMovedOnX(robot.getRadius());

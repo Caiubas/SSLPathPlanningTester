@@ -18,8 +18,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         int enemy_striker_id = -1;
         Robot enemy_striker(0);
         try {
-            //enemy_striker = robot.get_m_team()->getEnemyofRole(Robot::striker, robot.get_world().enemies);
-            enemy_striker = robot.get_m_team()->getRobotofRole(Robot::striker); //TODO REMOVER;
+            enemy_striker = robot.get_m_team()->getEnemyofRole(Robot::striker, robot.get_world().enemies);
             enemy_striker_id = enemy_striker.getId();
             hasStriker = true;
         } catch (...) {
@@ -33,9 +32,7 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
                 line = robot.get_world().ball.getMovementLine().getResized(1500000);
             }
             else if (robot.get_world().ball.isStopped() && hasStriker) {    //para bola parada
-                //line = LineSegment(enemy_striker.getPosition(), robot.get_world().ball.getPosition()).getResized(100000); //TODO REMOVER
-
-                line = LineSegment(enemy_striker.getPosition(), robot.get_world().ball.getPosition()).getResized(100000); //TODO REMOVER
+                line = LineSegment(enemy_striker.getPosition(), robot.get_world().ball.getPosition()).getResized(100000);
             } else {
                 line = LineSegment(robot.get_world().ball.getPosition(), y_segment.getMiddle()).getResized(100000);
             }

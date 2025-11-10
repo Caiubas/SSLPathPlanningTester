@@ -52,21 +52,11 @@ void RobotController::loop() {
         if (kicker_timer > 0) {
             kicker_timer -= mDelta_time;
         }
-        //std::cout << "kicker timer " << getId() << " " << kicker_timer << std::endl;
-        //mWorld.field.inside_dimensions = AreaRectangular({0, 0}, {2250, 1250});
-        mWorld.field.full_dimensions = AreaRectangular({0, -750}, {2400, 750});
-        mWorld.field.ourGoal = LineSegment(Point(250, -500), Point(250, 500));
-        mWorld.field.theirGoal = LineSegment(Point(250, -300), Point(250, 300));
-        mWorld.field.ourDefenseArea = AreaRectangular({0, -700}, {800, 700});
-        mWorld.field.theirDefenseArea = AreaRectangular({-25000000, 10}, {-50000, 500});
-        skills::SkillStop stop;
         try {
             if (han.new_tartarus.debug_mode) debug_mode();
             else if (technical_challenge) {do_technical_challenge();}
             else select_behavior();
 
-
-            //else stop.act(*this);
         } catch (std::runtime_error& e) {
             std::cout << "error" << e.what() << std::endl;
         }
@@ -1177,6 +1167,21 @@ int RobotController::getId() const {
     return id;
 }
 
+double RobotController::getKickerColddown() const {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    return kicker_colddown;
+}
+
+double RobotController::getKickerTimer() const {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    return kicker_timer;
+}
+
+double RobotController::getPushTime() const {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    return push_time;
+}
+
 Point RobotController::getOldPosition() const {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     return old_pos;
@@ -1253,6 +1258,22 @@ void RobotController::setId(int id) {
     this->id = id;
 }
 
+void RobotController::setKickerColddown(double t) {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    this->kicker_colddown = t;
+}
+
+void RobotController::setKickerTimer(double t) {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    this->kicker_timer = t;
+}
+
+void RobotController::setPushTime(double t) {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    this->push_time = t;
+}
+
+
 void RobotController::setPosition(const Point& p) {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     old_pos = pos;
@@ -1319,9 +1340,4 @@ bool RobotController::isStopped() const {
 void RobotController::setStoredVelocities(const std::deque<Vector2d>& vels) {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     stored_velocities = vels;
-}
-
-bool RobotController::isKickingOnVision() const {
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    return kickOnVision;
 }

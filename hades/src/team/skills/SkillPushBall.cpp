@@ -19,10 +19,9 @@ namespace skills {
 	}
 
 	void SkillPushBall::act(RobotController& robot) {
-		robot.push_time += robot.get_m_delta_time();
-		std::cout << "push time: " << robot.push_time << std::endl;
-		if (robot.push_time >= 3 || (robot.push_time >= 1.5 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_min()))) {
-			robot.push_time = 0;
+		robot.setPushTime(robot.getPushTime() + robot.get_m_delta_time());
+		if (robot.getPushTime() >= 3 || (robot.getPushTime() >= 1.5 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_min()))) {
+			robot.setPushTime(0);
 			robot.set_mkicker_x(0);
 			robot.setPositioned(false);
 			robot.get_m_team()->setPositioned(robot.getId(), false);

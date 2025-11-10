@@ -58,7 +58,7 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
             int closest_id = active_allies_ids[0];
             int closest_idx = 0;
             for (int i = 0; i<active_allies_ids.size(); i++) {
-                if (active_allies_ids[i] == world.striker_id) {closest_id = active_allies_ids[i]; closest_idx = i;}
+                if (world.allies[active_allies_ids[i]].getPosition().getDistanceTo({0, 0}) < world.allies[active_allies_ids[closest_idx]].getPosition().getDistanceTo({0, 0})) {closest_id = active_allies_ids[i]; closest_idx = i;}
             }
             roles[closest_id] = selected_role;
             distances_allies_from_center.erase(distances_allies_from_center.begin() + closest_idx);
@@ -68,7 +68,7 @@ std::array<Robot::role, 16> PlayOurKickOff::role_assign(WorldModel& world, TeamI
             int closest_id = active_allies_ids[0];
             int closest_idx = 0;
             for (int i = 0; i<active_allies_ids.size(); i++) {
-                if (active_allies_ids[i] == world.defender_id) {closest_id = active_allies_ids[i]; closest_idx = i;}
+                if (world.allies[active_allies_ids[i]].getPosition().getDistanceTo({0, 0}) > world.allies[active_allies_ids[closest_idx]].getPosition().getDistanceTo({0, 0})) {closest_id = active_allies_ids[i]; closest_idx = i;}
             }
             roles[closest_id] = selected_role;
             distances_allies_from_center.erase(distances_allies_from_center.begin() + closest_idx);

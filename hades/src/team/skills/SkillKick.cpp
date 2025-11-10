@@ -20,40 +20,11 @@ namespace skills {
 	}
 
 	void SkillKick::act(RobotController& robot) {
-		if (robot.isKickingOnVision() && robot.hasKicker()) {
-			std::cout << robot.get_world().ball.getVelocity().getNorm() << std::endl;
-			if (robot.get_world().ball.getVelocity().getNorm() > 0.5) {
-				robot.push_time += robot.get_m_delta_time();
-			} else {
-				robot.push_time = 0;
-			}
-			if (robot.push_time >= 0.1) {
-				robot.set_mkicker_x(255);
-				std::cout << "kicking on vision" << std::endl;
-			}
-			if (robot.push_time > 0.3 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.getVelocity().getNorm() >= robot.get_m_vxy_max())) {
-				robot.push_time = 0;
-				robot.set_mkicker_x(0);
-				robot.setPositioned(false);
-				robot.get_m_team()->setPositioned(robot.getId(), false);
-				robot.set_mtarget_vel({0, 0});
-				std::cout << "fim de kick" << std::endl;
-			}
-			if (robot.get_m_team()->getEvent() == TeamInfo::ourFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningOurFreeKick or robot.get_m_team()->getEvent() == TeamInfo::theirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::runningTheirFreeKick or robot.get_m_team()->getEvent() == TeamInfo::ourKickOff or robot.get_m_team()->getEvent() == TeamInfo::theirKickOff) {
-				robot.set_will_double_touch(true);
-			}
-			Vector2d v_vet = {robot.get_world().ball.getPosition(), robot.getPosition()};
-			v_vet = v_vet.getNormalized(robot.get_m_vxy_min());
-			robot.set_mtarget_vel(v_vet.getRotated(-robot.getYaw()));
-		}
-		else if (robot.hasKicker() && robot.kicker_timer <= 0) {
-			robot.push_time += robot.get_m_delta_time();
-			//std::cout << "push time: " << robot.push_time << std::endl;
-			//std::cout << robot.hasKicker() << std::endl;
-			//std::cout << robot.get_world().ball.isMoving() << (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius()) << std::endl;
-			if (robot.push_time >= 3 || (robot.push_time > 1 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.isMoving()))) {
-				robot.kicker_timer = robot.kicker_colddown;
-				robot.push_time = 0;
+		if (robot.hasKicker() && robot.getKickerTimer() <= 0) {
+			robot.setPushTime(robot.getPushTime() + robot.get_m_delta_time());
+			if (robot.getPushTime() >= 3 || (robot.getPushTime() > 1 && (robot.getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > distancethreshold + robot.getRadius() || robot.get_world().ball.isMoving()))) {
+				robot.setKickerTimer(robot.getKickerColddown());
+				robot.setPushTime(0);
 				robot.set_mkicker_x(0);
 				robot.setPositioned(false);
 				robot.get_m_team()->setPositioned(robot.getId(), false);

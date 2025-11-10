@@ -25,6 +25,18 @@ int Robot::getId() const {
 	return id;
 }
 
+double Robot::getKickerColddown() const {
+	return kicker_colddown;
+}
+
+double Robot::getKickerTimer() const {
+	return kicker_timer;
+}
+
+double Robot::getPushTime() const {
+	return push_time;
+}
+
 Point Robot::getOldPosition() const {
 	return old_pos;
 }
@@ -91,6 +103,18 @@ void Robot::setId(int id) {
 	this->id = id;
 }
 
+void Robot::setKickerColddown(double t) {
+	this->kicker_colddown = t;
+}
+
+void Robot::setKickerTimer(double t) {
+	this->kicker_timer = t;
+}
+
+void Robot::setPushTime(double t) {
+	this->push_time = t;
+}
+
 void Robot::setPosition(const Point& p) {
 	old_pos = pos;
 	pos = p;
@@ -152,9 +176,4 @@ bool Robot::isStopped() const {
 // --- Stored Velocities ---
 void Robot::setStoredVelocities(const std::deque<Vector2d>& vels) {
 	stored_velocities = vels;
-}
-
-
-bool Robot::isKickingOnVision() const {
-	return kickOnVision;
 }

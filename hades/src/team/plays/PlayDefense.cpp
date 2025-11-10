@@ -64,8 +64,6 @@ std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo
         if (selected_role == Robot::marker) {
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
-                if (avaiable_robots[idx]->getId() == world.striker_id) {closest_idx = idx; break;}
-                else {continue;}
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
                     closest_idx = idx;
                 }
@@ -78,8 +76,6 @@ std::array<Robot::role, 16> PlayDefense::role_assign(WorldModel& world, TeamInfo
         if (selected_role == Robot::defender) {
             int closest_idx = 0;
             for (int idx = 0; idx < avaiable_robots.size(); idx++) {
-                if (avaiable_robots[idx]->getId() == world.defender_id) {closest_idx = idx; break;}
-                else {continue;}
                 if (avaiable_robots[idx]->getPosition().getDistanceTo(world.ball.getPosition()) < avaiable_robots[closest_idx]->getPosition().getDistanceTo(world.ball.getPosition())) {
                     closest_idx = idx;
                 }

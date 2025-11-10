@@ -147,6 +147,9 @@ public:
     bool isOriented() const;
     bool isAligned() const;
     int getId() const;
+    double getKickerColddown() const;
+    double getKickerTimer() const;
+    double getPushTime() const;
     Point getOldPosition() const;
     Point getPosition() const;
     double getYaw() const;
@@ -160,7 +163,6 @@ public:
     const std::deque<Vector2d>& getStoredVelocities() const;
     double getRadius() const;
     double getKickDistance() const {return kickDistance;};
-    bool isKickingOnVision() const;
 
     // --- Setters ---
     void setAlly(bool is);
@@ -169,6 +171,9 @@ public:
     void setAligned(bool is);
     void setKicker(bool kicker);
     void setId(int id);
+    void setKickerColddown(double t);
+    void setKickerTimer(double t);
+    void setPushTime(double t);
     void setPosition(const Point& p);
     void setYaw(double y);
     void setVelocity(const Vector2d& v);

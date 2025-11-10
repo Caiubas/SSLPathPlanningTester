@@ -13,7 +13,6 @@
 
 class Robot {
 public:
-    double push_time = 0;
     enum role {
         unknown = -1,
         goal_keeper,
@@ -52,28 +51,30 @@ protected:
     double radius = 120;
     bool detected = false;
     bool kicker = false;
-    bool kickOnVision = false;
     double kickDistance = 2000;
     enum role this_role = unknown;
     bool positioned = true;
     bool aligned = true;
     bool oriented = true;
-public:
-
     double kicker_colddown = 5;
     double kicker_timer = 0;
+    double push_time = 0;
+
+public:
     // Construtor
     Robot(int id) : id(id) {this_role = unknown;}
 
     //flags
 
     // --- Getters ---
-    virtual bool isKickingOnVision() const;
     virtual bool isAlly() const;
     virtual bool isPositioned() const;
     virtual bool isOriented() const;
     virtual bool isAligned() const;
     virtual int getId() const;
+    virtual double getKickerColddown() const;
+    virtual double getKickerTimer() const;
+    virtual double getPushTime() const;
     virtual Point getOldPosition() const;
     virtual Point getPosition() const;
     virtual double getYaw() const;
@@ -96,6 +97,9 @@ public:
     virtual void setAligned(bool is);
     virtual void setKicker(bool kicker);
     virtual void setId(int id);
+    virtual void setKickerColddown(double t);
+    virtual void setKickerTimer(double t);
+    virtual void setPushTime(double t);
     virtual void setPosition(const Point& p);
     virtual void setYaw(double y);
     virtual void setVelocity(const Vector2d& v);
