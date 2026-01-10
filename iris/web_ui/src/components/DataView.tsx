@@ -7,6 +7,27 @@ type Props = {
   setReading: React.Dispatch<React.SetStateAction<boolean>>;
   className?: string;
 };
+
+const EVENT_NAMES: Record<number, string> = {
+  0: 'HALT',
+  1: 'STOP',
+  2: 'NORMAL START',
+  3: 'FORCE START',
+  4: 'KICKOFF (Yellow)',
+  5: 'KICKOFF (Blue)',
+  6: 'PENALTY (Yellow)',
+  7: 'PENALTY (Blue)',
+  8: 'DIRECT FREE KICK (Yellow)',
+  9: 'DIRECT FREE KICK (Blue)',
+  10: 'INDIRECT FREE KICK (Yellow)',
+  11: 'INDIRECT FREE KICK (Blue)',
+  12: 'TIME OUT (Yellow)',
+  13: 'TIME OUT (Blue)',
+  14: 'GOAL (Yellow)',
+  15: 'GOAL (Blue)',
+  16: 'BALL PLACEMENT (Yellow)',
+  17: 'BALL PLACEMENT (Blue)',
+};
 export function DataView({ reading, setReading, data }: Props) {
   //const [recebendoDoLCM, setRecebendoDoLCM] = useState(true);
 
@@ -24,15 +45,18 @@ export function DataView({ reading, setReading, data }: Props) {
     }
   };*/
 
+
+
+  const currentEventName = EVENT_NAMES[data.gc.gc_current_command] ?? 'Nenhum evento';
+
   return (
     <div className="m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-[40%]">
       <button
         onClick={() => setReading(!reading)}
-        className={`mb-4 w-full py-2 rounded-[5px] font-semibold transition-colors duration-200 ${
-          reading
-            ? 'bg-red-600 hover:bg-red-700'
-            : 'bg-green-600 hover:bg-green-700'
-        } text-white`}
+        className={`mb-4 w-full py-2 rounded-[5px] font-semibold transition-colors duration-200 ${reading
+          ? 'bg-red-600 hover:bg-red-700'
+          : 'bg-green-600 hover:bg-green-700'
+          } text-white`}
       >
         {reading ? 'Parar leitura' : 'Iniciar leitura'}
       </button>
@@ -71,6 +95,10 @@ export function DataView({ reading, setReading, data }: Props) {
       <p>
         Team Blue:{' '}
         <span className="font-mono">{data.gc.team_blue ? 'Sim' : 'Não'}</span>
+      </p>
+      <p>
+        Evento Atual:{' '}
+        <span className="font-mono text-yellow-300">{currentEventName}</span>
       </p>
 
       <h2 className="text-lg font-bold mt-4 mb-1">Tartarus</h2>

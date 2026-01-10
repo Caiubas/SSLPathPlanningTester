@@ -1,8 +1,8 @@
 // src/components/MenuBar.tsx
 import { useState } from 'react';
-import { MenuButton } from './MenuButton';
 import type { SoftwareOption } from '../App';
 import type { Division } from '../data/fieldDimensions';
+import { MenuButton } from './sections/utilities/buttons/MenuButton';
 
 export function MenuBar({
   onSelectSoftware,

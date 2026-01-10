@@ -1,5 +1,5 @@
 // SkillButton.tsx (para skills simples)
-import { sendPost } from '../../../hooks/useSendPost';
+import { sendPost } from '../../../../hooks/useSendPost';
 
 type Props = {
   label: string;

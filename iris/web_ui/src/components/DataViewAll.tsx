@@ -27,8 +27,12 @@ type Props = {
   selectedRobotId: number | null;
   className?: string;
 
+  centerX: number;
+  centerY: number;
+
   blueRobots: DetectionRobot[];
   yellowRobots: DetectionRobot[];
+  addTrajectory: (robotId: number, from: { x: number; y: number }, to: { x: number; y: number }) => void;
 };
 
 export function DataViewAll({
@@ -41,6 +45,8 @@ export function DataViewAll({
   setSelected,
   className,
   blueRobots, yellowRobots,
+  addTrajectory,
+  centerX, centerY,
 }: Props) {
   const data = useFetchLoop(reading, initialData);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
@@ -75,6 +81,9 @@ export function DataViewAll({
             data={data}
             robotId={selectedRobotId}
             setSelected={setSelected}
+            addTrajectory={addTrajectory}
+            centerX={centerX}
+            centerY={centerY}
           />
         ) : (
           <p>Selecione um robô para ver as skills</p>

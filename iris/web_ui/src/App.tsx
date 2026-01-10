@@ -6,7 +6,7 @@ import { DataViewAll } from './components/DataViewAll';
 import { FIELD_DIMENSIONS, type Division } from './data/fieldDimensions';
 import { initialData } from './data/initialData';
 import { useFetchLoop } from './hooks/useFetchLoop';
-import { mapBallToFieldCoords, mapRobotsToFieldCoords } from './utils';
+import { detectionRobot, generateTrajectory, mapBallToFieldCoords, mapRobotsToFieldCoords } from './utils';
 import type { DataType, DetectionRobot } from './types';
 import { useSendLoop } from './hooks/useSendLoop';
 
@@ -25,7 +25,7 @@ export default function App() {
 
   const data = useFetchLoop(reading, initialData);
   useSendLoop(reading, data);
-  
+
 
   let dimensions = initialData.vision.field;
 
@@ -39,16 +39,46 @@ export default function App() {
   const centerX = dimensions.field_width / 2;
   const centerY = totalFieldLength / 2;
 
-  const yellowRobots : DetectionRobot[] = data.vision.robots_yellow
+  const yellowRobots: DetectionRobot[] = data.vision.robots_yellow
+    .filter((r) => r.detected == true)
+    .map((r) => detectionRobot([r])[0]);
+  const blueRobots: DetectionRobot[] = data.vision.robots_blue
+    .filter((r) => r.detected == true)
+    .map((r) => detectionRobot([r])[0]);
+
+  const yellowRobotsForField: DetectionRobot[] = data.vision.robots_yellow
     .filter((r) => r.detected == true)
     .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
-  const blueRobots : DetectionRobot[] = data.vision.robots_blue
+  const blueRobotsForField: DetectionRobot[] = data.vision.robots_blue
     .filter((r) => r.detected == true)
-    .map((r) => mapRobotsToFieldCoords([r], centerX, centerY)[0]);
+    .map((r) => detectionRobot([r])[0]);
 
   const ball = mapBallToFieldCoords(data.vision.balls, centerX, centerY);
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(window.innerWidth > 1200);
+
+  const [trajectories, setTrajectories] = useState<
+    { robotId: number; points: { x: number; y: number }[] }[]
+  >([]);
+
+
+  const addTrajectory = (
+    robotId: number,
+    from: { x: number; y: number },
+    to: { x: number; y: number }
+  ) => {
+    const newTrajectory = {
+      robotId,
+      points: generateTrajectory(from, to),
+    };
+
+    // substitui a antiga trajetória desse robô, se existir
+    setTrajectories((prev) => [
+      ...prev.filter((t) => t.robotId !== robotId),
+      newTrajectory,
+    ]);
+  };
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,33 +101,30 @@ export default function App() {
           />
         </div>
 
-        <div className={`flex overflow-y-scroll overflow-x-hidden ${
-            isFullScreen ? 'flex-row' : 'flex-col'
+        <div className={`flex overflow-y-scroll overflow-x-hidden ${isFullScreen ? 'flex-row' : 'flex-col'
           }`}>
           {/* Campo ajustado pela divisão selecionada */}
           <FieldView
             data={data}
             dimensions={dimensions}
-            blueRobots={blueRobots}
-            yellowRobots={yellowRobots}
+            blueRobots={blueRobotsForField}
+            yellowRobots={yellowRobotsForField}
             ball={ball}
             flipField={flipField}
+            trajectories={trajectories}
           />
 
-           <div className={`flex gap-2 w-full ${
-            isFullScreen ? 'flex-row flex-nowrap ' : 'flex-col flex-wrap '
-          }`}>
-            <DataView data={data} reading={reading} setReading={setReading} 
-                  className=
-                    {`${
-                    window.innerWidth > 768 ? "flex-1" : "flex-[1]" // if para mobile (metade da largura)
-                     }`} 
-                      />
+          <div className={`flex gap-2 w-full ${isFullScreen ? 'flex-row flex-nowrap ' : 'flex-col flex-wrap '
+            }`}>
+            <DataView data={data} reading={reading} setReading={setReading}
+              className=
+              {`${window.innerWidth > 768 ? "flex-1" : "flex-[1]" // if para mobile (metade da largura)
+                }`}
+            />
             {selectedSoftware && (
               <DataViewAll
-                   className={`${
-                  window.innerWidth < 768 ? "flex-1" : "flex-[2]" // if para desktop (2x maior que o DataView)
-                }`}
+                className={`${window.innerWidth < 768 ? "flex-1" : "flex-[2]" // if para desktop (2x maior que o DataView)
+                  }`}
                 reading={reading}
                 selected={selectedSoftware}
                 setSelected={setSelectedSoftware}
@@ -109,6 +136,9 @@ export default function App() {
                 setSelectedRobotId={setSelectedRobotId}
                 blueRobots={blueRobots}
                 yellowRobots={yellowRobots}
+                addTrajectory={addTrajectory}
+                centerX={centerX}
+                centerY={centerY}
               />
             )}
           </div>

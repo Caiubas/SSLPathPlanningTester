@@ -48,7 +48,11 @@ void TacticKeepXLine::act(RobotController& robot, LineSegment y_segment, double 
         double y_min = y_segment.getStart().getY() + robot.getRadius();
         p.setY(std::clamp(p.getY(), y_min, y_max));
 
+<<<<<<< HEAD
         if (robot.get_world().enemies.size() > 0 && hasStriker && false) {
+=======
+        if (robot.get_world().enemies.size() > 0 && hasStriker) {
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
             if ((robot.get_world().enemies[enemy_striker_id].getPosition().getDistanceTo(robot.get_world().ball.getPosition()) > 1000 && robot.get_world().ball.isStopped())) {
                 p.setY(y_rest);
             }

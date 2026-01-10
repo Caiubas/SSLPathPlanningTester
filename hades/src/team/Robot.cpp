@@ -176,4 +176,12 @@ bool Robot::isStopped() const {
 // --- Stored Velocities ---
 void Robot::setStoredVelocities(const std::deque<Vector2d>& vels) {
 	stored_velocities = vels;
+<<<<<<< HEAD
+=======
+}
+
+
+bool Robot::isKickingOnVision() const {
+	return kickOnVision;
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
 }

@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import type { DataType } from '../../types';
-import { toggleBooleanWithId } from '../../utils';
-import RobotTabs from './utilities/RobotTabs';
+import { mapRobotsToFieldCoords, toggleBooleanWithId } from '../../utils';
+import RobotTabs, { type RobotTabsProps } from './utilities/RobotTabs';
 import { RowWrapper } from './utilities/RowWrapper';
 import { ToggleSwitch } from './utilities/ToggleSwitch';
 
-type Props = {
+type RobotSectionProps = RobotTabsProps & {
   data: DataType;
   robotId: number;
   setSelected: React.Dispatch<React.SetStateAction<keyof DataType>>;
+  centerX: number;
+  centerY: number;
+  addTrajectory: (robotId: number, from: { x: number; y: number }, to: { x: number; y: number }) => void;
 };
 
-export default function RobotSection({ data, robotId, setSelected }: Props) {
+export default function RobotSection({ data, robotId, setSelected, addTrajectory, centerX, centerY }: RobotSectionProps) {
   const teamBlueSelected = data.gc.team_blue;
   const team = teamBlueSelected ? 'blue_team' : 'yellow_team';
 
@@ -45,6 +48,18 @@ export default function RobotSection({ data, robotId, setSelected }: Props) {
   const robot = data.robot; // ou data.skill se você voltou para esse
   if (!robot) return null; // evita undefined
 
+
+  let currentPos = { x: 0, y: 0 };
+
+  if (team === 'blue_team') {
+    const robotMapped = mapRobotsToFieldCoords([data.vision.robots_blue[robotId]], centerX, centerY)[0];
+    currentPos = { x: robotMapped.position_x, y: robotMapped.position_y };
+  } else if (team === 'yellow_team') {
+    const robotMapped = mapRobotsToFieldCoords([data.vision.robots_yellow[robotId]], centerX, centerY)[0];
+    currentPos = { x: robotMapped.position_x, y: robotMapped.position_y };
+  }
+
+
   const currentSkill = robot.skill_robot;
   const currentSkillName = skillNames[currentSkill] ?? 'Desconhecida';
 
@@ -74,7 +89,7 @@ export default function RobotSection({ data, robotId, setSelected }: Props) {
       </RowWrapper>
 
       <h2 className="text-lg font-bold mb-1">Skills do Robô {robotId}</h2>
-      <RobotTabs robotId={robotId} />
+      <RobotTabs robotId={robotId} currentPos={currentPos} addTrajectory={addTrajectory} />
     </div>
   );
 }

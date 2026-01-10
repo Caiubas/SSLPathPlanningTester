@@ -1,4 +1,4 @@
-import GameEventButton from '../utilities/GameEventButton';
+import GameEventButton from '../utilities/buttons/GameEventButton';
 
 export default function EventsBallLeftFieldTemplate() {
   return (

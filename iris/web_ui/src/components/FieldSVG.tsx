@@ -7,6 +7,7 @@ export function FieldSVG({
   yellowRobots = [],
   ball,
   flipField = false,
+  trajectories,
 }: FieldProps) {
   const totalFieldLength = dimensions.field_length + 2 * dimensions.goal_depth;
   const centerX = dimensions.field_width / 2;
@@ -19,13 +20,13 @@ export function FieldSVG({
 
   const designatedPosition = data.tartarus.iris_as_GC
     ? {
-        x: data?.irisGC?.designated_position_x ?? 0,
-        y: data?.irisGC?.designated_position_y ?? 0,
-      }
+      x: data?.irisGC?.designated_position_x ?? 0,
+      y: data?.irisGC?.designated_position_y ?? 0,
+    }
     : {
-        x: data?.gc?.gc_designated_position_x ?? 0,
-        y: data?.gc?.gc_designated_position_y ?? 0,
-      };
+      x: data?.gc?.gc_designated_position_x ?? 0,
+      y: data?.gc?.gc_designated_position_y ?? 0,
+    };
 
   console.log(
     'flipField:',
@@ -86,7 +87,7 @@ export function FieldSVG({
           x2={dimensions.field_width}
           y2={centerY}
           stroke="white"
-          strokeWidth={dimensions.line_thickness*1.5}
+          strokeWidth={dimensions.line_thickness * 1.5}
         />
 
         {/* Circulo central */}
@@ -179,6 +180,7 @@ export function FieldSVG({
 
         {/* Robôs azuis */}
         {blueRobots.map((robot) => {
+          
           const adjustedOrientation = 90 - (robot.orientation ?? 0); // Ajusta conforme seu padrão
           return (
             <image
@@ -247,6 +249,33 @@ export function FieldSVG({
               />
             </>
           )}
+
+        {/*Trajetórias*/}
+        {/*{trajectories?.map((traj) => (
+          <g key={traj.robotId}>
+            {// Linha da trajetória }
+            <polyline
+              points={traj.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              stroke={traj.robotId % 2 === 0 ? 'blue' : 'yellow'} // cor por robô/time
+              strokeWidth={5}
+              fill="none"
+              opacity={0.6}
+            />
+
+            {// Pontos da trajetória }
+            {traj.points.map((p, i) => (
+              <circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={6} // raio em pixels
+                fill="red"
+                stroke="white"
+                strokeWidth={1.5}
+              />
+            ))}
+          </g>
+          ))}*/}
       </g>
     </svg>
   );

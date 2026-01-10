@@ -1,7 +1,10 @@
-import RoleButton from '../utilities/RoleButton';
-import type { Props } from '../utilities/RobotTabs';
+import RoleButton from '../utilities/buttons/RoleButton';
 
-export default function RoleTemplate({ robotId }: Props) {
+export type RoleTEmplateProps = {
+  robotId: number;
+}
+
+export default function RoleTemplate({ robotId }: RoleTEmplateProps) {
   return (
     <>
       <p>Basic Roles:</p>

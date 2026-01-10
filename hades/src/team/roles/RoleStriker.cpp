@@ -111,10 +111,17 @@ namespace roles {
             hasSupport = true;
         } catch (...) {}
         LineSegment robot_goal = {robot.get_world().ball.getPosition(), goal};
+<<<<<<< HEAD
         if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/4) && robot.get_world().isBallMovingRobotDirection(robot)) {
             intercept.act(robot);
         }
         else if ((robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition()))) {//|| ((robot.get_world().ball.isMoving() && !robot.isKickingOnVision()))) {
+=======
+        if (robot.get_world().ball.isMoving() && robot.get_world().ball.getMovementLine().isPointAligned(robot.getPosition(), 3.1415/4)) {
+            intercept.act(robot);
+        }
+        else if (((robot.get_world().ball.isMoving() && !robot.isKickingOnVision())|| robot.get_world().isPointOnOurArea(robot.get_world().ball.getPosition()) && hasSupport)) {
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
             Point p = getSupportPosition(robot);
             keepLocation.act(robot, p);
 
@@ -123,6 +130,7 @@ namespace roles {
         }
         else if (hasGoalPosition && robot_goal.getLength() <= robot.getKickDistance() && robot.get_m_team()->getEvent() != TeamInfo::stop && robot.get_m_team()->getEvent() != TeamInfo::theirFreeKick) {
             positionAndKick.act(robot, goal);
+<<<<<<< HEAD
             //std::cout << "kicking on goal: " << goal.getX() << " " << goal.getY() << std::endl;
         } else if (hasSupport) {
             positionAndKick.act(robot, support);
@@ -135,6 +143,12 @@ namespace roles {
             } catch (...) {
                 positionAndPush.act(robot, goal);
             }
+=======
+        } else if (hasSupport) {
+            positionAndKick.act(robot, support);
+        } else {
+            positionAndPush.act(robot, goal);
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
         }
     }
 } // roles

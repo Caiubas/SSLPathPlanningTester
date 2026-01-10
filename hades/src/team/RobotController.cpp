@@ -351,13 +351,14 @@ void RobotController::receive_config() {
         mDynamic_position_tolarance = radius/2;
         mStatic_angle_tolarance = 0.1;
         mVxy_min = 0.1;
-        mVxy_max = 0.7;
+        mVxy_max = 0.8;
         mVyaw_min = 0.25;
         mVyaw_max = 3;
     }
 
 
     kicker = han.new_tartarus.robots[getId()].has_kicker;
+<<<<<<< HEAD
     if (getId() == 2) kicker = true;
     if (getId() == 1) kicker = false;
     if (kicker) kickDistance = 4000;
@@ -365,6 +366,11 @@ void RobotController::receive_config() {
     //if (getId() == 2) std::cout << mWorld.ball.isMoving() << std::endl;
 
     //if (getId() == 2) std::cout << kicker << " " << kickDistance <<  " " << mWorld.field.theirGoal.getMiddle().getDistanceTo({0, 0}) << std::endl;
+=======
+    kicker = true;
+    if (kicker) kickDistance = 2000;
+    else kickDistance = 750;
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
 }
 
 
@@ -552,8 +558,13 @@ void RobotController::receive_field_geometry() {
         mWorld.field.theirDefenseArea = rightDefenseArea;
     }
     if (mTeam->getOurSide() == TeamInfo::right) {
+<<<<<<< HEAD
         mWorld.field.ourGoal = {Point(han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2 - 100), Point(han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2 + 100)};;
         mWorld.field.theirGoal = leftGoal;
+=======
+        mWorld.field.ourGoal = rightGoal;
+        mWorld.field.theirGoal = leftGoal; //TODO COMP REMOVER
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
         mWorld.field.ourDefenseArea = rightDefenseArea;
         mWorld.field.theirDefenseArea = leftDefenseArea;
     }
@@ -1340,4 +1351,12 @@ bool RobotController::isStopped() const {
 void RobotController::setStoredVelocities(const std::deque<Vector2d>& vels) {
     std::lock_guard<std::recursive_mutex> lock(mtx);
     stored_velocities = vels;
+<<<<<<< HEAD
+=======
+}
+
+bool RobotController::isKickingOnVision() const {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    return kickOnVision;
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
 }

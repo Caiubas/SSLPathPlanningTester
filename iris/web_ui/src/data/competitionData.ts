@@ -9,6 +9,7 @@ export const competitionData: TartarusData = {
     debug_mode: false,
     half_field: false,
     iris_as_GC: false,
+    right_field: false,
 
     goalkeeper_id: 0,
     cams_number: 1,

@@ -145,11 +145,11 @@ export default function VisionSection({ data, blueRobots, yellowRobots }: Props)
                   </p>
                   <p>
                     Pos X:{' '}
-                    <span className="font-mono">{robot.position_x.toFixed(2)} m</span>
+                    <span className="font-mono">{robot.position_x.toFixed(2)} mm</span>
                   </p>
                   <p>
                     Pos Y:{' '}
-                    <span className="font-mono">{robot.position_y.toFixed(2)} m</span>
+                    <span className="font-mono">{robot.position_y.toFixed(2)} mm</span>
                   </p>
                   <p>
                     Orientation:{' '}

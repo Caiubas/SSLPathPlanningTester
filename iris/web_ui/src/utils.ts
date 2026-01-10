@@ -4,20 +4,23 @@ import type { DataType, DetectionBall, DetectionRobot } from './types';
 
 // -------------------- Conversões --------------------
 
-export function detectionRobotToRobot(dr: DetectionRobot): DetectionRobot {
-  return {
+export function detectionRobot(
+  robots: DetectionRobot[] | undefined,
+): DetectionRobot[] {
+  if (!robots) return [];
+  return robots.map((dr) => ({
     robot_id: dr.robot_id,
     position_x: dr.position_x,
     position_y: dr.position_y,
     orientation: dr.orientation,
-    detected: dr.detected, // rad → graus
-  };
+    detected: dr.detected,
+  }));
 }
 
 export function mapRobotsToFieldCoords(
   robots: DetectionRobot[] | undefined,
   centerX: number,
-  centerY: number
+  centerY: number,
 ): DetectionRobot[] {
   if (!robots) return [];
   return robots.map((dr) => ({
@@ -82,15 +85,15 @@ export const toggleBoolean = async (key: string, currentValue: boolean) => {
       } else {
         payload = { competition_mode: false };
       }
-    } 
-    
+    }
+
     else if (key === 'half_field') {
       half_field = !half_field;
       newValue = half_field;
       payload = { [key]: newValue };
       console.log("half_field agora é:", half_field);
-    } 
-    
+    }
+
     else {
       payload = { [key]: newValue };
     }
@@ -142,4 +145,31 @@ export const updateNumber = async (key: string, value: number) => {
 export function getMidField() {
   return half_field;
 }
+
+// technicalMoveState.ts
+
+export let technicalMove = 0; // valor inicial
+
+export const setTechnicalMove = (value: number) => {
+  technicalMove = value;
+  console.log("Move Action selecionada:", value);
+};
+
+export const generateTrajectory = (
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  steps: number = 20
+) => {
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    points.push({
+      x: from.x + t * (to.x - from.x),
+      y: from.y + t * (to.y - from.y),
+    });
+  }
+  return points;
+};
+
+
 

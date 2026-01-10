@@ -93,9 +93,17 @@ void vision_master::vision_main()
         memset(my_vision_data.robots_yellow, 0, sizeof(my_vision_data.robots_yellow));
         memset(my_autoref_data.robots_blue, 0, sizeof(my_autoref_data.robots_blue));
         memset(my_autoref_data.robots_yellow, 0, sizeof(my_autoref_data.robots_yellow));
+<<<<<<< HEAD
         //my_vision_data.balls.position_x = 0;
         //my_vision_data.balls.position_y = 0;
 
+=======
+        
+        if(!han.new_tartarus.autoreferee){
+            my_vision_data.balls.position_x = 0;
+            my_vision_data.balls.position_y = 0;
+        }
+>>>>>>> 9fa43e16e1cb4304d698b0bfbfc19d3511c7cccf
         vision_master_instance.yellow_ids.clear();
     	vision_master_instance.blue_ids.clear();
     }

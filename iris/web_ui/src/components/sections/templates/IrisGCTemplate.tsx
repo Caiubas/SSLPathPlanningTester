@@ -1,6 +1,6 @@
 import { useState } from "react";
 import GoalkeeperIdInput from "../utilities/GoalkeeperIdInput";
-import CurrentCommandButton from "../utilities/CurrentCommandButton";
+import CurrentCommandButton from "../utilities/buttons/CurrentCommandButton";
 import { sendPost } from "../../../hooks/useSendPost"; // função que você já usa para enviar POST
 import EventTabs from "../utilities/EventTabs";
 
