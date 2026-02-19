@@ -8,7 +8,7 @@
 #include <cmath>
 #include <iostream>
 #include <bits/algorithmfwd.h>
-
+#include <algorithm>
 
 using namespace std;
 

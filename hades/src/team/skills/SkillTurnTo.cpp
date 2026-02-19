@@ -6,7 +6,7 @@
 #include "../RobotController.h"
 #include "../TeamInfo.h"
 #include "../c_trajectory/C_trajectory.h"
-
+#include <algorithm>
 
 namespace skills {
 	double SkillTurnTo::find_angle_error(RobotController& robot, Point goal) {

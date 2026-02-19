@@ -3,7 +3,7 @@
 //
 
 #include "RoleSupport.h"
-
+#include <algorithm>
 #include <iostream>
 
 #include "../RobotController.h"

@@ -5,7 +5,7 @@
 #include "TacticKeepXLine.h"
 
 #include <iostream>
-
+#include <algorithm>
 #include "../RobotController.h"
 #include "../TeamInfo.h"
 

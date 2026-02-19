@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "SkillMoveTo.h"
-
+#include <algorithm>
 #include <iostream>
 
 #include "../RobotController.h"
