@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME} src/main.cpp
                         src/tartarus.cpp
                         src/socket_connect.cpp
                         src/autoref.cpp
+                        src/vision_master.cpp
                         ${PROTO_SRCS}
                         )
 
@@ -46,3 +47,5 @@ target_include_directories(${PROJECT_NAME}
 
 # Linkar bibliotecas
 target_link_libraries(${PROJECT_NAME} ${Protobuf_LIBRARIES} lcm)
+
+target_compile_options(${PROJECT_NAME} PRIVATE -w)

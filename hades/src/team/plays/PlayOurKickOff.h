@@ -5,19 +5,21 @@
 #ifndef PLAYKICKOFF_H
 #define PLAYKICKOFF_H
 
+#include "PlayBase.h"
 #include "../geometry/WorldModel.h"
 #include "../Robot.h"
 
 
-class PlayOurKickOff {
+class PlayOurKickOff : public PlayBase{
 public:
-    int score(WorldModel world, TeamInfo team);
-    std::array<TeamInfo::role, 16> role_assing(WorldModel& world, TeamInfo& team, std::array<TeamInfo::role, 16> roles);
+    std::array<Robot::role, 16> role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) override;
+    int calc_score(WorldModel world, TeamInfo& team) override;
 
-private:
-    int required_robots = 3;
-    std::array<TeamInfo::role, 3> required_roles = {TeamInfo::kickoff_goal_keeper, TeamInfo::kickoff_kicker, TeamInfo::kickoff_support};
-
+    PlayOurKickOff(){
+        name = "OurKickOff";
+        required_robots = 3;
+        required_roles = {Robot::kickoff_goal_keeper, Robot::kickoff_kicker, Robot::kickoff_support};
+    };
 };
 
 

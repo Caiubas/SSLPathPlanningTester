@@ -7,8 +7,6 @@ Handler han;
 void Handler::handle_tartarus(const lcm::ReceiveBuffer* rbuf,
     const std::string& chan,
     const data::tartarus* msg_tartarus) {
+        
     this->new_tartarus = *msg_tartarus;
-
-    
-
 }

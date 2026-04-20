@@ -9,20 +9,21 @@
 
 #include "../TeamInfo.h"
 
-int PlayHalt::score(WorldModel world, TeamInfo team) {
+int PlayHalt::calc_score(WorldModel world, TeamInfo& team) {
     int score = 0;
-    if (team.current_command == TeamInfo::halt) {
+    if (team.getCurrentCommand() == TeamInfo::HALT) {
         score += 999992;
     }
+    this->score = score;
     return score;
 }
 
-std::array<TeamInfo::role, 16> PlayHalt::role_assing(WorldModel& world, TeamInfo& team, std::array<TeamInfo::role, 16> roles) {
+std::array<Robot::role, 16> PlayHalt::role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) {
     int num_active_robots = 0;
     std::vector<int> active_allies_ids = {};
 
-    for (int i = 0 ; i < std::size(team.active_robots) ; i++) {
-        if (team.active_robots[i] == 1) {
+    for (int i = 0 ; i < team.getNumOfActiveRobots() ; i++) {
+        if (team.isRobotActive(i) == 1) {
             if (roles[i] != -1) {
                 continue;
             }
@@ -35,12 +36,12 @@ std::array<TeamInfo::role, 16> PlayHalt::role_assing(WorldModel& world, TeamInfo
     }
 
     //role assign
-    for (TeamInfo::role selected_role : required_roles) {
+    for (Robot::role selected_role : required_roles) {
         if (active_allies_ids.empty()) {
             return roles;
         }
         roles[active_allies_ids[0]] = selected_role;
-        active_allies_ids.erase(active_allies_ids.begin() + team.goal_keeper_id);
+        active_allies_ids.erase(active_allies_ids.begin());
     }
 
     return roles;

@@ -3,21 +3,23 @@
 #include <mutex>
 #include <string>
 #include <lcm/lcm-cpp.hpp>
+#include <map>
 
-#include "../../../../../../data_lcm/data/game_controller.hpp"
-#include "../../../../../../data_lcm/data/vision.hpp"
-#include "../../../../../../data_lcm/data/tartarus.hpp"
-#include "../../../../../../data_lcm/data/ia.hpp"
+#include "../../../../../../data_lcm/game_controller.hpp"
+#include "../../../../../../data_lcm/vision.hpp"
+#include "../../../../../../data_lcm/tartarus.hpp"
+#include "../../../../../../data_lcm/ia.hpp"
 
 // Agora LatestData utiliza diretamente as structs LCM, sem redefini-las
 
-struct LatestData {
+struct LatestData
+{
     // Game Controller
     bool team_blue = false;
-    float designated_position_x = 0.f;
-    float designated_position_y = 0.f;
-    int current_command = 0;
-    int game_event = 0;
+    float gc_designated_position_x = 0.f;
+    float gc_designated_position_y = 0.f;
+    int gc_current_command = 0;
+    int gc_game_event = 0;
     data::team_info yellow;
     data::team_info blue;
 
@@ -25,7 +27,7 @@ struct LatestData {
     int robots_size = 0;
     std::string processo;
     std::string estrategia;
-    std::vector<data::robot> robots;  // supondo que 'robot' esteja definido no ia.hpp
+    std::vector<data::robot> robots; // supondo que 'robot' esteja definido no ia.hpp
 
     // Vision
     int64_t timestamp = 0;
@@ -38,14 +40,46 @@ struct LatestData {
 
     // Tartarus
     bool ssl_vision = false;
+    bool autoreferee = false;
     bool competition_mode = false;
     bool bool_controller = false;
-    bool team_blue_status = false;
+    bool debug_mode = false;
+    bool half_field;
+    bool iris_as_GC;
+    bool right_field;
+
+    int16_t goalkeeper_id;
+    int16_t cams_number = 0;
     int16_t stm_port = 0;
-    int16_t controller_port = 0;
+    int16_t mcast_port_gc;
+    int16_t mcast_port_vision_sslvision; // default 10006
+    int16_t mcast_port_vision_grsim;     // default 10020
+    int16_t mcast_port_vision_tracked;
+    
+    std::map<int, int> role_by_robot;
+    std::map<int, int> skill_by_robot;
+
+    std::map<int, float> move_x_by_robot;
+    std::map<int, float> move_y_by_robot;
+    std::map<int, float> turn_x_by_robot;
+    std::map<int, float> turn_y_by_robot;
+
+    std::map<int, bool> has_kicker;
+    
+    int16_t selected_robot_id = -1; // id do robô que deve receber skill/role
+    
+
+    bool team_blue_status = false;
+
+    // Iris GC
+    float designated_position_x = 0.f;
+    float designated_position_y = 0.f;
+    int current_command = 0;
+    int game_event = 0;
 };
 
-struct LCMControl {
+struct LCMControl
+{
     bool goalkeeper_id_from_lcm = true;
     bool team_blue_from_lcm = true;
 };
@@ -55,7 +89,8 @@ extern LCMControl lcm_control;
 extern LatestData latest_data;
 extern std::mutex data_mutex;
 
-class Handler {
+class Handler
+{
 public:
     using gc_t = data::game_controller;
     using vision_t = data::vision;
@@ -67,8 +102,8 @@ public:
     tartarus_t msg_tartarus;
     ia_t msg_ia;
 
-    void handleGC(const lcm::ReceiveBuffer* rbuf, const std::string& chan, const gc_t* msg);
-    void handleVision(const lcm::ReceiveBuffer* rbuf, const std::string& chan, const vision_t* msg);
-    void handleTartarus(const lcm::ReceiveBuffer* rbuf, const std::string& chan, const tartarus_t* msg);
-    void handleIA(const lcm::ReceiveBuffer* rbuf, const std::string& chan, const ia_t* msg);
+    void handleGC(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const gc_t *msg);
+    void handleVision(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const vision_t *msg);
+    void handleTartarus(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const tartarus_t *msg);
+    void handleIA(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const ia_t *msg);
 };

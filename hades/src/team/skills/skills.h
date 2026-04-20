@@ -5,15 +5,12 @@
 #ifndef SKILLS_H
 #define SKILLS_H
 
-class RobotController;
-
-#include <cmath>
-
-namespace skills {
-    void move_to(RobotController& robot, double goal[2], bool avoid_ball = true);
-    void turn_to(RobotController& robot, double goal[2]);
-    void kick(RobotController& robot);
-    void stop(RobotController& robot);
-}
+#include "SkillBase.h"
+#include "SkillMoveTo.h"
+#include "SkillTurnTo.h"
+#include "SkillStop.h"
+#include "SkillKick.h"
+#include "SkillCushion.h"
+#include "SkillPushBall.h"
 
 #endif //SKILLS_H

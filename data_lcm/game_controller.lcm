@@ -1,0 +1,32 @@
+package data;
+
+struct team_info
+{
+	string name;
+	int16_t score;
+	int16_t red_cards;
+	int16_t yellow_cards;
+	//int16_t yellow_card_time[yellow_cards];
+	int16_t timeouts;
+	int16_t timeout_time;
+	int16_t goalkeeper_id;
+	int16_t fouls;
+	int16_t bot_substituitions;
+	int16_t bot_substituitions_time;
+}
+
+//main struct
+struct game_controller
+{
+	boolean team_blue;
+	team_info yellow;
+	team_info blue;
+	boolean has_designated_position;
+	boolean blue_team_on_positive_half;
+	float designated_position_x;
+	float designated_position_y;
+	int16_t current_command;
+	int16_t next_command;
+	int16_t game_event;
+	int16_t stage;
+}

@@ -1,0 +1,44 @@
+//
+// Created by caiu on 21/08/25.
+//
+
+#ifndef BALL_H
+#define BALL_H
+
+#include <deque>
+
+#include "LineSegment.h"
+#include "Point.h"
+#include "Vector2d.h"
+#include "VisibilityGraph.h"
+
+class Ball {
+private:
+	bool detected;
+	double deceleration = 0.4;
+	Point position;
+	Vector2d velocity;
+	int max_velocities_stored = 60;
+	std::deque<Vector2d> stored_velocities = {};
+	Point stopPosition = Point(0, 0);
+	double velocityThreshold = 0.1;
+	VisibilityGraph visibility;
+public:
+  	Ball(bool detected, Point position, Vector2d velocity) : detected(detected), position(position), velocity(velocity) {stopPosition = getStopPosition();};
+  	void setVelocity(const Vector2d& v);
+  	Vector2d getVelocity() const;
+  	void setDetected(bool detected);
+    bool getDetected();
+  	void setPosition(Point position);
+  	Point getPosition();
+	Point getStopPosition() const;
+	bool isStopped();
+	bool isMoving();
+	LineSegment getMovementLine() const;
+	void setVisibilityGraph(VisibilityGraph graph) {visibility = graph;};
+	bool isVisible(Point p) {return visibility.isVisible(p);};
+};
+
+
+
+#endif //BALL_H

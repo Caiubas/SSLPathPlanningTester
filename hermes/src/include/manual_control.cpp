@@ -80,7 +80,7 @@ void controller::control() {
     if (e.type == SDL_JOYBUTTONDOWN) {
         switch(e.jbutton.button) { 
             case 0:    // Button A (xbox) or X (playstation)
-                pct.kicker = 1000; 
+                pct.kicker = 3; 
                 break;
             case 4:    // Button LB (xbox) or L1 (playstation)
                 control_obj.robot_id--; // Decrementa o ID do robô

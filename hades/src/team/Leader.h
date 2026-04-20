@@ -9,31 +9,29 @@
 #include "geometry/WorldModel.h"
 #include "TeamInfo.h"
 #include "plays/PlayAttack.h"
+#include "plays/PlayBallPlacement.h"
 #include "plays/PlayDebug.h"
 #include "plays/PlayHalt.h"
 #include "plays/PlayOurKickOff.h"
+#include "plays/PlayDefense.h"
+#include "plays/PlayOnTheirGoal.h"
+#include "plays/PlayTheirKickOff.h"
+#include "plays/PlayOurPenalty.h"
+#include "plays/PlayRetake.h"
+#include "plays/PlayTheirPenalty.h"
+#include "plays/PlayOnOurGoal.h"
 
 class Leader {
 public:
+    Leader();
     TeamInfo team;
-
-    RobotController robots[16] = {
-        RobotController(0), RobotController(1), RobotController(2), RobotController(3),
-        RobotController(4), RobotController(5), RobotController(6), RobotController(7),
-        RobotController(8), RobotController(9), RobotController(10), RobotController(11),
-        RobotController(12), RobotController(13), RobotController(14), RobotController(15)
-    };
-
-
 
     double ball_pos[2] = {0, 0};
     int64_t last_time_stamp = 0;
     double delta_time = 0;
+    double GC_timer = 0;
 
-    PlayAttack attack;
-    PlayDebug debug;
-    PlayHalt halt;
-    PlayOurKickOff ourKickOff;
+    std::vector<std::unique_ptr<PlayBase>> plays;
 
     WorldModel world;
 
@@ -52,8 +50,10 @@ private:
     void add_robot(int id);
     void imprimir_ativos();
     void select_plays();
+    void debug_mode();
     void inspect_enemy_team();
     void world_analysis();
+    void event_FSM();
 };
 
 

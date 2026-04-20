@@ -1,18 +1,13 @@
 import type { FieldProps } from './FieldView';
 
-export type Robot = {
-  id: number;
-  x: number;
-  y: number;
-  orientation?: number; // graus, opcional
-};
-
 export function FieldSVG({
+  data,
   dimensions,
   blueRobots = [],
   yellowRobots = [],
   ball,
   flipField = false,
+  trajectories,
 }: FieldProps) {
   const totalFieldLength = dimensions.field_length + 2 * dimensions.goal_depth;
   const centerX = dimensions.field_width / 2;
@@ -22,13 +17,30 @@ export function FieldSVG({
   const strokeWidth = 10;
   const robotSize = dimensions.max_robot_radius * 2;
   const ballSize = dimensions.ball_radius * 2;
-  console.log('flipField:', flipField, 'centerX:', centerX, 'centerY:', centerY);
 
+  const designatedPosition = data.tartarus.iris_as_GC
+    ? {
+      x: data?.irisGC?.designated_position_x ?? 0,
+      y: data?.irisGC?.designated_position_y ?? 0,
+    }
+    : {
+      x: data?.gc?.gc_designated_position_x ?? 0,
+      y: data?.gc?.gc_designated_position_y ?? 0,
+    };
+
+  console.log(
+    'flipField:',
+    flipField,
+    'centerX:',
+    centerX,
+    'centerY:',
+    centerY,
+  );
 
   return (
     <svg
       className="h-full w-auto"
-      viewBox={`0 0 ${dimensions.field_width} ${totalFieldLength}`}
+      viewBox={`${-dimensions.boundary_width} 0 ${dimensions.field_width + 2 * dimensions.boundary_width} ${totalFieldLength}`}
       preserveAspectRatio="xMidYMid meet"
     >
       <g
@@ -46,12 +58,24 @@ export function FieldSVG({
         />
 
         {/* Campo jogável */}
+        {/* parte de cima */}
         <rect
           x={0}
           y={dimensions.goal_depth}
           width={dimensions.field_width}
-          height={dimensions.field_length}
-          stroke="white"
+          height={dimensions.field_length / 2}
+          stroke="#0000f9"
+          strokeWidth={dimensions.line_thickness}
+          fill="#545454"
+        />
+
+        {/* parte de baixo */}
+        <rect
+          x={0}
+          y={dimensions.goal_depth + dimensions.field_length / 2}
+          width={dimensions.field_width}
+          height={dimensions.field_length / 2}
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="#545454"
         />
@@ -63,7 +87,7 @@ export function FieldSVG({
           x2={dimensions.field_width}
           y2={centerY}
           stroke="white"
-          strokeWidth={dimensions.line_thickness}
+          strokeWidth={dimensions.line_thickness * 1.5}
         />
 
         {/* Circulo central */}
@@ -82,7 +106,7 @@ export function FieldSVG({
           y={dimensions.goal_depth}
           width={dimensions.defense_area_width}
           height={dimensions.defense_area_height}
-          stroke="white"
+          stroke="#0000f9"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -97,7 +121,7 @@ export function FieldSVG({
           }
           width={dimensions.defense_area_width}
           height={dimensions.defense_area_height}
-          stroke="white"
+          stroke="#fefe00"
           strokeWidth={dimensions.line_thickness}
           fill="transparent"
         />
@@ -108,7 +132,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalTopY}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -116,7 +140,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width - dimensions.goal_width) / 2}
           y2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
         <line
@@ -124,7 +148,7 @@ export function FieldSVG({
           y1={goalTopY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalTopY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#0000f9"
           strokeWidth={strokeWidth}
         />
 
@@ -134,7 +158,7 @@ export function FieldSVG({
           y1={goalBottomY + dimensions.goal_depth}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -142,7 +166,7 @@ export function FieldSVG({
           y1={goalBottomY}
           x2={(dimensions.field_width - dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
         <line
@@ -150,22 +174,23 @@ export function FieldSVG({
           y1={goalBottomY}
           x2={(dimensions.field_width + dimensions.goal_width) / 2}
           y2={goalBottomY + dimensions.goal_depth}
-          stroke="#8D00F2"
+          stroke="#fefe00"
           strokeWidth={strokeWidth}
         />
 
         {/* Robôs azuis */}
         {blueRobots.map((robot) => {
+          
           const adjustedOrientation = 90 - (robot.orientation ?? 0); // Ajusta conforme seu padrão
           return (
             <image
-              key={`blue-${robot.id}`}
-              href={`/img/blue_team/id${robot.id}.png`}
-              x={robot.x - robotSize / 2}
-              y={robot.y - robotSize / 2}
+              key={`blue-${robot.robot_id}`}
+              href={`/img/blue_team/id${robot.robot_id}.png`}
+              x={robot.position_x - robotSize / 2}
+              y={robot.position_y - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.x}, ${robot.y})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_x}, ${robot.position_y})`}
               pointerEvents="none"
             />
           );
@@ -177,13 +202,13 @@ export function FieldSVG({
 
           return (
             <image
-              key={`yellow-${robot.id}`}
-              href={`/img/yellow_team/id${robot.id}.png`}
-              x={robot.x - robotSize / 2}
-              y={robot.y - robotSize / 2}
+              key={`yellow-${robot.robot_id}`}
+              href={`/img/yellow_team/id${robot.robot_id}.png`}
+              x={robot.position_x - robotSize / 2}
+              y={robot.position_y - robotSize / 2}
               width={robotSize}
               height={robotSize}
-              transform={`rotate(${adjustedOrientation}, ${robot.x}, ${robot.y})`}
+              transform={`rotate(${adjustedOrientation}, ${robot.position_x}, ${robot.position_y})`}
               pointerEvents="none"
             />
           );
@@ -200,6 +225,57 @@ export function FieldSVG({
             pointerEvents="none"
           />
         )}
+
+        {/* X de posição designada */}
+        {designatedPosition &&
+          designatedPosition.x != 0 &&
+          designatedPosition.y != 0 && (
+            <>
+              <line
+                x1={designatedPosition.x - 50}
+                y1={designatedPosition.y - 50}
+                x2={designatedPosition.x + 50}
+                y2={designatedPosition.y + 50}
+                stroke="red"
+                strokeWidth={7}
+              />
+              <line
+                x1={designatedPosition.x - 50}
+                y1={designatedPosition.y + 50}
+                x2={designatedPosition.x + 50}
+                y2={designatedPosition.y - 50}
+                stroke="red"
+                strokeWidth={7}
+              />
+            </>
+          )}
+
+        {/*Trajetórias*/}
+        {/*{trajectories?.map((traj) => (
+          <g key={traj.robotId}>
+            {// Linha da trajetória }
+            <polyline
+              points={traj.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              stroke={traj.robotId % 2 === 0 ? 'blue' : 'yellow'} // cor por robô/time
+              strokeWidth={5}
+              fill="none"
+              opacity={0.6}
+            />
+
+            {// Pontos da trajetória }
+            {traj.points.map((p, i) => (
+              <circle
+                key={i}
+                cx={p.x}
+                cy={p.y}
+                r={6} // raio em pixels
+                fill="red"
+                stroke="white"
+                strokeWidth={1.5}
+              />
+            ))}
+          </g>
+          ))}*/}
       </g>
     </svg>
   );

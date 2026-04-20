@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <lcm/lcm-cpp.hpp>
-#include "../../data_lcm/data/tartarus.hpp"
+#include "../../data_lcm/tartarus.hpp"
 
 class Handler {
     public:
@@ -13,6 +13,7 @@ class Handler {
 
     lcm::LCM* lc;
     data::tartarus new_tartarus;
+    bool updated_tartarus = false;
 };
 
 extern Handler han;

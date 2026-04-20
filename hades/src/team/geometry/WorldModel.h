@@ -9,68 +9,52 @@
 #include <vector>
 
 #include "../../c_trajectory/geometry/Rectangle.h"
-#include "../TeamInfo.h"
 #include "../Robot.h"
+#include "Ball.h"
+#include "Field.h"
 
 class WorldModel {
 public:
-    double field_size[2][2] = {{-6000, -4500}, {6000, 4500}};
-    double boundariesMinor[2] = {-6300, -4800};
-    double boundariesMajor[2] = {6300, 4800};
+    WorldModel() : field() {}
 
-    double their_goal[2][2] = {{6000, 6000}, {1000, -1000}};
-    double our_goal[2][2] = {{-6000, -6000}, {1000, -1000}};
+    Field field;
 
-    double our_defese_area[2][2] = {{-6000, -1750}, {-4200, 1750}};
-    double their_defese_area[2][2] = {{4200, -1750}, {6000, 1750}};
-
-    double back_fisical_left_goal[2][2] = {{-6300, -1000}, {-6200, 1000}}; //{-6300, -1000}, {-6000, 1000}};
-    double left_fisical_left_goal[2][2] = {{-6100, -950}, {-6000, -900}}; //{-6300, -1000}, {-6000, 1000}};
-    double right_fisical_left_goal[2][2] = {{-6100, 900}, {-6000, 950}}; //{-6300, -1000}, {-6000, 1000}};
-
-    double back_fisical_right_goal[2][2] = {{6200, -1000}, {6300, 1000}}; //{-6300, -1000}, {-6000, 1000}};
-    double left_fisical_right_goal[2][2] = {{6000, -950}, {6100, -900}}; //{-6300, -1000}, {-6000, 1000}};
-    double right_fisical_right_goal[2][2] = {{6000, 900}, {6100, 950}};
-
-    double outside_field_x_minus[2][2] = {{-8000, -4800}, {-6000, 4800}};
-    double outside_field_x_plus[2][2] = {{6000, -4800}, {8000, 4800}};
-    double outside_field_y_minus[2][2] = {{-6000, -6000}, {6000, -4700}};
-    double outside_field_y_plus[2][2] = {{-6000, 4700}, {6000, 6000}};
-
-    //TODO organizar nesse formato
-    enum position {
-        top,
-        right,
-        bottom,
-        left
+    std::array<Robot, 16> allies = {
+        Robot(0), Robot(1), Robot(2), Robot(3),
+        Robot(4), Robot(5), Robot(6), Robot(7),
+        Robot(8), Robot(9), Robot(10), Robot(11),
+        Robot(12), Robot(13), Robot(14), Robot(15)
     };
-    std::map<enum position, Rectangle> field_boundaries;
-    std::map<enum position, Rectangle> fisical_barrier_left_goal;
-    std::map<enum position, Rectangle> fisical_barrier_right_goal;
+
+    std::array<Robot, 16> enemies = {
+        Robot(0), Robot(1), Robot(2), Robot(3),
+        Robot(4), Robot(5), Robot(6), Robot(7),
+        Robot(8), Robot(9), Robot(10), Robot(11),
+        Robot(12), Robot(13), Robot(14), Robot(15)
+    };
+
+    Ball ball = {false, {0, 0}, {0, 0}};
 
 
-    std::vector<Robot> allies = {};
-    std::vector<Robot> enemies = {};
-    double ball_pos[2] = {0, 0};
-    double ball_speed[2] = {0, 0}; //m/s"2
-    double ball_speed_module = 0;
-    double ball_stop_position[2] = {0, 0};
-    double ball_disacceleration = 0.2;
-
-    std::vector<std::vector<double>> support_areas = {};
-
-
-
-
-    std::vector<double> getKickingPosition(std::vector<double> pos_0, std::vector<double> pos_1, double distance);
-    bool isBallOnOurSide();
-    bool isBallOnOurArea();
-    bool isBallOnTheirArea();
+    Point getKickingPosition(Point pos_0, Point pos_1, double distance);
+    bool isPointOnOurSide(Point p);
+    bool isPointOnOurArea(Point p);
+    bool isPointOnTheirArea(Point p);
     std::vector<int> getAlliesIdsAccordingToDistanceToBall();
     int findNearestAllyThatIsntTheGoalKeeper(int id, int goalkeeper_id);
-    void generateBallStopPosition();
     int getIdOfTheBallInterceptor();
-    bool isBallMovingIdDirection(int id);
+    bool isBallMovingIdDirection(int id, double tolerance = M_PI/2);
+    bool isBallMovingRobotDirection(Robot robot, double tolerance = 3.1415/2);
+    bool isBallReachable(bool includeOurArea, bool full_field = false);
+    bool isAllAlliesOnOurSide();
+    bool isAllAlliesOnOurSideorOnCenterCircle();
+    bool isAllEnemiesOnTheirSide();
+    bool doInterceptAnyRobot(LineSegment l);
+    Robot getClosestAllyToPoint(Point p);
+    Robot getClosestEnemyToPoint(Point p);
+    bool isBallHittingTheGoal();
+    Point getGoalPosition(Robot goalkeeper = {0});
+    Robot getBallOwner();
 };
 
 

@@ -16,6 +16,37 @@ export type Robot = {
   wheel_br: number;
 };
 
+export type CompetitionData = {
+  ssl_vision: boolean;
+  autoreferee: boolean,
+  competition_mode: boolean;
+  bool_controller: boolean;
+  debug_mode: boolean;
+  half_field: boolean;
+  iris_as_GC: boolean;
+
+  goalkeeper_id: number;
+  cams_number: number;
+  stm_port: number;
+  mcast_port_gc: number;
+  mcast_port_vision_sslvision: number;
+  mcast_port_vision_grsim: number;
+  mcast_port_vision_tracked: number;
+  
+  team_blue: boolean,
+}
+
+export type RobotData = {
+  id: number;
+  skill_robot: number;
+  role: number;
+  movey: number;
+  movex: number;
+  turny: number;
+  turnx: number;
+  has_kicker: boolean;
+}
+
 export type IAData = {
   robots_size: number;
   robots: Robot[];
@@ -32,10 +63,10 @@ export type TeamInfo = {
 
 export type GCType = {
   team_blue: boolean;
-  designated_position_x: number;
-  designated_position_y: number;
-  current_command: number;
-  game_event: number;
+  gc_designated_position_x: number;
+  gc_designated_position_y: number;
+  gc_current_command: number;
+  gc_game_event: number;
   blue: TeamInfo;
   yellow: TeamInfo;
 };
@@ -47,14 +78,8 @@ export type DetectionRobot = {
   position_x: number; // mm
   position_y: number; // mm
   orientation: number; // rad
+  detected: boolean;
 };
-
-export type RobotField = {
-  id: number;
-  x: number;
-  y: number;
-  orientation: number; // graus
-}
 
 export type DetectionBall = {
   position_x: number; // mm
@@ -98,14 +123,30 @@ export type VisionData = {
 
 export type TartarusData = {
   ssl_vision: boolean;
-  team_blue_status: boolean;
+  autoreferee: boolean;
   competition_mode: boolean;
   team_blue: boolean;
   bool_controller: boolean;
+  debug_mode: boolean;
+  half_field: boolean;
+  iris_as_GC: boolean;
+  right_field: boolean;
+
   stm_port: number;
-  controller_port: number;
+  mcast_port_gc: number;// default 10003
+	mcast_port_vision_sslvision: number; // default 10006
+	mcast_port_vision_grsim: number; // default 10020
+	mcast_port_vision_tracked: number;
   goalkeeper_id: number;
+  cams_number: number;
 };
+
+export type IrisGCData = {
+  designated_position_x: number;
+  designated_position_y: number;
+  current_command: number;
+  game_event: number;
+}
 
 // --- Caronte (Processo / Estratégia) ---
 
@@ -122,6 +163,9 @@ export type DataType = {
   vision: VisionData;
   gc: GCType;
   tartarus: TartarusData;
+  robot: RobotData;
+  competition: CompetitionData;
+  irisGC: IrisGCData;
 };
 
 // --- BackendData (estrutura parcial vinda do backend) ---

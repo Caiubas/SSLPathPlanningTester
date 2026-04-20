@@ -1,34 +1,41 @@
-import { useState } from 'react';
-import { useFetchLoop } from '../hooks/useFetchLoop';
-import { sendPost } from '../hooks/useSendPost';
-import TeamSelector from './TeamSelector';
-import { initialData } from '../data/initialData';
+import TeamSelector from './sections/utilities/TeamSelector';
+import type { DataType } from '../types';
 
 type Props = {
+  data: DataType;
   reading: boolean;
   setReading: React.Dispatch<React.SetStateAction<boolean>>;
+  className?: string;
 };
-export function DataView({ reading, setReading }: Props) {
+
+const EVENT_NAMES: Record<number, string> = {
+  0: 'HALT',
+  1: 'STOP',
+  2: 'NORMAL START',
+  3: 'FORCE START',
+  4: 'KICKOFF (Yellow)',
+  5: 'KICKOFF (Blue)',
+  6: 'PENALTY (Yellow)',
+  7: 'PENALTY (Blue)',
+  8: 'DIRECT FREE KICK (Yellow)',
+  9: 'DIRECT FREE KICK (Blue)',
+  10: 'INDIRECT FREE KICK (Yellow)',
+  11: 'INDIRECT FREE KICK (Blue)',
+  12: 'TIME OUT (Yellow)',
+  13: 'TIME OUT (Blue)',
+  14: 'GOAL (Yellow)',
+  15: 'GOAL (Blue)',
+  16: 'BALL PLACEMENT (Yellow)',
+  17: 'BALL PLACEMENT (Blue)',
+};
+export function DataView({ reading, setReading, data }: Props) {
   //const [recebendoDoLCM, setRecebendoDoLCM] = useState(true);
-
-  const [goalieInput, setGoalieInput] = useState<number>(0);
-
-  const data = useFetchLoop(reading, initialData);
-
-  const handleSendGoalie = async () => {
-    const success = await sendPost('http://localhost:5000/command', {
-      goalkeeper_id: goalieInput,
-      goalkeeper_from_lcm: false, // <- isso é ESSENCIAL para impedir sobrescrita
-    });
-    alert(success ? 'ID enviado com sucesso' : 'Erro ao enviar ID');
-  };
-
 
   /*const handleToggleFonte = async () => {
     const novoEstado = !recebendoDoLCM;
     setRecebendoDoLCM(novoEstado);
 
-    const success = await sendPost('http://localhost:5000/command', {
+    const success = await sendPost('http://localhost:5000/data', {
       team_blue_from_lcm: novoEstado,
       goalkeeper_from_lcm: novoEstado,
     });
@@ -39,15 +46,17 @@ export function DataView({ reading, setReading }: Props) {
   };*/
 
 
+
+  const currentEventName = EVENT_NAMES[data.gc.gc_current_command] ?? 'Nenhum evento';
+
   return (
-    <div className="m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-[30%]">
+    <div className="m-2 p-4 bg-[#545454] text-white border-[#6805F2] border-3 rounded-[5px] w-[40%]">
       <button
         onClick={() => setReading(!reading)}
-        className={`mb-4 w-full py-2 rounded-[5px] font-semibold transition-colors duration-200 ${
-          reading
-            ? 'bg-red-600 hover:bg-red-700'
-            : 'bg-green-600 hover:bg-green-700'
-        } text-white`}
+        className={`mb-4 w-full py-2 rounded-[5px] font-semibold transition-colors duration-200 ${reading
+          ? 'bg-red-600 hover:bg-red-700'
+          : 'bg-green-600 hover:bg-green-700'
+          } text-white`}
       >
         {reading ? 'Parar leitura' : 'Iniciar leitura'}
       </button>
@@ -71,7 +80,6 @@ export function DataView({ reading, setReading }: Props) {
       </p>
       */}
 
-
       <h2 className="text-lg font-bold mt-4 mb-1">IA</h2>
       <p>
         Robots Size: <span className="font-mono">{data.ia.robots_size}</span>
@@ -88,45 +96,27 @@ export function DataView({ reading, setReading }: Props) {
         Team Blue:{' '}
         <span className="font-mono">{data.gc.team_blue ? 'Sim' : 'Não'}</span>
       </p>
+      <p>
+        Evento Atual:{' '}
+        <span className="font-mono text-yellow-300">{currentEventName}</span>
+      </p>
 
       <h2 className="text-lg font-bold mt-4 mb-1">Tartarus</h2>
-      <p>
-        SSL Vision:{' '}
-        <span className="font-mono">
-          {data.tartarus.ssl_vision ? 'Sim' : 'Não'}
-        </span>
-      </p>
-      <p>
-        Team Blue Status:{' '}
-        <span className="font-mono">
-          {data.tartarus.team_blue_status ? 'Sim' : 'Não'}
-        </span>
-      </p>
 
       <div>
-        <label className="block mb-1 font-semibold text-white">
-          ID do Goleiro:
-        </label>
-        <input
-          type="number"
-          className="w-full p-2 rounded border border-gray-300 mb-2 text-black"
-          value={goalieInput}
-          onChange={(e) => setGoalieInput(Number(e.target.value))}
-        />
-        <button
-          onClick={handleSendGoalie}
-          className="w-full py-2 bg-[#6805F2] hover:bg-[#34007D] text-white rounded font-semibold"
-        >
-          Enviar Goleiro
-        </button>
-
         {/* Passa o setter para sincronizar estado no TeamSelector */}
-        <TeamSelector />
+        {data.tartarus.iris_as_GC && (
+          <>
+            <TeamSelector />
 
-        <p className="w-full text-center mt-4">
-          Time Atual:{' '}
-          <span className="font-mono">{data.gc.team_blue ? 'Azul' : 'Amarelo'}</span>
-        </p>
+            <p className="w-full text-center mt-4">
+              Time Atual:{' '}
+              <span className="font-mono">
+                {data.gc.team_blue ? 'Azul' : 'Amarelo'}
+              </span>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

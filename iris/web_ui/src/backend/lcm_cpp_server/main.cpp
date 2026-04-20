@@ -1,6 +1,7 @@
 #define CROW_MAIN
 #include "crow_all.h"
 
+#include <unordered_set>
 #include <lcm/lcm-cpp.hpp>
 #include <mutex>
 #include <thread>
@@ -72,19 +73,47 @@ int main()
     std::thread lcm_thread(lcm_thread_func);
     crow::App<CORS> app;
 
+    // ============================
+    // GET /data
+    // ============================
     CROW_ROUTE(app, "/data").methods("GET"_method)([]
                                                    {
         std::lock_guard<std::mutex> lock(data_mutex);
 
         crow::json::wvalue data;
 
-        // GC
+        // ---- Status principais ----
+        data["ssl_vision"] = latest_data.ssl_vision;
+        data["autoreferee"] = latest_data.autoreferee;
+        data["competition_mode"] = latest_data.competition_mode;
+        data["bool_controller"] = latest_data.bool_controller;
+        data["debug_mode"] = latest_data.debug_mode;
+        data["half_field"] = latest_data.half_field;
+        data["iris_as_GC"] = latest_data.iris_as_GC;
         data["team_blue"] = latest_data.team_blue;
+        data["team_blue_status"] = latest_data.team_blue_status;
+        data["right_field"] = latest_data.right_field;
+
+        // ---- Configuração de portas ----
+        data["stm_port"] = latest_data.stm_port;
+        data["mcast_port_gc"] = latest_data.mcast_port_gc;
+        data["mcast_port_vision_grsim"] = latest_data.mcast_port_vision_grsim;
+        data["mcast_port_vision_sslvision"] = latest_data.mcast_port_vision_sslvision;
+        data["mcast_port_vision_tracked"] = latest_data.mcast_port_vision_tracked;
+
+        // ---- Game Controller ----
+        data["gc_designated_position_x"] = latest_data.gc_designated_position_x;
+        data["gc_designated_position_y"] = latest_data.gc_designated_position_y;
+        data["gc_current_command"] = latest_data.gc_current_command;
+        data["gc_game_event"] = latest_data.gc_game_event;
+
+        // ---- Iris Game Controller ----
         data["designated_position_x"] = latest_data.designated_position_x;
         data["designated_position_y"] = latest_data.designated_position_y;
         data["current_command"] = latest_data.current_command;
         data["game_event"] = latest_data.game_event;
 
+        // ---- Times ----
         data["blue"]["name"] = latest_data.blue.name;
         data["blue"]["score"] = latest_data.blue.score;
         data["blue"]["fouls"] = latest_data.blue.fouls;
@@ -95,84 +124,154 @@ int main()
         data["yellow"]["fouls"] = latest_data.yellow.fouls;
         data["yellow"]["goalkeeper_id"] = latest_data.yellow.goalkeeper_id;
 
-        // IA
-        for (size_t i = 0; i < latest_data.robots.size(); ++i) {
-            const auto& r = latest_data.robots[i];
+        // ---- IA Robots (fixo em 16) ----
+        constexpr size_t MAX_ROBOTS_SEND = 16;
+
+        std::unordered_set<int> detected_blue;
+        std::unordered_set<int> detected_yellow;
+
+        for (const auto &v : latest_data.robots_blue)
+            if (v.detected) detected_blue.insert(v.robot_id);
+
+        for (const auto &v : latest_data.robots_yellow)
+            if (v.detected) detected_yellow.insert(v.robot_id);
+
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
+            const auto it = std::find_if(
+                latest_data.robots.begin(), latest_data.robots.end(),
+                [i](const auto& r) { return r.id == static_cast<int>(i); });
+
             crow::json::wvalue robot;
-            robot["id"] = r.id;
-            robot["spinner"] = r.spinner;
-            robot["kick"] = r.kick;
-            robot["vel_tang"] = r.vel_tang;
-            robot["vel_normal"] = r.vel_normal;
-            robot["vel_ang"] = r.vel_ang;
-            robot["kick_speed_x"] = r.kick_speed_x;
-            robot["kick_speed_z"] = r.kick_speed_z;
-            robot["wheel_speed"] = r.wheel_speed;
-            robot["wheel_fr"] = r.wheel_fr;
-            robot["wheel_fl"] = r.wheel_fl;
-            robot["wheel_bl"] = r.wheel_bl;
-            robot["wheel_br"] = r.wheel_br;
+
+            if (it != latest_data.robots.end()) {
+                const auto& r = *it;
+                robot["id"] = r.id;
+                robot["spinner"] = r.spinner;
+                robot["kick"] = r.kick;
+                robot["vel_tang"] = r.vel_tang;
+                robot["vel_normal"] = r.vel_normal;
+                robot["vel_ang"] = r.vel_ang;
+                robot["kick_speed_x"] = r.kick_speed_x;
+                robot["kick_speed_z"] = r.kick_speed_z;
+                robot["wheel_speed"] = r.wheel_speed;
+                robot["wheel_fr"] = r.wheel_fr;
+                robot["wheel_fl"] = r.wheel_fl;
+                robot["wheel_bl"] = r.wheel_bl;
+                robot["wheel_br"] = r.wheel_br;
+                robot["has_kicker"] = latest_data.has_kicker.count(r.id) ? latest_data.has_kicker.at(r.id) : false;
+                robot["skill_robot"] = latest_data.skill_by_robot.count(r.id) ? latest_data.skill_by_robot.at(r.id) : 0;
+                robot["role"] = latest_data.role_by_robot.count(r.id) ? latest_data.role_by_robot.at(r.id) : 0;
+                robot["move_to_x"] = latest_data.move_x_by_robot.count(r.id) ? latest_data.move_x_by_robot.at(r.id) : 0.0;
+                robot["move_to_y"] = latest_data.move_y_by_robot.count(r.id) ? latest_data.move_y_by_robot.at(r.id) : 0.0;
+                robot["turn_to_x"] = latest_data.turn_x_by_robot.count(r.id) ? latest_data.turn_x_by_robot.at(r.id) : 0.0;
+                robot["turn_to_y"] = latest_data.turn_y_by_robot.count(r.id) ? latest_data.turn_y_by_robot.at(r.id) : 0.0;
+            } else {
+                // robô ausente -> placeholder
+                robot["id"] = static_cast<int>(i);
+                robot["spinner"] = 0;
+                robot["kick"] = 0;
+                robot["vel_tang"] = 0.0;
+                robot["vel_normal"] = 0.0;
+                robot["vel_ang"] = 0.0;
+                robot["kick_speed_x"] = 0.0;
+                robot["kick_speed_z"] = 0.0;
+                robot["wheel_speed"] = 0.0;
+                robot["wheel_fr"] = 0.0;
+                robot["wheel_fl"] = 0.0;
+                robot["wheel_bl"] = 0.0;
+                robot["wheel_br"] = 0.0;
+                robot["has_kicker"] = false;
+                robot["skill_robot"] = 0;
+                robot["role"] = 0;
+                robot["move_to_x"] = 0.0;
+                robot["move_to_y"] = 0.0;
+                robot["turn_to_x"] = 0.0;
+                robot["turn_to_y"] = 0.0;
+            }
+
+            robot["detected"] = detected_blue.count(i) || detected_yellow.count(i);
+            robot["vision_team"] = detected_blue.count(i) ? "blue" :
+                                detected_yellow.count(i) ? "yellow" : "none";
+
             data["robots"][i] = std::move(robot);
         }
 
-        // Vision - Yellow
-        for (size_t i = 0; i < latest_data.robots_yellow.size(); ++i) {
-            const auto& r = latest_data.robots_yellow[i];
+        // ---- Vision Robots Yellow (16 fixos) ----
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
             crow::json::wvalue robot;
-            robot["robot_id"] = r.robot_id;
-            robot["position_x"] = r.position_x;
-            robot["position_y"] = r.position_y;
-            robot["orientation"] = r.orientation;
+            if (i < latest_data.robots_yellow.size()) {
+                const auto& r = latest_data.robots_yellow[i];
+                robot["robot_id"] = r.robot_id;
+                robot["position_x"] = r.position_x;
+                robot["position_y"] = r.position_y;
+                robot["orientation"] = r.orientation;
+                robot["detected"] = r.detected;
+            } else {
+                robot["robot_id"] = static_cast<int>(i);
+                robot["position_x"] = 0.0;
+                robot["position_y"] = 0.0;
+                robot["orientation"] = 0.0;
+                robot["detected"] = false;
+            }
             data["robots_yellow"][i] = std::move(robot);
         }
 
-        // Vision - Blue
-        for (size_t i = 0; i < latest_data.robots_blue.size(); ++i) {
-            const auto& r = latest_data.robots_blue[i];
+        // ---- Vision Robots Blue (16 fixos) ----
+        for (size_t i = 0; i < MAX_ROBOTS_SEND; ++i) {
             crow::json::wvalue robot;
-            robot["robot_id"] = r.robot_id;
-            robot["position_x"] = r.position_x;
-            robot["position_y"] = r.position_y;
-            robot["orientation"] = r.orientation;
+            if (i < latest_data.robots_blue.size()) {
+                const auto& r = latest_data.robots_blue[i];
+                robot["robot_id"] = r.robot_id;
+                robot["position_x"] = r.position_x;
+                robot["position_y"] = r.position_y;
+                robot["orientation"] = r.orientation;
+                robot["detected"] = r.detected;
+            } else {
+                robot["robot_id"] = static_cast<int>(i);
+                robot["position_x"] = 0.0;
+                robot["position_y"] = 0.0;
+                robot["orientation"] = 0.0;
+                robot["detected"] = false;
+            }
             data["robots_blue"][i] = std::move(robot);
         }
 
-        // Ball
+
+        // ---- Bola ----
         data["balls"]["position_x"] = latest_data.balls.position_x;
         data["balls"]["position_y"] = latest_data.balls.position_y;
 
-        // Field
+        // ---- Campo ----
         const auto& f = latest_data.field;
         data["field"]["field_length"] = f.field_length;
         data["field"]["field_width"] = f.field_width;
         data["field"]["goal_width"] = f.goal_width;
         data["field"]["goal_depth"] = f.goal_depth;
+        data["field"]["goal_height"] = f.goal_height;
         data["field"]["boundary_width"] = f.boundary_width;
         data["field"]["center_circle_radius"] = f.center_circle_radius;
         data["field"]["defense_area_width"] = f.defense_area_width;
         data["field"]["defense_area_height"] = f.defense_area_height;
         data["field"]["line_thickness"] = f.line_thickness;
         data["field"]["goal_center_to_penalty_mark"] = f.goal_center_to_penalty_mark;
-        data["field"]["goal_height"] = f.goal_height;
         data["field"]["ball_radius"] = f.ball_radius;
         data["field"]["max_robot_radius"] = f.max_robot_radius;
 
-        // Extras
+        // ---- Extras ----
         data["processo"] = latest_data.processo;
         data["estrategia"] = latest_data.estrategia;
         data["timestamp"] = latest_data.timestamp;
         data["robots_size"] = latest_data.robots_size;
-        data["ssl_vision"] = latest_data.ssl_vision;
-        data["team_blue_status"] = latest_data.team_blue_status;
-        data["competition_mode"] = latest_data.competition_mode;
-        data["bool_controller"] = latest_data.bool_controller;
-        data["stm_port"] = latest_data.stm_port;
-        data["controller_port"] = latest_data.controller_port;
+        data["cams_number"] = latest_data.cams_number;
+
+
 
         return crow::response{data}; });
 
-    // POST /command — recebe comandos para atualizar valores manualmente
-    CROW_ROUTE(app, "/command").methods("POST"_method)([](const crow::request &req)
+    // ============================
+    // POST /data
+    // ============================
+    CROW_ROUTE(app, "/data").methods("POST"_method)([](const crow::request &req)
                                                        {
         auto body = crow::json::load(req.body);
         if (!body)
@@ -185,6 +284,139 @@ int main()
 
         try
         {
+            // Antes de processar qualquer outro campo
+            if (body.has("current_command") && body["current_command"].t() == crow::json::type::Number) {
+                latest_data.current_command = 0;
+                std::cout << "[POST] current_command resetado para 0" << std::endl;
+
+                int cmd = body["current_command"].i();
+                latest_data.current_command = cmd;
+                std::cout << "[POST] current_command atualizado para " << cmd << std::endl;
+            }
+
+            if (body.has("game_event") && body["game_event"].t() == crow::json::type::Number) {
+                latest_data.game_event = 0;
+                std::cout << "[POST] game_event resetado para 0" << std::endl;
+
+                int cmd = body["game_event"].i();
+                latest_data.game_event = cmd;
+                std::cout << "[POST] game_event atualizado para " << cmd << std::endl;
+            }
+
+            if (body.has("skill") && body["skill"].t() == crow::json::type::Number) {
+                int cmd = body["skill"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.skill_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] skill " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] skill recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+            if (body.has("role") && body["role"].t() == crow::json::type::Number) {
+                int cmd = body["role"].i();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    latest_data.role_by_robot[robot_id] = cmd;
+                    latest_data.selected_robot_id = robot_id;
+
+                    std::cout << "[POST] role " << cmd
+                            << " enviada para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] role recebida mas sem robot_id" << std::endl;
+                }
+            }
+
+            if (body.has("has_kicker") && (body["has_kicker"].t() == crow::json::type::True || body["has_kicker"].t() == crow::json::type::False)) {
+                bool hasKicker = body["has_kicker"].b();
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+
+                if (robot_id != -1) {
+                    // Atualiza o map de has_kicker
+                    latest_data.has_kicker[robot_id] = hasKicker;
+
+                    // Atualiza o vetor de robôs também, caso já exista
+                    for (auto& robot : latest_data.robots) {
+                        if (robot.id == robot_id) {
+                            robot.has_kicker = hasKicker;
+                            break;
+                        }
+                    }
+
+                    std::cout << "[POST] has_kicker=" << (hasKicker ? "true" : "false")
+                            << " enviado para robô " << robot_id << std::endl;
+                } else {
+                    std::cout << "[POST] has_kicker recebido mas sem robot_id" << std::endl;
+                }
+            }
+            // Log para move_to_x e move_to_y
+            if (body.has("move_to_x")) {
+                std::cout << "[POST] move_to_x recebido: " << body["move_to_x"].d() << std::endl;
+            }
+            if (body.has("move_to_y")) {
+                std::cout << "[POST] move_to_y recebido: " << body["move_to_y"].d() << std::endl;
+            }
+
+            // Log para turn_to_x e turn_to_y
+            if (body.has("turn_to_x")) {
+                std::cout << "[POST] turn_to_x recebido: " << body["turn_to_x"].d() << std::endl;
+            }
+            if (body.has("turn_to_y")) {
+                std::cout << "[POST] turn_to_y recebido: " << body["turn_to_y"].d() << std::endl;
+            }
+
+            // Processando move_to_x e move_to_y
+            if (body.has("move_to_x") && body["move_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_x_by_robot[robot_id] = static_cast<float>(body["move_to_x"].d());
+                    std::cout << "[POST] move_to_x para robô " << robot_id << " atualizado para " << latest_data.move_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("move_to_y") && body["move_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.move_y_by_robot[robot_id] = static_cast<float>(body["move_to_y"].d());
+                    std::cout << "[POST] move_to_y para robô " << robot_id << " atualizado para " << latest_data.move_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            // Processando turn_to_x e turn_to_y
+            if (body.has("turn_to_x") && body["turn_to_x"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_x_by_robot[robot_id] = static_cast<float>(body["turn_to_x"].d());
+                    std::cout << "[POST] turn_to_x para robô " << robot_id << " atualizado para " << latest_data.turn_x_by_robot[robot_id] << std::endl;
+                }
+            }
+
+            if (body.has("turn_to_y") && body["turn_to_y"].t() == crow::json::type::Number) {
+                int robot_id = body.has("robot_id") ? body["robot_id"].i() : -1;
+                if (robot_id != -1) {
+                    latest_data.turn_y_by_robot[robot_id] = static_cast<float>(body["turn_to_y"].d());
+                    std::cout << "[POST] turn_to_y para robô " << robot_id << " atualizado para " << latest_data.turn_y_by_robot[robot_id] << std::endl;
+                }
+            }
+
+
+
+            if (body.has("designated_position_x") && body["designated_position_x"].t() == crow::json::type::Number) {
+                latest_data.designated_position_x = static_cast<float>(body["designated_position_x"].d());
+                std::cout << "[POST] designated_position_x atualizado para " << latest_data.designated_position_x << std::endl;
+            }
+
+            if (body.has("designated_position_y") && body["designated_position_y"].t() == crow::json::type::Number) {
+                latest_data.designated_position_y = static_cast<float>(body["designated_position_y"].d());
+                std::cout << "[POST] designated_position_y atualizado para " << latest_data.designated_position_y << std::endl;
+            }
+
             // Atualiza team_blue manualmente e desativa fonte LCM
             if (body.has("team_blue"))
             {
@@ -210,27 +442,24 @@ int main()
             if (body.has("goalkeeper_id") && body["goalkeeper_id"].t() == crow::json::type::Number)
             {
                 int id = body["goalkeeper_id"].i();
-
-                // Bloqueia updates pelo LCM para goalkeeper_id
-                lcm_control.goalkeeper_id_from_lcm = false;
+                lcm_control.goalkeeper_id_from_lcm = false; // bloqueia updates pelo LCM
 
                 if (latest_data.team_blue)
-                {
                     latest_data.blue.goalkeeper_id = id;
-                }
                 else
-                {
                     latest_data.yellow.goalkeeper_id = id;
-                }
+
                 std::cout << "[POST] goalkeeper_id atualizado manualmente para " << id << std::endl;
             }
 
-
-
-
+            // ---- Flags booleanas ----
             if (body.has("ssl_vision") && (body["ssl_vision"].t() == crow::json::type::True || body["ssl_vision"].t() == crow::json::type::False)) {
                 latest_data.ssl_vision = body["ssl_vision"].b();
                 std::cout << "[POST] ssl_vision atualizado para " << (latest_data.ssl_vision ? "true" : "false") << std::endl;
+            }
+            if (body.has("autoreferee") && (body["autoreferee"].t() == crow::json::type::True || body["autoreferee"].t() == crow::json::type::False)) {
+                latest_data.autoreferee = body["autoreferee"].b();
+                std::cout << "[POST] autoreferee atualizado para " << (latest_data.autoreferee ? "true" : "false") << std::endl;
             }
             if (body.has("competition_mode") && (body["competition_mode"].t() == crow::json::type::True || body["competition_mode"].t() == crow::json::type::False)) {
                 latest_data.competition_mode = body["competition_mode"].b();
@@ -240,34 +469,112 @@ int main()
                 latest_data.bool_controller = body["bool_controller"].b();
                 std::cout << "[POST] bool_controller atualizado para " << (latest_data.bool_controller ? "true" : "false") << std::endl;
             }
+            if (body.has("debug_mode") && (body["debug_mode"].t() == crow::json::type::True || body["debug_mode"].t() == crow::json::type::False)) {
+                latest_data.debug_mode = body["debug_mode"].b();
+                std::cout << "[POST] debug_mode atualizado para " << (latest_data.debug_mode ? "true" : "false") << std::endl;
+            }
+            if (body.has("half_field") && (body["half_field"].t() == crow::json::type::True || body["half_field"].t() == crow::json::type::False)) {
+                latest_data.half_field = body["half_field"].b();
+                std::cout << "[POST] half_field atualizado para " << (latest_data.half_field ? "true" : "false") << std::endl;
+            }
+            if (body.has("iris_as_GC") && (body["iris_as_GC"].t() == crow::json::type::True || body["iris_as_GC"].t() == crow::json::type::False)) {
+                latest_data.iris_as_GC = body["iris_as_GC"].b();
+                std::cout << "[POST] iris_as_GC atualizado para " << (latest_data.iris_as_GC ? "true" : "false") << std::endl;
+            }
+            if (body.has("right_field") && (body["right_field"].t() == crow::json::type::True || body["right_field"].t() == crow::json::type::False)) {
+                latest_data.right_field = body["right_field"].b();
+                std::cout << "[POST] right_field atualizado para " << (latest_data.right_field ? "true" : "false") << std::endl;
+            }
+
+            // ---- Portas ----
             if (body.has("stm_port") && body["stm_port"].t() == crow::json::type::Number) {
                 latest_data.stm_port = body["stm_port"].i();
                 std::cout << "[POST] stm_port atualizado para " << latest_data.stm_port << std::endl;
             }
-            if (body.has("controller_port") && body["controller_port"].t() == crow::json::type::Number) {
-                latest_data.controller_port = body["controller_port"].i();
-                std::cout << "[POST] controller_port atualizado para " << latest_data.controller_port << std::endl;
+            if (body.has("mcast_port_gc") && body["mcast_port_gc"].t() == crow::json::type::Number) {
+                latest_data.mcast_port_gc = body["mcast_port_gc"].i();
+                std::cout << "[POST] mcast_port_gc atualizado para " << latest_data.mcast_port_gc << std::endl;
+            }
+            if (body.has("mcast_port_vision_sslvision") && body["mcast_port_vision_sslvision"].t() == crow::json::type::Number) {
+                latest_data.mcast_port_vision_sslvision = body["mcast_port_vision_sslvision"].i();
+                std::cout << "[POST] mcast_port_vision_sslvision atualizado para " << latest_data.mcast_port_vision_sslvision << std::endl;
+            }
+            if (body.has("mcast_port_vision_grsim") && body["mcast_port_vision_grsim"].t() == crow::json::type::Number) {
+                latest_data.mcast_port_vision_grsim = body["mcast_port_vision_grsim"].i();
+                std::cout << "[POST] mcast_port_vision_grsim atualizado para " << latest_data.mcast_port_vision_grsim << std::endl;
+            }
+            if (body.has("mcast_port_vision_tracked") && body["mcast_port_vision_tracked"].t() == crow::json::type::Number) {
+                latest_data.mcast_port_vision_tracked = body["mcast_port_vision_tracked"].i();
+                std::cout << "[POST] mcast_port_vision_tracked atualizado para " << latest_data.mcast_port_vision_tracked << std::endl;
+            }
+            if (body.has("cams_number") && body["cams_number"].t() == crow::json::type::Number) {
+                latest_data.cams_number = body["cams_number"].i();
+                std::cout << "[POST] cams_number atualizado para " << latest_data.cams_number << std::endl;
             }
 
-            // Publicar mensagem tartarus no LCM
+            // ---- Publicar mensagem no LCM ----
             data::tartarus msg;
             msg.ssl_vision = latest_data.ssl_vision;
+            msg.autoreferee = latest_data.autoreferee;
             msg.competition_mode = latest_data.competition_mode;
             msg.bool_controller = latest_data.bool_controller;
+            msg.debug_mode = latest_data.debug_mode;
+            msg.half_field = latest_data.half_field;
+            msg.iris_as_GC = latest_data.iris_as_GC;
+            msg.right_field = latest_data.right_field;
+
             msg.goalkeeper_id = latest_data.team_blue ? latest_data.blue.goalkeeper_id : latest_data.yellow.goalkeeper_id;
             msg.stm_port = latest_data.stm_port;
-            msg.controller_port = latest_data.controller_port;
+            msg.mcast_port_gc = latest_data.mcast_port_gc;
+            msg.mcast_port_vision_grsim = latest_data.mcast_port_vision_grsim;
+            msg.mcast_port_vision_sslvision = latest_data.mcast_port_vision_sslvision;
+            msg.mcast_port_vision_tracked = latest_data.mcast_port_vision_tracked;
             msg.team_blue = latest_data.team_blue;
+            msg.cams_number = latest_data.cams_number;
 
-            std::cout << "[POST] Enviando goalkeeper_id: " << msg.goalkeeper_id << " para time "
-          << (latest_data.team_blue ? "blue" : "yellow") << std::endl;
-          std::cout << "[handleTartarus] goal_keeper_id_from_lcm: " << lcm_control.goalkeeper_id_from_lcm 
-          << ", goal_keeper_id recebido do LCM: " << msg.goalkeeper_id << std::endl;
+            msg.iris_gc.game_event = latest_data.game_event;
+            msg.iris_gc.designated_position_x = latest_data.designated_position_x;
+            msg.iris_gc.designated_position_y = latest_data.designated_position_y;
+            msg.iris_gc.current_command = latest_data.current_command;
 
+            // Preencher robôs (até 16)
+            for (size_t i = 0; i < 16; ++i) {
+                if (i < latest_data.robots.size()) {
+                    int robot_id = latest_data.robots[i].id;
+
+                    msg.robots[i].id = robot_id;
+
+                    // Aqui garantimos que o has_kicker vá corretamente
+                    msg.robots[i].has_kicker = latest_data.has_kicker.count(robot_id)
+                                            ? latest_data.has_kicker.at(robot_id)
+                                            : latest_data.robots[i].has_kicker;
+
+                    // Skill e role
+                    msg.robots[i].skill = latest_data.skill_by_robot.count(robot_id) ? latest_data.skill_by_robot.at(robot_id) : 0;
+                    msg.robots[i].role  = latest_data.role_by_robot.count(robot_id)  ? latest_data.role_by_robot.at(robot_id)  : 0;
+
+                    // Move/Turn
+                    msg.robots[i].move_to_x = latest_data.move_x_by_robot.count(robot_id) ? latest_data.move_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].move_to_y = latest_data.move_y_by_robot.count(robot_id) ? latest_data.move_y_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_x = latest_data.turn_x_by_robot.count(robot_id) ? latest_data.turn_x_by_robot.at(robot_id) : 0.0f;
+                    msg.robots[i].turn_to_y = latest_data.turn_y_by_robot.count(robot_id) ? latest_data.turn_y_by_robot.at(robot_id) : 0.0f;
+                } else {
+                    // Robô vazio
+                    msg.robots[i].id = -1;
+                    msg.robots[i].has_kicker = false;
+                    msg.robots[i].skill = 0;
+                    msg.robots[i].role = 0;
+                    msg.robots[i].move_to_x = 0.0f;
+                    msg.robots[i].move_to_y = 0.0f;
+                    msg.robots[i].turn_to_x = 0.0f;
+                    msg.robots[i].turn_to_y = 0.0f;
+                }
+            }
 
 
             global_lcm.publish("tartarus", &msg);
             std::cout << "[POST] Mensagem publicada no canal 'tartarus'\n";
+
         }
         catch (const std::exception &e)
         {

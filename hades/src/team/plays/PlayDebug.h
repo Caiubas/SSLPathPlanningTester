@@ -4,25 +4,23 @@
 
 #ifndef PLAY_DEBUG_H
 #define PLAY_DEBUG_H
+#include "PlayBase.h"
 #include "../geometry/WorldModel.h"
 #include "../Robot.h"
 
 
-class PlayDebug {
+class PlayDebug : public PlayBase {
 public:
-    int score(WorldModel world, TeamInfo team);
-    std::array<TeamInfo::role, 16> role_assing(WorldModel& world, TeamInfo& team, std::array<TeamInfo::role, 16> roles);
-
-private:
-    int required_robots = 16;
-    std::array<TeamInfo::role, 16> required_roles = {TeamInfo::debug_circular_trajectory, TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory, TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory, TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory,TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory,TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory,TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory,TeamInfo::debug_squared_trajectory,
-        TeamInfo::debug_squared_trajectory,TeamInfo::debug_squared_trajectory};
+    std::array<Robot::role, 16> role_assign(WorldModel& world, TeamInfo& team, std::array<Robot::role, 16> roles) override;
+    int calc_score(WorldModel world, TeamInfo& team) override;
+    PlayDebug(){
+        name = "debug";
+        required_robots = 16;
+        required_roles = {Robot::debug_circular_trajectory, Robot::debug_squared_trajectory, Robot::debug_squared_trajectory,
+        Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,
+        Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,
+        Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,Robot::debug_squared_trajectory,
+        Robot::debug_squared_trajectory,};}
 };
 
 

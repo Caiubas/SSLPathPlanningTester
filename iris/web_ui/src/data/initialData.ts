@@ -33,10 +33,10 @@ export const initialData: DataType = {
   },
   gc: {
     team_blue: false,
-    designated_position_x: 0,
-    designated_position_y: 0,
-    current_command: 0,
-    game_event: 0,
+    gc_designated_position_x: 0,
+    gc_designated_position_y: 0,
+    gc_current_command: 0,
+    gc_game_event: 0,
     blue: {
       name: 'Azul',
       score: 0,
@@ -51,13 +51,56 @@ export const initialData: DataType = {
     },
   },
   tartarus: {
-    team_blue_status: false,
     ssl_vision: false,
+    autoreferee: false,
     competition_mode: false,
     team_blue: false,
     bool_controller: false,
+    debug_mode: false,
+    half_field: false,
+    iris_as_GC: false,
+    right_field: false,
     stm_port: 0,
-    controller_port: 0,
+    mcast_port_gc: 0,// default 10003
+    mcast_port_vision_sslvision: 0, // default 10006
+    mcast_port_vision_grsim: 0, // default 10020
+    mcast_port_vision_tracked: 0,
     goalkeeper_id: 0,
+    cams_number: 0,
+  },
+  robot: {
+    id: 0,
+    skill_robot: 0,
+    role: 0,
+    movey: 0,
+    movex: 0,
+    turny: 0,
+    turnx: 0,
+    has_kicker: false,
+  },
+  competition: {
+    ssl_vision: true,
+    autoreferee: false,
+    competition_mode: true,
+    bool_controller: false,
+    debug_mode: false,
+    half_field: false,
+    iris_as_GC: false,
+
+    goalkeeper_id: 0,
+    cams_number: 1,
+    stm_port: 0,
+    mcast_port_gc: 0,// default 10003
+    mcast_port_vision_sslvision: 0, // default 10006
+    mcast_port_vision_grsim: 0, // default 10020
+    mcast_port_vision_tracked: 0,
+    
+    team_blue: false,
+  },
+  irisGC: {
+    designated_position_x: 0,
+    designated_position_y: 0,
+    current_command: 0,
+    game_event: 0,
   },
 };

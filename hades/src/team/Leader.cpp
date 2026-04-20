@@ -14,6 +14,23 @@
 #include "TeamInfo.h"
 #include "plays/PlayOurKickOff.h"
 
+Leader::Leader() {
+    plays.clear();
+    plays.push_back(std::make_unique<PlayAttack>());
+    plays.push_back(std::make_unique<PlayDebug>());
+    plays.push_back(std::make_unique<PlayHalt>());
+    plays.push_back(std::make_unique<PlayOurKickOff>());
+    plays.push_back(std::make_unique<PlayDefense>());
+    plays.push_back(std::make_unique<PlayTheirKickOff>());
+    plays.push_back(std::make_unique<PlayOurPenalty>());
+    plays.push_back(std::make_unique<PlayTheirPenalty>());
+    plays.push_back(std::make_unique<PlayRetake>());
+    plays.push_back(std::make_unique<PlayOnTheirGoal>());
+    plays.push_back(std::make_unique<PlayOnOurGoal>());
+    plays.push_back(std::make_unique<PlayBallPlacement>());
+}
+
+
 void Leader::start() {
     loop();
 }
@@ -29,6 +46,7 @@ void Leader::loop() {
         if (last_time_stamp == han.new_ia.timestamp) {
             continue;
         }
+
         auto t1 = std::chrono::steady_clock::now();
 
         receive_config();
@@ -38,7 +56,8 @@ void Leader::loop() {
 
         inspect_enemy_team();
         world_analysis();
-        select_plays();
+        if (han.new_tartarus.debug_mode) debug_mode();
+        else select_plays();
         //imprimir_ativos();
 
         //std::cout << team.central_line_x << std::endl;
@@ -60,243 +79,379 @@ void Leader::receive_vision() {
     std::unordered_set<int> enemies_detected = {};
 
     for (auto blue_robot : han.new_vision.robots_blue) {
-        if (team.color == TeamInfo::blue) {
+        if (!blue_robot.detected) continue;
+        if (team.getColor() == TeamInfo::blue) {
             int rb_id = blue_robot.robot_id;
-            if (rb_id >= size(world.allies)) {
-                for (int i = size(world.allies); i <= rb_id; i++) {
-                    world.allies.push_back(Robot(i));
-                }
-            }
-            if (team.active_robots[rb_id] == 0) {
+            if (team.isRobotActive(rb_id) == 0) {
                 add_robot(rb_id);
                 continue;
             }
             double new_yaw = blue_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (delta_time > 0) {
-                world.allies[rb_id].stored_speed_x.push_back((blue_robot.position_x - world.allies[rb_id].pos[0])/(delta_time*1000));
-                world.allies[rb_id].stored_speed_y.push_back((blue_robot.position_y - world.allies[rb_id].pos[1])/(delta_time*1000));
-                if (size(world.allies[rb_id].stored_speed_x) > 10) {
-                    world.allies[rb_id].stored_speed_x.pop_front();
-                    world.allies[rb_id].stored_speed_y.pop_front();
+                //TODO logica quebrada na troca de estrutura, refazer.
+                Vector2d v = {((blue_robot.position_x - world.allies[rb_id].getPosition().getX())/(delta_time*1000)), ((blue_robot.position_y - world.allies[rb_id].getPosition().getY())/(delta_time*1000))};
+                auto velocities = world.allies[rb_id].getStoredVelocities();
+                velocities.push_back(v);
+                if (size(world.allies[rb_id].getStoredVelocities()) > 10) {
+                    velocities.pop_front();
                 }
-                world.allies[rb_id].vel[0] = std::accumulate(world.allies[rb_id].stored_speed_x.begin(), world.allies[rb_id].stored_speed_x.end(), 0.0)/10;
-                world.allies[rb_id].vel[1] = std::accumulate(world.allies[rb_id].stored_speed_y.begin(), world.allies[rb_id].stored_speed_y.end(), 0.0)/10;
+                world.allies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
+                world.allies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
+                world.allies[rb_id].setStoredVelocities(velocities);
             }
-            world.allies[rb_id].yaw = new_yaw;
-            world.allies[rb_id].pos[0] = blue_robot.position_x;
-            world.allies[rb_id].pos[1] = blue_robot.position_y;
+            world.allies[rb_id].setYaw(new_yaw);
+            world.allies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
+            world.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
             int rb_id = blue_robot.robot_id;
-            if (rb_id >= size(world.enemies)) {
-                for (int i = size(world.enemies); i <= rb_id; i++) {
-                    world.enemies.push_back(Robot(i));
-                }
-            }
-
             double new_yaw = blue_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (delta_time > 0) {
-                world.enemies[rb_id].stored_speed_x.push_back((blue_robot.position_x - world.enemies[rb_id].pos[0])/(delta_time*1000));
-                world.enemies[rb_id].stored_speed_y.push_back((blue_robot.position_y - world.enemies[rb_id].pos[1])/(delta_time*1000));
-                if (size(world.enemies[rb_id].stored_speed_x) > 10) {
-                    world.enemies[rb_id].stored_speed_x.pop_front();
-                    world.enemies[rb_id].stored_speed_y.pop_front();
+                //TODO
+                Vector2d v = {((blue_robot.position_x - world.enemies[rb_id].getPosition().getX())/(delta_time*1000)), ((blue_robot.position_y - world.allies[rb_id].getPosition().getY())/(delta_time*1000))};
+                auto velocities = world.enemies[rb_id].getStoredVelocities();
+                velocities.push_back(v);
+                if (size(world.enemies[rb_id].getStoredVelocities()) > 10) {
+                    velocities.pop_front();
                 }
-                world.enemies[rb_id].vel[0] = std::accumulate(world.enemies[rb_id].stored_speed_x.begin(), world.enemies[rb_id].stored_speed_x.end(), 0.0)/10;
-                world.enemies[rb_id].vel[1] = std::accumulate(world.enemies[rb_id].stored_speed_y.begin(), world.enemies[rb_id].stored_speed_y.end(), 0.0)/10;
+                world.enemies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
+                world.enemies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
+                world.enemies[rb_id].setStoredVelocities(velocities);
             }
-            world.enemies[rb_id].yaw = new_yaw;
-            world.enemies[rb_id].pos[0] = blue_robot.position_x;
-            world.enemies[rb_id].pos[1] = blue_robot.position_y;
+            world.enemies[rb_id].setYaw(new_yaw);
+            world.enemies[rb_id].setPosition({blue_robot.position_x, blue_robot.position_y});
+            world.enemies[rb_id].setAlly(false);
             enemies_detected.insert(rb_id);
         }
     }
 
 
     for (auto yellow_robot : han.new_vision.robots_yellow) {
-        if (team.color == TeamInfo::yellow) {
+        if (!yellow_robot.detected) continue;
+        if (team.getColor() == TeamInfo::yellow) {
             int rb_id = yellow_robot.robot_id;
-            if (rb_id >= size(world.allies)) {
-                for (int i = size(world.allies); i <= rb_id; i++) {
-                    world.allies.push_back(Robot(i));
-                }
-            }
-            if (team.active_robots[rb_id] == 0) {
+            if (team.isRobotActive(rb_id) == 0) {
                 add_robot(rb_id);
                 continue;
             }
             double new_yaw = yellow_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (delta_time > 0) {
-                world.allies[rb_id].stored_speed_x.push_back((yellow_robot.position_x - world.allies[rb_id].pos[0])/(delta_time*1000));
-                world.allies[rb_id].stored_speed_y.push_back((yellow_robot.position_y - world.allies[rb_id].pos[1])/(delta_time*1000));
-                if (size(world.allies[rb_id].stored_speed_x) > 10) {
-                    world.allies[rb_id].stored_speed_x.pop_front();
-                    world.allies[rb_id].stored_speed_y.pop_front();
+                //TODO logica quebrada na troca de estrutura, refazer.
+                Vector2d v = {((yellow_robot.position_x - world.allies[rb_id].getPosition().getX())/(delta_time*1000)), ((yellow_robot.position_y - world.allies[rb_id].getPosition().getY())/(delta_time*1000))};
+                auto velocities = world.allies[rb_id].getStoredVelocities();
+                velocities.push_back(v);
+                if (size(world.allies[rb_id].getStoredVelocities()) > 10) {
+                    velocities.pop_front();
                 }
-                world.allies[rb_id].vel[0] = std::accumulate(world.allies[rb_id].stored_speed_x.begin(), world.allies[rb_id].stored_speed_x.end(), 0.0)/10;
-                world.allies[rb_id].vel[1] = std::accumulate(world.allies[rb_id].stored_speed_y.begin(), world.allies[rb_id].stored_speed_y.end(), 0.0)/10;
+                world.allies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
+                world.allies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
+                world.allies[rb_id].setStoredVelocities(velocities);
             }
-            world.allies[rb_id].yaw = new_yaw;
-            world.allies[rb_id].pos[0] = yellow_robot.position_x;
-            world.allies[rb_id].pos[1] = yellow_robot.position_y;
+            world.allies[rb_id].setYaw(new_yaw);
+            world.allies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
+            world.allies[rb_id].setAlly(true);
             allies_detected.insert(rb_id);
         }
         else {
             int rb_id = yellow_robot.robot_id;
-            if (rb_id >= size(world.enemies)) {
-                for (int i = size(world.enemies); i <= rb_id; i++) {
-                    world.enemies.push_back(Robot(i));
-                }
-            }
+
             double new_yaw = yellow_robot.orientation;
             if (new_yaw < 0) new_yaw += 2*M_PI;
             if (delta_time > 0) {
-                world.enemies[rb_id].stored_speed_x.push_back((yellow_robot.position_x - world.enemies[rb_id].pos[0])/(delta_time*1000));
-                world.enemies[rb_id].stored_speed_y.push_back((yellow_robot.position_y - world.enemies[rb_id].pos[1])/(delta_time*1000));
-                if (size(world.enemies[rb_id].stored_speed_x) > 10) {
-                    world.enemies[rb_id].stored_speed_x.pop_front();
-                    world.enemies[rb_id].stored_speed_y.pop_front();
+                //TODO
+                Vector2d v = {((yellow_robot.position_x - world.enemies[rb_id].getPosition().getX())/(delta_time*1000)), ((yellow_robot.position_y - world.allies[rb_id].getPosition().getY())/(delta_time*1000))};
+                auto velocities = world.enemies[rb_id].getStoredVelocities();
+                velocities.push_back(v);
+                if (size(world.enemies[rb_id].getStoredVelocities()) > 10) {
+                    velocities.pop_front();
                 }
-                world.enemies[rb_id].vel[0] = std::accumulate(world.enemies[rb_id].stored_speed_x.begin(), world.enemies[rb_id].stored_speed_x.end(), 0.0)/10;
-                world.enemies[rb_id].vel[1] = std::accumulate(world.enemies[rb_id].stored_speed_y.begin(), world.enemies[rb_id].stored_speed_y.end(), 0.0)/10;
+                world.enemies[rb_id].getVelocity().setX(v.getX()); // <<< aqui!
+                world.enemies[rb_id].getVelocity().setY(v.getY()); // <<< e aqui!
+                world.enemies[rb_id].setStoredVelocities(velocities);
             }
-            world.enemies[rb_id].yaw = new_yaw;
-            world.enemies[rb_id].pos[0] = yellow_robot.position_x;
-            world.enemies[rb_id].pos[1] = yellow_robot.position_y;
+            world.enemies[rb_id].setYaw(new_yaw);
+            world.enemies[rb_id].setPosition({yellow_robot.position_x, yellow_robot.position_y});
             enemies_detected.insert(rb_id);
         }
     }
 
     for (int i = 0; i < size(world.allies); i++) {
-        if (allies_detected.find(i) != allies_detected.end()) world.allies[i].detected = true;
-        else world.allies[i].detected = false;
+        if (allies_detected.find(i) != allies_detected.end()) world.allies[i].setDetected(true);
+        else world.allies[i].setDetected(false);
     }
 
     for (int i = 0; i < size(world.enemies); i++) {
-        if (enemies_detected.find(i) != enemies_detected.end()) world.enemies[i].detected = true;
-        else world.enemies[i].detected = false;
+        if (enemies_detected.find(i) != enemies_detected.end()) world.enemies[i].setDetected(true);
+        else world.enemies[i].setDetected(false);
     }
 
     if (delta_time != 0) {
-        world.ball_speed[0] = (han.new_vision.balls.position_x - world.ball_pos[0])/(delta_time*1000);
-        world.ball_speed[1] = (han.new_vision.balls.position_y - world.ball_pos[1])/(delta_time*1000);
+        world.ball.setVelocity({(han.new_vision.balls.position_x - world.ball.getPosition().getX())/(delta_time*1000), (han.new_vision.balls.position_y - world.ball.getPosition().getY())/(delta_time*1000)});
     }
-    world.ball_pos[0] = han.new_vision.balls.position_x;
-    world.ball_pos[1] = han.new_vision.balls.position_y;
-
+    world.ball.setPosition({han.new_vision.balls.position_x, han.new_vision.balls.position_y});
     last_time_stamp = han.new_vision.timestamp;
 }
 
 void Leader::receive_field_geometry() {
     //TODO implementar urgente
-    team.striker_max_dislocation = fabs(world.their_defese_area[0][0] + world.their_defese_area[1][0]) / 2;
-    team.mid_field_max_dislocation = std::min(fabs(world.their_defese_area[0][0]), fabs(world.their_defese_area[1][0]));
+    world.field.inside_dimensions.setMinorPoint({static_cast<double>(-han.new_vision.field.field_length/2), static_cast<double>(-han.new_vision.field.field_width/2)});
+    world.field.inside_dimensions.setMajorPoint({static_cast<double>(han.new_vision.field.field_length/2), static_cast<double>(han.new_vision.field.field_width/2)});
+
+    AreaRectangular leftDefenseArea = {{-han.new_vision.field.field_length/2 - han.new_vision.field.goal_height, -han.new_vision.field.defense_area_width/2},{-han.new_vision.field.field_length/2 + han.new_vision.field.defense_area_height, han.new_vision.field.defense_area_width/2}};
+    AreaRectangular rightDefenseArea = {{han.new_vision.field.field_length/2 - han.new_vision.field.defense_area_height, -han.new_vision.field.defense_area_width/2}, {han.new_vision.field.field_length/2 + han.new_vision.field.goal_height, han.new_vision.field.defense_area_width/2}};
+
+    LineSegment leftGoal = {Point(-han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(-han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
+    LineSegment rightGoal = {Point(han.new_vision.field.field_length/2, -han.new_vision.field.goal_width/2), Point(han.new_vision.field.field_length/2 , han.new_vision.field.goal_width/2)};
+
+    AreaRectangular leftFisicalBarrier = {leftGoal.getStart(), {leftGoal.getEnd().getX() - han.new_vision.field.goal_depth, leftGoal.getEnd().getY()}};
+    AreaRectangular rightFisicalBarrier = {rightGoal.getStart(), {rightGoal.getEnd().getX() + han.new_vision.field.goal_depth, rightGoal.getEnd().getY()}};
+
+    world.field.leftFisicalBarrier = leftFisicalBarrier;
+    world.field.rightFisicalBarrier = rightFisicalBarrier;
+    if (team.getOurSide() == TeamInfo::left) {
+        world.field.ourGoal = leftGoal;
+        world.field.theirGoal = rightGoal;
+        world.field.ourDefenseArea = leftDefenseArea;
+        world.field.theirDefenseArea = rightDefenseArea;
+    }
+    if (team.getOurSide() == TeamInfo::right) {
+        world.field.ourGoal = rightGoal;
+        world.field.theirGoal = leftGoal;
+        world.field.ourDefenseArea = rightDefenseArea;
+        world.field.theirDefenseArea = leftDefenseArea;
+    }
+}
+void Leader::event_FSM() {
+    if (team.getCurrentCommand() == TeamInfo::HALT) team.setEvent(TeamInfo::halt);
+    //std::cout << team.getCurrentCommand() << team.getEvent() << std::endl;
+    if (team.getEvent() == TeamInfo::halt) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::STOP) {
+            team.setEvent(TeamInfo::stop);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::timeout) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+    }
+
+    if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+
+    if (team.getEvent() == TeamInfo::stop) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_KICKOFF_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::prepareOurKickOff);
+            else team.setEvent(TeamInfo::prepareTheirKickOff);
+        }
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_KICKOFF_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::prepareOurKickOff);
+            else team.setEvent(TeamInfo::prepareTheirKickOff);
+        }
+
+        if (team.getCurrentCommand() == TeamInfo::BALL_PLACEMENT_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::ourballPlacement);
+            else team.setEvent(TeamInfo::theirballPlacement);
+        }
+        if (team.getCurrentCommand() == TeamInfo::BALL_PLACEMENT_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::ourballPlacement);
+            else team.setEvent(TeamInfo::theirballPlacement);
+        }
+
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_PENALTY_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::prepareOurPenalty);
+            else team.setEvent(TeamInfo::prepareTheirPenalty);
+        }
+        if (team.getCurrentCommand() == TeamInfo::PREPARE_PENALTY_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::prepareOurPenalty);
+            else team.setEvent(TeamInfo::prepareTheirPenalty);
+        }
+
+        if (team.getCurrentCommand() == TeamInfo::FORCE_START) team.setEvent(TeamInfo::run);
+
+        if (team.getCurrentCommand() == TeamInfo::DIRECT_FREE_BLUE) {
+            if (team.getColor() == TeamInfo::blue) team.setEvent(TeamInfo::ourFreeKick);
+            else team.setEvent(TeamInfo::theirFreeKick);
+        }
+        if (team.getCurrentCommand() == TeamInfo::DIRECT_FREE_YELLOW) {
+            if (team.getColor() == TeamInfo::yellow) team.setEvent(TeamInfo::ourFreeKick);
+            else team.setEvent(TeamInfo::theirFreeKick);
+        }
+
+        if (team.getCurrentCommand() == TeamInfo::TIMEOUT_BLUE or team.getCurrentCommand() == TeamInfo::TIMEOUT_YELLOW) {
+            team.setEvent(TeamInfo::timeout);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::prepareOurKickOff) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            team.setEvent(TeamInfo::ourKickOff);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::prepareTheirKickOff) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            team.setEvent(TeamInfo::theirKickOff);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::ourballPlacement) {
+        GC_timer += delta_time;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+        if (delta_time > 30) team.setEvent(TeamInfo::stop);
+        if (world.ball.getPosition().getDistanceTo(team.getBallPlacementSpot()) < 150 && world.ball.isStopped()) team.setEvent(TeamInfo::stop);
+    }
+
+    if (team.getEvent() == TeamInfo::theirballPlacement) {
+        GC_timer += delta_time;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+        if (delta_time >= 1) team.setEvent(TeamInfo::theirFreeKick);
+    }
+
+    if (team.getEvent() == TeamInfo::prepareOurPenalty) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) team.setEvent(TeamInfo::ourPenalty);
+    }
+
+    if (team.getEvent() == TeamInfo::prepareTheirPenalty) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) team.setEvent(TeamInfo::theirPenalty);
+    }
+
+    if (team.getEvent() == TeamInfo::ourPenalty or team.getEvent() == TeamInfo::theirPenalty) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && team.getEvent() == TeamInfo::runningTheirPenalty) team.setEvent(TeamInfo::runningTheirPenalty);
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && team.getEvent() == TeamInfo::ourPenalty) team.setEvent(TeamInfo::runningOurPenalty);
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+    }
+
+    if (team.getEvent() == TeamInfo::runningOurPenalty || team.getEvent() == TeamInfo::runningTheirPenalty) {
+        GC_timer += delta_time;
+        if (GC_timer >= 10 or team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+    }
+
+    if (team.getEvent() == TeamInfo::ourKickOff or team.getEvent() == TeamInfo::theirKickOff) {
+        GC_timer += delta_time;
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START && ((world.ball.isMoving() && world.ball.getPosition().getDistanceTo(Point(0, 0)) > 100) or GC_timer > 10)) {
+            team.setEvent(TeamInfo::run);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::ourFreeKick or team.getEvent() == TeamInfo::theirFreeKick) {
+        GC_timer = 0;
+        if (world.ball.isMoving()) {
+            team.setEvent(TeamInfo::run);
+        }
+        if (team.getCurrentCommand() == TeamInfo::NORMAL_START) {
+            if (team.getEvent() == TeamInfo::ourFreeKick) team.setEvent(TeamInfo::runningOurFreeKick);
+            if (team.getEvent() == TeamInfo::theirFreeKick) team.setEvent(TeamInfo::runningTheirFreeKick);
+        }
+    }
+    if (team.getEvent() == TeamInfo::runningOurFreeKick or team.getEvent() == TeamInfo::runningTheirFreeKick) {
+        GC_timer += delta_time;
+        if (world.ball.isMoving() or GC_timer > 10) {
+            team.setEvent(TeamInfo::run);
+        }
+    }
+
+    if (team.getEvent() == TeamInfo::run) {
+        GC_timer = 0;
+        if (team.getCurrentCommand() == TeamInfo::STOP) team.setEvent(TeamInfo::stop);
+    }
+}
+
+
+void Leader::receive_config() {
 }
 
 void Leader::receive_gamecontroller() {
     //TODO implementar maquina de estados dos estados do jogo
-    team.current_command = TeamInfo::Command(han.new_GC.current_command);
+    team.setCurrentCommand(TeamInfo::Command(han.new_GC.current_command));
+
+    team.setBallPlacementSpot({han.new_GC.designated_position_x, han.new_GC.designated_position_y});
     int is_team_blue = int(han.new_GC.team_blue);
     if (is_team_blue == 1) {
-        team.color = TeamInfo::blue;
-        team.goal_keeper_id = han.new_GC.blue.goalkeeper_id;
+        team.setColor(TeamInfo::blue);
+        team.setGoalKeeperId(han.new_GC.blue.goalkeeper_id);
     }
     else if (is_team_blue == 0) {
-        team.color = TeamInfo::yellow;
-        team.goal_keeper_id = han.new_GC.yellow.goalkeeper_id;
+        team.setColor(TeamInfo::yellow);
+        team.setGoalKeeperId(han.new_GC.yellow.goalkeeper_id);
     }
-}
 
-void Leader::receive_config() {
-    //TODO receber time do tartarus ou do GC
-    //TODO receber lado do time
+    if (han.new_GC.blue_team_on_positive_half) {
+        if (is_team_blue) team.setOurSide(TeamInfo::right);
+        else team.setOurSide(TeamInfo::left);
+    } else {
+        if (is_team_blue) team.setOurSide(TeamInfo::left);
+        else team.setOurSide(TeamInfo::right);
+    }
 
-    if (team.our_side == TeamInfo::right) team.our_side_sign = 1;
-    else team.our_side_sign = -1;
-
-
+    event_FSM();
 }
 
 void Leader::world_analysis() {
-    world.ball_pos[0] != 0 ? team.central_line_x = world.ball_pos[0]
-        : team.central_line_x = 0;
-    //std::cout << team.central_line_x << std::endl;
 }
-
-
 
 
 void Leader::add_robot(int id) {
-    if (id >= sizeof(team.active_robots)) {
-        return;
-    }
-    if (team.active_robots[id] == 0) {
-        team.active_robots[id] = 1;
-        robots[id].start(&team);
+    if (team.isRobotActive(id) == 0) {
+        team.setRobotActive(id, true);
+        team.getRobotController(id).start(&team);
     }
 }
 
+void Leader::debug_mode() {
+
+}
+
+
 void Leader::select_plays() {
-    // Contar aliados ativos
-    int numOfActiveAllies = std::count_if(
-        std::begin(team.active_robots),
-        std::end(team.active_robots),
-        [](int id) { return id != 0; }
-    );
-
-    struct PlayInfo {
-        std::string name;
-        int score;
-        std::function<int(WorldModel&, TeamInfo&)> score_func;
-        std::function<std::array<TeamInfo::role, 16>(
-            WorldModel&, TeamInfo&, std::array<TeamInfo::role, 16>
-        )> role_func;
-    };
-
-    std::array<PlayInfo, 4> plays = {{
-        { "attack", 0,
-          [&](WorldModel& w, TeamInfo& t) { return attack.score(w, t); },
-          [&](WorldModel& w, TeamInfo& t, std::array<TeamInfo::role, 16> r) { return attack.role_assing(w, t, r); } },
-
-        { "debug", 0,
-          [&](WorldModel& w, TeamInfo& t) { return debug.score(w, t); },
-          [&](WorldModel& w, TeamInfo& t, std::array<TeamInfo::role, 16> r) { return debug.role_assing(w, t, r); } },
-
-        { "halt", 0,
-          [&](WorldModel& w, TeamInfo& t) { return halt.score(w, t); },
-          [&](WorldModel& w, TeamInfo& t, std::array<TeamInfo::role, 16> r) { return halt.role_assing(w, t, r); } },
-
-        { "OurKickOff", 0,
-        [&](WorldModel& w, TeamInfo& t) { return ourKickOff.score(w, t); },
-        [&](WorldModel& w, TeamInfo& t, std::array<TeamInfo::role, 16> r) { return ourKickOff.role_assing(w, t, r); } }
-
-    }};
-
     // Calcular scores
-    for (auto& play : plays) {
-        play.score = play.score_func(world, team);
+    for (auto& p : plays) {
+        try {
+            p->calc_score(world, team);
+        } catch (...) {
+            std::cout << "error acessing play" << std::endl;
+        }
     }
 
     // Ordenar do maior para o menor score
     std::sort(plays.begin(), plays.end(),
-              [](const PlayInfo& a, const PlayInfo& b) {
-                  return a.score > b.score;
-              });
+          [](const std::unique_ptr<PlayBase>& a, const std::unique_ptr<PlayBase>& b) {
+              return a->get_score() > b->get_score();
+          });
+
 
     // Criar lista inicial de roles
-    std::array<TeamInfo::role, 16> roles;
-    roles.fill(TeamInfo::unknown);
+    std::array<Robot::role, 16> roles;
+    roles.fill(Robot::unknown);
 
-    // Aplicar roles da melhor play
-    roles = plays.front().role_func(world, team, roles);
+    // Aplicar roles de todas as plays em ordem de score
+    for (auto& p : plays) {
+        roles = p->role_assign(world, team, roles);
+    }
+    if (team.getEvent() == TeamInfo::halt) {
+        for (int i = 0; i < roles.size(); i++) {
+            team.setAllyRole(i, Robot::halted);
+        }
+        return;
+    }
 
     // Copiar para o time
-    team.roles = roles;
+    for (int i = 0; i < roles.size(); i++) {
+        team.setAllyRole(i, roles[i]);
+    }
 }
+
+
+
 
 
 void Leader::inspect_enemy_team() {
@@ -305,38 +460,49 @@ void Leader::inspect_enemy_team() {
     std::vector<double> distances_enemies_from_ball = {};
     if (size(world.enemies) == 0) return;
     for (int i = 0; i < size(world.enemies) ; i++) {
-        if (world.enemies[i].detected) {
-            active_enemies_ids.push_back(i);
-            distances_enemies_from_ball.push_back(sqrt(pow(world.enemies[i].pos[0] - world.ball_pos[0],2) + pow(world.enemies[i].pos[1] - world.ball_pos[1],2)));
+        if (world.enemies[i].isDetected()) {
+            active_enemies_ids.push_back(world.enemies[i].getId());
+            distances_enemies_from_ball.push_back(world.enemies[i].getPosition().getDistanceTo(world.ball.getPosition()));
         }
     }
-    if (team.color == TeamInfo::blue) {
-        team.enemy_roles[han.new_GC.yellow.goalkeeper_id] = TeamInfo::goal_keeper;
+    if (active_enemies_ids.size() == 0) return;
+    if (team.getColor() == TeamInfo::blue) {
+        team.setEnemyRole(han.new_GC.yellow.goalkeeper_id, Robot::goal_keeper);
     }
     else {
-        team.enemy_roles[han.new_GC.blue.goalkeeper_id] = TeamInfo::goal_keeper;
+        team.setEnemyRole(han.new_GC.blue.goalkeeper_id, Robot::goal_keeper);
     }
-    unsigned int closest_idx = 0;
-    for (int idx = 0; idx < active_enemies_ids.size(); idx++) {
-        if (distances_enemies_from_ball[idx] < distances_enemies_from_ball[closest_idx]) {
-                closest_idx = idx;
-            }
+
+    int closest_idx = -1;
+    int second_closest_idx = -1;
+    for (int idx : active_enemies_ids) {
+        if (team.getEnemyRole(idx) == Robot::goal_keeper || !world.enemies[idx].isDetected()) continue;
+
+        if (closest_idx == -1 || distances_enemies_from_ball[idx] < distances_enemies_from_ball[closest_idx]) {
+            // Atualiza os dois
+            second_closest_idx = closest_idx;
+            closest_idx = idx;
+        } else if (second_closest_idx == -1 || distances_enemies_from_ball[idx] < distances_enemies_from_ball[second_closest_idx]) {
+            // Atualiza só o segundo
+            second_closest_idx = idx;
+        }
     }
-    unsigned int id = world.enemies[closest_idx].id;
-    team.enemy_roles[id] = TeamInfo::striker;
+
+    unsigned int id = world.enemies[closest_idx].getId();
+    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::striker);
+
+    id = world.enemies[second_closest_idx].getId();
+    if (team.getEnemyRole(id) != Robot::goal_keeper && world.enemies[id].isDetected()) team.setEnemyRole(id, Robot::support);
 
 }
-
-
-
 
 
 
 void Leader::imprimir_ativos() {
     std::cout << std::endl << "[";
     for (int i = 0; i < 16 ; i++) {
-        if (team.active_robots[i] == 1) {
-            std::cout << i << ", ";
+        if (team.isRobotActive(i) == 1) {
+            std::cout << i << " , ";
         }
     }
     std::cout << "]" << std::endl;

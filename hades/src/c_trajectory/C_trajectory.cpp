@@ -8,12 +8,12 @@
 #include <cmath>
 #include <iostream>
 #include <bits/algorithmfwd.h>
-
+#include <algorithm>
 
 using namespace std;
 
-vector<vector<double>> C_trajectory::path_find(std::vector<double>& start, std::vector<double>& goal,
-            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular) {
+vector<vector<double>> C_trajectory::path_find(std::vector<double> start, std::vector<double> goal,
+            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted) {
 
 /*Encontra uma trajetoria a partir de 3 estratégias.
 Se é encontrada uma trajetoria na primeira estratégia, a função retorna essa trajetoria,
@@ -39,37 +39,40 @@ menorpasso : Menor distancia entre dois pontos consecutivos
 
     vector<vector<double>> trajectory = {};
 
-    vector<double> start_new = interference(start, obs_circular, obs_retangular);
-    vector<double> goal_new = interference(goal, obs_circular, obs_retangular);
+    if (goal[0] < boundaries.minor[0]) goal[0] = boundaries.minor[0];
+    if (goal[1] < boundaries.minor[1]) goal[1] = boundaries.minor[1];
+    if (goal[0] > boundaries.major[0]) goal[0] = boundaries.major[0];
+    if (goal[1] > boundaries.major[1]) goal[1] = boundaries.major[1];
+
+    vector<double> start_new = interference(start, obs_circular, obs_retangular, obs_tilted);
+    vector<double> goal_new = interference(goal, obs_circular, obs_retangular, obs_tilted);
 
     if (start_new[0] != start[0] || start_new[1] != start[1]) {
         trajectory.push_back(start);
     }
 
-
-    vector<vector<double>> mid_path = path_connect(start_new, goal_new, obs_circular, obs_retangular);
+    vector<vector<double>> mid_path = path_connect(start_new, goal_new, obs_circular, obs_retangular, obs_tilted);
     if (size(mid_path) == 0) {
-        mid_path = path_single(start_new, goal_new, obs_circular, obs_retangular);
+        mid_path = path_single(start_new, goal_new, obs_circular, obs_retangular, obs_tilted);
         if (size(mid_path) == 0) {
-            mid_path = path_single_inverted(start_new, goal_new, obs_circular, obs_retangular);
+            mid_path = path_single_inverted(start_new, goal_new, obs_circular, obs_retangular, obs_tilted);
             if (size(mid_path) == 0) {
                 trajectory.push_back(start);
-                trajectory.push_back(interference(start, obs_circular, obs_retangular));
+                trajectory.push_back(interference(start, obs_circular, obs_retangular, obs_tilted));
             }
         }
     }
     if (size(mid_path) > 0) {
         trajectory.insert(trajectory.end(), mid_path.begin(), mid_path.end());
-        trajectory = smoothing(trajectory, obs_circular, obs_retangular);
+        trajectory = smoothing(trajectory, obs_circular, obs_retangular, obs_tilted);
     }
-
 
 
     return trajectory;
 }
 
 vector<vector<double>> C_trajectory::path_connect(std::vector<double>& start, std::vector<double>& goal,
-        std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular) {
+        std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted) {
     /*
     Cria uma trajetoria a partir de duas trajetorias, uma partindo do ponto inicial e outra do ponto final.
     As trajetorias tentam encontrar uma a outra.
@@ -96,52 +99,45 @@ vector<vector<double>> C_trajectory::path_connect(std::vector<double>& start, st
 
 
 
-
-    while (collision_test(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular)) {
-
+    while (collision_test(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular, obs_tilted)) {
         goal1 = trajectory_2.back();
         find_blocking_circles(trajectory_1, trajectory_2.back(), new_obs_circular, obs_circular);
-        found = c_point(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular);
+        found = c_point(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular, obs_tilted);
         alternatives_1.push_back(found);
         remove_invalide_points(alternatives_1.back(), trajectory_1);
         remove_empty_alternatives(alternatives_1, trajectory_1);
         if (size(alternatives_1) == 0) {
             return vector<vector<double>>{};
         }
-
         angle_sort(trajectory_1.back(),trajectory_2.back(), alternatives_1.back());
         trajectory_1.push_back(alternatives_1.back().front());
         alternatives_1.back().pop_front();
 
-        shorten_path(trajectory_1, trajectory_2, new_obs_circular, obs_retangular);
-
+        shorten_path(trajectory_1, trajectory_2, new_obs_circular, obs_retangular, obs_tilted);
         if (each_iterations != 0) {
             if (iteration%each_iterations && print_each) {
                 std::cout << "Iteration: " << iteration << std::endl;
             }
         }
 
-
-        if (!collision_test(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular)) {
+        if (!collision_test(trajectory_1.back(), trajectory_2.back(), new_obs_circular, obs_retangular, obs_tilted)) {
             break;
         }
 
         goal2 = trajectory_1.back();
         find_blocking_circles(trajectory_2, goal2, new_obs_circular, obs_circular);
-        found = c_point(trajectory_2.back(), trajectory_1.back(), new_obs_circular, obs_retangular);
+        found = c_point(trajectory_2.back(), trajectory_1.back(), new_obs_circular, obs_retangular, obs_tilted);
         alternatives_2.push_back(found);
         remove_invalide_points(alternatives_2.back(), trajectory_2);
         remove_empty_alternatives(alternatives_2, trajectory_2);
         if (size(alternatives_2) == 0) {
             return vector<vector<double>> {};
         }
-
         angle_sort(trajectory_2.back(),trajectory_1.back(), alternatives_2.back());
 
         trajectory_2.push_back(alternatives_2.back().front());
         alternatives_2.back().pop_front();
-
-        shorten_path(trajectory_2, trajectory_1, new_obs_circular, obs_retangular);
+        shorten_path(trajectory_2, trajectory_1, new_obs_circular, obs_retangular, obs_tilted);
         if (each_iterations != 0) {
             if (iteration%each_iterations && print_each) {
                 std::cout << "Iteration: " << iteration << std::endl;
@@ -154,7 +150,7 @@ vector<vector<double>> C_trajectory::path_connect(std::vector<double>& start, st
     trajectory_1.insert(trajectory_1.end(), trajectory_2.begin(), trajectory_2.end());
 
     if (size(trajectory_1) > 2) {
-        retrace_path(trajectory_1, obs_circular, obs_retangular);
+        retrace_path(trajectory_1, obs_circular, obs_retangular, obs_tilted);
     }
 
     if (print_last) {
@@ -168,15 +164,15 @@ vector<vector<double>> C_trajectory::path_connect(std::vector<double>& start, st
 
 
 std::vector<std::vector<double>> C_trajectory::path_single(std::vector<double>& start, std::vector<double>& goal,
-             std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular) {
+             std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted) {
     vector<vector<double>> trajectory = {start};
     deque<deque<vector<double>>> alternatives = {};
     vector<Circle> new_obs_circular = obs_circular;
     int iteration = 0;
     deque<vector<double>> found;
 
-    while (collision_test(trajectory.back(), goal, new_obs_circular, obs_retangular)) {
-        found = c_point(trajectory.back(), goal, new_obs_circular, obs_retangular);
+    while (collision_test(trajectory.back(), goal, new_obs_circular, obs_retangular, obs_tilted)) {
+        found = c_point(trajectory.back(), goal, new_obs_circular, obs_retangular, obs_tilted);
         alternatives.push_back(found);
         remove_invalide_points(alternatives.back(), trajectory);
         remove_empty_alternatives(alternatives, trajectory);
@@ -199,21 +195,21 @@ std::vector<std::vector<double>> C_trajectory::path_single(std::vector<double>& 
     }
     trajectory.push_back(goal);
     if (size(trajectory) > 2) {
-        retrace_path(trajectory, obs_circular, obs_retangular);
+        retrace_path(trajectory, obs_circular, obs_retangular, obs_tilted);
     }
     return trajectory;
 }
 
 std::vector<std::vector<double>> C_trajectory::path_single_inverted(std::vector<double>& start, std::vector<double>& goal,
-            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular) {
-    auto trajectory = path_single(start, goal, obs_circular, obs_retangular);
+            std::vector<Circle>& obs_circular, std::vector<Rectangle>& obs_retangular, std::vector<TiltedRectangle>& obs_tilted) {
+    auto trajectory = path_single(start, goal, obs_circular, obs_retangular, obs_tilted);
     invert_trajectory(trajectory);
     return trajectory;
 }
 
 
 bool C_trajectory::collision_test(auto& start, auto& goal,
-    auto& obs_circular, auto& obs_retangular) {
+    auto& obs_circular, auto& obs_retangular, auto& obs_tilted) {
     vector<double> vet = {goal[0] - start[0], goal[1] - start[1]};
     for (Circle c: obs_circular) {
         if (c.collision_test(start, vet)) {
@@ -225,6 +221,12 @@ bool C_trajectory::collision_test(auto& start, auto& goal,
             return true;
         }
     }
+    for (TiltedRectangle r: obs_tilted) {
+        if (r.collision_test(start, vet)) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -256,11 +258,12 @@ void C_trajectory::find_blocking_circles(auto& trajectory, auto& goal, auto& new
 }
 
 
-std::deque<std::vector<double>> C_trajectory::c_point(auto& start, auto& goal, auto& obs_circular, auto& obs_rectangular) {
+std::deque<std::vector<double>> C_trajectory::c_point(auto& start, auto& goal, auto& obs_circular, auto& obs_rectangular, auto& obs_tilted) {
     deque<vector<double>> unchecked = {subtract(goal, start)};
     deque<vector<double>> approved;
     vector<bool> collided_circle;
     vector<bool> collided_rectangular;
+    vector<bool> collided_tilted;
     bool collided = false;
 
     double boundarieMinorVector[2] = {boundaries.minor[0] - start[0], boundaries.minor[1] - start[1]};
@@ -271,6 +274,9 @@ std::deque<std::vector<double>> C_trajectory::c_point(auto& start, auto& goal, a
     }
     for (int i = 0; i < size(obs_rectangular); i++) {
         collided_rectangular.push_back(false);
+    }
+    for (int i = 0; i < size(obs_rectangular); i++) {
+        collided_tilted.push_back(false);
     }
 
 
@@ -297,6 +303,17 @@ std::deque<std::vector<double>> C_trajectory::c_point(auto& start, auto& goal, a
                 }
             }
         }
+
+        for (int i = 0; i < size(obs_tilted); i++) {
+            if (obs_tilted[i].collision_test(start, unchecked[0])) {
+                collided = true;
+                if (!collided_tilted[i]) {
+                    auto avoided = obs_tilted[i].avoid(start);
+                    unchecked.insert(unchecked.end(), avoided.begin(), avoided.end());
+                    collided_tilted[i] = true;
+                }
+            }
+        }
         if (unchecked[0][0] < boundarieMinorVector[0] || unchecked[0][0] > boundarieMajorVector[0]){
             collided = true;
         }
@@ -318,7 +335,7 @@ std::deque<std::vector<double>> C_trajectory::c_point(auto& start, auto& goal, a
 
 
 
-std::vector<double> C_trajectory::interference(auto point, auto& obs_circular, auto& obs_retangular) {
+std::vector<double> C_trajectory::interference(auto point, auto& obs_circular, auto& obs_retangular, auto& obs_tilted) {
     bool collided = false;
     auto backup = point;
     vector<double> a;
@@ -385,6 +402,69 @@ std::vector<double> C_trajectory::interference(auto point, auto& obs_circular, a
                 collided = true;
             }
         }
+        for (TiltedRectangle tret : obs_tilted) {
+
+            // --- Part 1: Check if point is inside (your correct logic) ---
+            std::vector<double> e1 = {tret.p2[0] - tret.p1[0], tret.p2[1] - tret.p1[1]};
+            std::vector<double> e2 = {tret.p4[0] - tret.p1[0], tret.p4[1] - tret.p1[1]};
+            std::vector<double> v = {point[0] - tret.p1[0], point[1] - tret.p1[1]};
+
+            double e1_len_sq = e1[0]*e1[0] + e1[1]*e1[1];
+            double e2_len_sq = e2[0]*e2[0] + e2[1]*e2[1];
+
+            double proj1 = (v[0]*e1[0] + v[1]*e1[1]) / e1_len_sq;
+            double proj2 = (v[0]*e2[0] + v[1]*e2[1]) / e2_len_sq;
+
+            if (proj1 >= 0 && proj1 <= 1 && proj2 >= 0 && proj2 <= 1) {
+
+                // --- Part 2: If inside, find the CLOSEST of the FOUR edges ---
+                double min_dist_sq = std::numeric_limits<double>::max();
+                std::vector<double> closest_outward_normal = {0, 0};
+
+                std::vector<std::vector<double>> vertices = {tret.p1, tret.p2, tret.p3, tret.p4};
+
+                for (int i = 0; i < 4; ++i) {
+                    const auto& v_start = vertices[i];
+                    const auto& v_end = vertices[(i + 1) % 4]; // Next vertex, wraps around
+
+                    std::vector<double> edge = {v_end[0] - v_start[0], v_end[1] - v_start[1]};
+                    std::vector<double> vec_to_point = {point[0] - v_start[0], point[1] - v_start[1]};
+
+                    // Perpendicular distance squared from point to the line defined by the edge
+                    double cross_prod = vec_to_point[0] * edge[1] - vec_to_point[1] * edge[0];
+                    double edge_len_sq = edge[0]*edge[0] + edge[1]*edge[1];
+                    double dist_sq = (cross_prod * cross_prod) / edge_len_sq;
+
+                    if (dist_sq < min_dist_sq) {
+                        min_dist_sq = dist_sq;
+                        // Outward normal for CCW vertices (p1, p2, p3, p4) is (dy, -dx)
+                        closest_outward_normal = {edge[1], -edge[0]};
+                    }
+                }
+
+                // --- Part 3: Push the point out along the closest normal ---
+                double distance = std::sqrt(min_dist_sq);
+                double move_amount = distance + adcret;
+
+                // Normalize the outward normal vector
+                double norm_mag = std::sqrt(closest_outward_normal[0]*closest_outward_normal[0] +
+                                            closest_outward_normal[1]*closest_outward_normal[1]);
+
+                if (norm_mag > 0) {
+                    std::vector<double> unit_normal = {closest_outward_normal[0] / norm_mag,
+                                                       closest_outward_normal[1] / norm_mag};
+
+                    // Move the point
+                    point[0] += unit_normal[0] * move_amount;
+                    point[1] += unit_normal[1] * move_amount;
+                }
+
+                // Update state variables
+                adcret += small_step;
+                collided = true;
+            }
+        }
+
         if (point[0] < boundaries.minor[0] || point[0] > boundaries.major[0]){
             std::clamp(point[0], boundaries.minor[0], boundaries.major[0]);
             collided = true;
@@ -456,9 +536,9 @@ void C_trajectory::invert_trajectory(auto& trajectory) {
 }
 
 
-void C_trajectory::shorten_path(auto& trajectory_1, auto& trajectory_2, auto& obs_circular, auto& obs_retangular) {
+void C_trajectory::shorten_path(auto& trajectory_1, auto& trajectory_2, auto& obs_circular, auto& obs_retangular, auto& obs_tilted) {
     for (int i = 0; i < size(trajectory_2); i++) {
-        if (!collision_test(trajectory_1.back(), trajectory_2[i], obs_circular, obs_retangular)) {
+        if (!collision_test(trajectory_1.back(), trajectory_2[i], obs_circular, obs_retangular, obs_tilted)) {
             trajectory_2.resize(i + 1);
             break;
         }
@@ -466,7 +546,7 @@ void C_trajectory::shorten_path(auto& trajectory_1, auto& trajectory_2, auto& ob
 }
 
 
-void C_trajectory::retrace_path(auto& trajectory, auto& obs_circular, auto& obs_retangular) {
+void C_trajectory::retrace_path(auto& trajectory, auto& obs_circular, auto& obs_retangular, auto& obs_tilted) {
     /*
     Retraca uma trajetoria retirando pontos desnecessarios.
     Sendo um trecho da trajetoria [A, B, C], se AC nao ha colisao, retira-se B.
@@ -500,7 +580,7 @@ void C_trajectory::retrace_path(auto& trajectory, auto& obs_circular, auto& obs_
 
             //Se nao colidir A com C, retira todos os pontos entre A e C. Sendo A = trajetoria[i] e C = trajetoria[len(trajetoria) - 1 - j]
             vet = subtract(trajectory[size(trajectory) - 1 - j], trajectory[i]);
-            if (!collision_test(trajectory[i], trajectory[size(trajectory) - 1 - j], obs_circular, obs_retangular)) {
+            if (!collision_test(trajectory[i], trajectory[size(trajectory) - 1 - j], obs_circular, obs_retangular, obs_tilted)) {
                 for (int a = 0; a < size(trajectory) - j - 1 - 1 - i; a++) {
                     trajectory.erase(trajectory.begin() + i + 1);
                 }
@@ -511,7 +591,7 @@ void C_trajectory::retrace_path(auto& trajectory, auto& obs_circular, auto& obs_
     }
 }
 
-vector<vector<double>> C_trajectory::smoothing(auto& trajectory, auto& obs_circular, auto& obs_retangular) {
+vector<vector<double>> C_trajectory::smoothing(auto& trajectory, auto& obs_circular, auto& obs_retangular, auto& obs_tilted) {
     if (k == 0) {
         return trajectory;
     }
@@ -560,7 +640,7 @@ vector<vector<double>> C_trajectory::smoothing(auto& trajectory, auto& obs_circu
         double boundariesMinor[2] = {boundaries.minor[0], boundaries.minor[1]};
         double boundariesMajor[2] = {boundaries.major[0], boundaries.major[1]};
         C_trajectory temp(false, false, 0, int(max_iterations/10), radius/2, 0, boundariesMinor, boundariesMajor);
-        auto between = temp.path_connect(new_trajectory[i], new_trajectory[i + 1], total_obs_circular, obs_retangular);
+        auto between = temp.path_connect(new_trajectory[i], new_trajectory[i + 1], total_obs_circular, obs_retangular, obs_tilted);
         if (size(between) > 2) {
             between.erase(between.begin());
             between.pop_back();
