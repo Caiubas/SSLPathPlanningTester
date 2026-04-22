@@ -67,4 +67,3 @@ class detection_balls(object):
     def get_hash(self):
         """Get the LCM hash of the struct"""
         return struct.unpack(">Q", detection_balls._get_packed_fingerprint())[0]
-

@@ -8,6 +8,8 @@ from io import BytesIO
 import struct
 
 import data
+import data
+from data.robot import robot as _robot_cls
 
 class ia(object):
 
@@ -34,7 +36,7 @@ class ia(object):
         LCM Type: int16_t
         """
 
-        self.robots = [ data.robot() for dim0 in range(16) ]
+        self.robots = [ _robot_cls() for dim0 in range(16) ]
         """ LCM Type: data.robot[16] """
 
     def encode(self):
@@ -46,7 +48,7 @@ class ia(object):
     def _encode_one(self, buf):
         buf.write(struct.pack(">qhhh", self.timestamp, self.estrategia, self.processo, self.robots_size))
         for i0 in range(16):
-            assert self.robots[i0]._get_packed_fingerprint() == data.robot._get_packed_fingerprint()
+            assert self.robots[i0]._get_packed_fingerprint() == _robot_cls._get_packed_fingerprint()
             self.robots[i0]._encode_one(buf)
 
     @staticmethod
@@ -65,14 +67,14 @@ class ia(object):
         self.timestamp, self.estrategia, self.processo, self.robots_size = struct.unpack(">qhhh", buf.read(14))
         self.robots = []
         for i0 in range(16):
-            self.robots.append(data.robot._decode_one(buf))
+            self.robots.append(_robot_cls._decode_one(buf))
         return self
 
     @staticmethod
     def _get_hash_recursive(parents):
         if ia in parents: return 0
         newparents = parents + [ia]
-        tmphash = (0x7c342bde0e4cf528+ data.robot._get_hash_recursive(newparents)) & 0xffffffffffffffff
+        tmphash = (0x7c342bde0e4cf528+ _robot_cls._get_hash_recursive(newparents)) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _packed_fingerprint = None

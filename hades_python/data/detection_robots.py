@@ -9,11 +9,11 @@ import struct
 
 class detection_robots(object):
 
-    __slots__ = ["robot_id", "position_x", "position_y", "orientation"]
+    __slots__ = ["robot_id", "position_x", "position_y", "orientation", "detected"]
 
-    __typenames__ = ["int16_t", "float", "float", "float"]
+    __typenames__ = ["int16_t", "float", "float", "float", "boolean"]
 
-    __dimensions__ = [None, None, None, None]
+    __dimensions__ = [None, None, None, None, None]
 
     def __init__(self):
         self.robot_id = 0
@@ -32,6 +32,12 @@ class detection_robots(object):
         LCM Type: float
         """
 
+        self.detected = False
+        """
+        rad
+        LCM Type: boolean
+        """
+
 
     def encode(self):
         buf = BytesIO()
@@ -40,7 +46,7 @@ class detection_robots(object):
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack(">hfff", self.robot_id, self.position_x, self.position_y, self.orientation))
+        buf.write(struct.pack(">hfffb", self.robot_id, self.position_x, self.position_y, self.orientation, self.detected))
 
     @staticmethod
     def decode(data: bytes):
@@ -56,12 +62,13 @@ class detection_robots(object):
     def _decode_one(buf):
         self = detection_robots()
         self.robot_id, self.position_x, self.position_y, self.orientation = struct.unpack(">hfff", buf.read(14))
+        self.detected = bool(struct.unpack('b', buf.read(1))[0])
         return self
 
     @staticmethod
     def _get_hash_recursive(parents):
         if detection_robots in parents: return 0
-        tmphash = (0x5cefce394113435c) & 0xffffffffffffffff
+        tmphash = (0xf171c0a79224a2e3) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _packed_fingerprint = None
@@ -75,4 +82,3 @@ class detection_robots(object):
     def get_hash(self):
         """Get the LCM hash of the struct"""
         return struct.unpack(">Q", detection_robots._get_packed_fingerprint())[0]
-

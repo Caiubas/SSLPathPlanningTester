@@ -16,7 +16,7 @@ class vision(object):
 
     __typenames__ = ["int64_t", "int16_t", "int16_t", "data.detection_robots", "data.detection_robots", "data.detection_balls", "data.detection_geometry"]
 
-    __dimensions__ = [None, None, None, ["robots_yellow_size"], ["robots_blue_size"], None, None]
+    __dimensions__ = [None, None, None, [16], [16], None, None]
 
     def __init__(self):
         self.timestamp = 0
@@ -25,10 +25,10 @@ class vision(object):
         """ LCM Type: int16_t """
         self.robots_blue_size = 0
         """ LCM Type: int16_t """
-        self.robots_yellow = []
-        """ LCM Type: data.detection_robots[robots_yellow_size] """
-        self.robots_blue = []
-        """ LCM Type: data.detection_robots[robots_blue_size] """
+        self.robots_yellow = [ data.detection_robots() for dim0 in range(16) ]
+        """ LCM Type: data.detection_robots[16] """
+        self.robots_blue = [ data.detection_robots() for dim0 in range(16) ]
+        """ LCM Type: data.detection_robots[16] """
         self.balls = data.detection_balls()
         """ LCM Type: data.detection_balls """
         self.field = data.detection_geometry()
@@ -42,10 +42,10 @@ class vision(object):
 
     def _encode_one(self, buf):
         buf.write(struct.pack(">qhh", self.timestamp, self.robots_yellow_size, self.robots_blue_size))
-        for i0 in range(self.robots_yellow_size):
+        for i0 in range(16):
             assert self.robots_yellow[i0]._get_packed_fingerprint() == data.detection_robots._get_packed_fingerprint()
             self.robots_yellow[i0]._encode_one(buf)
-        for i0 in range(self.robots_blue_size):
+        for i0 in range(16):
             assert self.robots_blue[i0]._get_packed_fingerprint() == data.detection_robots._get_packed_fingerprint()
             self.robots_blue[i0]._encode_one(buf)
         assert self.balls._get_packed_fingerprint() == data.detection_balls._get_packed_fingerprint()
@@ -68,10 +68,10 @@ class vision(object):
         self = vision()
         self.timestamp, self.robots_yellow_size, self.robots_blue_size = struct.unpack(">qhh", buf.read(12))
         self.robots_yellow = []
-        for i0 in range(self.robots_yellow_size):
+        for i0 in range(16):
             self.robots_yellow.append(data.detection_robots._decode_one(buf))
         self.robots_blue = []
-        for i0 in range(self.robots_blue_size):
+        for i0 in range(16):
             self.robots_blue.append(data.detection_robots._decode_one(buf))
         self.balls = data.detection_balls._decode_one(buf)
         self.field = data.detection_geometry._decode_one(buf)
@@ -81,7 +81,7 @@ class vision(object):
     def _get_hash_recursive(parents):
         if vision in parents: return 0
         newparents = parents + [vision]
-        tmphash = (0xb27b48fcf3d90b9b+ data.detection_robots._get_hash_recursive(newparents)+ data.detection_robots._get_hash_recursive(newparents)+ data.detection_balls._get_hash_recursive(newparents)+ data.detection_geometry._get_hash_recursive(newparents)) & 0xffffffffffffffff
+        tmphash = (0xca1da1a57eca12f6+ data.detection_robots._get_hash_recursive(newparents)+ data.detection_robots._get_hash_recursive(newparents)+ data.detection_balls._get_hash_recursive(newparents)+ data.detection_geometry._get_hash_recursive(newparents)) & 0xffffffffffffffff
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _packed_fingerprint = None
@@ -95,4 +95,3 @@ class vision(object):
     def get_hash(self):
         """Get the LCM hash of the struct"""
         return struct.unpack(">Q", vision._get_packed_fingerprint())[0]
-

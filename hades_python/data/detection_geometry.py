@@ -133,4 +133,3 @@ class detection_geometry(object):
     def get_hash(self):
         """Get the LCM hash of the struct"""
         return struct.unpack(">Q", detection_geometry._get_packed_fingerprint())[0]
-

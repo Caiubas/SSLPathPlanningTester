@@ -9,7 +9,7 @@ import struct
 
 class robot(object):
 
-    __slots__ = ["id", "spinner", "kick", "vel_tang", "vel_normal", "vel_ang", "kick_speed_x", "kick_speed_z", "wheel_speed", "wheel_fr", "wheel_fl", "wheel_bl", "wheel_br"]
+    __slots__ = ["id", "spinner", "kick", "vel_tang", "vel_normal", "vel_ang", "kick_speed_x", "kick_speed_z", "wheel_speed", "wheel_fr", "wheel_fl", "wheel_bl", "wheel_br", "has_kicker"]
 
     __typenames__ = ["int16_t", "boolean", "boolean", "float", "float", "float", "float", "float", "boolean", "float", "float", "float", "float"]
 
@@ -53,6 +53,7 @@ class robot(object):
         wheel back left;
         LCM Type: float
         """
+        self.has_kicker = False
 
 
     def encode(self):
@@ -62,7 +63,7 @@ class robot(object):
         return buf.getvalue()
 
     def _encode_one(self, buf):
-        buf.write(struct.pack(">hbbfffffbffff", self.id, self.spinner, self.kick, self.vel_tang, self.vel_normal, self.vel_ang, self.kick_speed_x, self.kick_speed_z, self.wheel_speed, self.wheel_fr, self.wheel_fl, self.wheel_bl, self.wheel_br))
+        buf.write(struct.pack(">hbbfffffbffffb", self.id, self.spinner, self.kick, self.vel_tang, self.vel_normal, self.vel_ang, self.kick_speed_x, self.kick_speed_z, self.wheel_speed, self.wheel_fr, self.wheel_fl, self.wheel_bl, self.wheel_br, self.has_kicker))
 
     @staticmethod
     def decode(data: bytes):
@@ -83,12 +84,13 @@ class robot(object):
         self.vel_tang, self.vel_normal, self.vel_ang, self.kick_speed_x, self.kick_speed_z = struct.unpack(">fffff", buf.read(20))
         self.wheel_speed = bool(struct.unpack('b', buf.read(1))[0])
         self.wheel_fr, self.wheel_fl, self.wheel_bl, self.wheel_br = struct.unpack(">ffff", buf.read(16))
+        self.has_kicker = bool(struct.unpack('b', buf.read(1))[0])
         return self
 
     @staticmethod
     def _get_hash_recursive(parents):
         if robot in parents: return 0
-        tmphash = (0x86049ef78a47a59c) & 0xffffffffffffffff
+        tmphash = (0xcdb827186eb2fbfc) & 0xffffffffffffffff  # ← CORRIGIR o hash
         tmphash  = (((tmphash<<1)&0xffffffffffffffff) + (tmphash>>63)) & 0xffffffffffffffff
         return tmphash
     _packed_fingerprint = None
