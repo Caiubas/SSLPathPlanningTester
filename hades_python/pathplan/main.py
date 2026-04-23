@@ -15,6 +15,8 @@ from time import perf_counter
 from typing import Optional
 
 
+
+
 # ---------------------------------------------------------------------------
 # Point
 # ---------------------------------------------------------------------------
@@ -892,9 +894,15 @@ def generate_random_world(
 
     return point_a, point_b, obstacles
 
+def new_no_collision(x0: State2D, controls: ControlSegment2D, world):
+    x1 = controls.integrate(x0)
+    A = Point(x0.x.q, x0.y.q)
+    B = Point(x1.x.q, x1.y.q)
+    return world.is_free_path(A, B)
 
 def no_collision(x0, controls, world):
-    x1 = integrate_control_2d(x0, controls)
+    from pathplan.new_bboptimizer import State2D, ControlSegment2D
+    x1 = controls.integrate(x0)
     A = Point(x0[0], x0[1])
     B = Point(x1[0], x1[1])
     return world.is_free_path(A, B)

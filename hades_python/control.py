@@ -253,21 +253,21 @@ class TrajectoryController:
 
     def __init__(
         self,
-        # Cross-track gains
+        # Cross-track proportional gain: (metres of error) → (m/s correction)
         kp_ct: float = 2.0,
-        ki_ct: float = 0.05,
-        kd_ct: float = 0.10,
-        # Along-track gains
-        kp_at: float = 1.5,
-        ki_at: float = 0.02,
-        kd_at: float = 0.08,
+        # Along-track proportional gain: (metres of error) → (m/s correction)
+        kp_at: float = 0.0,
         # Limits
         vmax: float = 3.0,
-        waypoint_radius: float = 0.08,
+        waypoint_radius: float = 0.10,
         waypoint_t_margin: float = 0.05,
         # Feedforward
         feedforward_weight: float = 1.0,
-        # PID internals
+        # Kept for API compatibility — unused
+        ki_ct: float = 0.0,
+        kd_ct: float = 0.0,
+        ki_at: float = 0.0,
+        kd_at: float = 0.0,
         integral_limit: float = 1.0,
         derivative_alpha: float = 0.8,
     ) -> None:
@@ -277,19 +277,11 @@ class TrajectoryController:
         self.waypoint_t_margin = waypoint_t_margin
         self.feedforward_weight = feedforward_weight
 
-        # Separate PIDs for cross-track and along-track axes
-        self._pid_ct = PIDController1D(
-            kp_ct, ki_ct, kd_ct,
-            output_limit=vmax,
-            integral_limit=integral_limit,
-            derivative_alpha=derivative_alpha,
-        )
-        self._pid_at = PIDController1D(
-            kp_at, ki_at, kd_at,
-            output_limit=vmax,
-            integral_limit=integral_limit,
-            derivative_alpha=derivative_alpha,
-        )
+        # Pure proportional gains on position error → corrective velocity.
+        # No integral (feedforward handles steady-state) and no derivative
+        # (that would act on velocity error, not position error).
+        self.kp_ct = kp_ct
+        self.kp_at = kp_at
 
         # Trajectory state
         self._trajectory: list[TrajectoryPoint] = []
@@ -337,14 +329,11 @@ class TrajectoryController:
         self._trajectory = list(trajectory)
         self._wp_index = 1      # first segment: [0] → [1]
         self._finished = False
-        self._pid_ct.reset()
-        self._pid_at.reset()
         self.diagnostics = ControllerDiagnostics()
 
     def reset(self) -> None:
-        """Reset PID state without changing the trajectory (e.g. after a pause)."""
-        self._pid_ct.reset()
-        self._pid_at.reset()
+        """No-op kept for API compatibility (pure-P has no accumulated state)."""
+        pass
 
     # ------------------------------------------------------------------
     # Main update — called once per control tick
@@ -406,16 +395,24 @@ class TrajectoryController:
         )
 
         # ------------------------------------------------------------------
-        # 3. PID in path frame
+        # 3. Proportional correction in path frame
+        #
+        # Both errors are in metres (position domain).  Multiplying by kp
+        # (units: 1/s) gives a corrective velocity in m/s.  No integral or
+        # derivative terms: the feedforward already handles steady-state
+        # velocity, and the derivative would act on velocity error rather than
+        # position error.
         # ------------------------------------------------------------------
-        # Cross-track: drive e_ct → 0  (push robot back onto segment)
-        # The correction must be applied perpendicular to the segment.
-        ct_correction_scalar = self._pid_ct.update(-proj.e_ct, now)
+        # Cross-track: push robot back onto the segment (perpendicular axis)
+        ct_correction_scalar = self.kp_ct * (-proj.e_ct)
 
-        # Along-track: drive e_at → 0  (close the lag/lead along the segment)
-        at_correction_scalar = self._pid_at.update(-proj.e_at, now)
+        # Along-track: close the lag along the segment (parallel axis)
+        at_correction_scalar = self.kp_at * (-proj.e_at)
 
-        # PID outputs live in the path frame; rotate back to world frame
+        if proj.t > 1.0:
+            at_correction_scalar = 0.0
+
+        # Corrections live in the path frame; rotate back to world frame
         seg_dir  = proj.segment_dir
         seg_perp = Vector(-seg_dir.y, seg_dir.x)  # left of travel
 
@@ -428,9 +425,13 @@ class TrajectoryController:
         # 4. Velocity feedforward
         #    Use the reference velocity interpolated at the projected foot.
         # ------------------------------------------------------------------
+        # magnitude da velocidade desejada
+        speed = math.hypot(proj.ref_velocity.x, proj.ref_velocity.y)
+
+        # direção correta = direção da trajetória
         ff = Vector(
-            self.feedforward_weight * proj.ref_velocity.x,
-            self.feedforward_weight * proj.ref_velocity.y,
+            proj.segment_dir.x * speed,
+            proj.segment_dir.y * speed
         )
 
         # ------------------------------------------------------------------
@@ -505,13 +506,8 @@ class TrajectoryController:
             is_last = self._wp_index == len(self._trajectory) - 1
             if is_last:
                 self._finished = True
-                self._pid_ct.reset()
-                self._pid_at.reset()
             else:
                 self._wp_index += 1
-                # Reset derivative / integral to avoid transient on new segment
-                self._pid_ct.reset()
-                self._pid_at.reset()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -578,13 +574,14 @@ class TrajectoryController:
                 dy = path[i + 1].y - pt.y
                 dist = math.hypot(dx, dy)
                 if dist > 1e-9:
-                    speed = cruise_speed if i < n - 2 else arrival_speed
-                    vel = Vector(speed * dx / dist, speed * dy / dist)
+                    # Every point except the last gets cruise_speed.
+                    # The last point always gets arrival_speed (zero by default).
+                    vel = Vector(cruise_speed * dx / dist, cruise_speed * dy / dist)
                 else:
                     vel = Vector(0.0, 0.0)
             else:
-                # Last point
-                vel = Vector(0.0, 0.0)
+                # Last waypoint: arrive stopped
+                vel = Vector(arrival_speed, 0.0) if arrival_speed else Vector(0.0, 0.0)
             result.append(TrajectoryPoint(position=pt, velocity=vel))
 
         return result

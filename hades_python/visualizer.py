@@ -351,29 +351,22 @@ class PlannerThread(threading.Thread):
         # Lazy import of planner internals (avoids import-time failures)
         try:
             from planner_handler import (  # type: ignore
-                PlannerHandler,
                 ROBOT_RADIUS, VMAX, UMAX, UMIN,
-                TARGET_REACHED_DIST, WAYPOINT_ADVANCE_DIST,
+                TARGET_REACHED_DIST,
                 REPLAN_TIMEOUT, REPLAN_DEVIATION,
                 PATH_PLANNER_MAX_ITER, FIELD_MARGIN,
-                _mm_to_m, _build_field_boundary, _world_vel_to_robot_frame,
+                _mm_to_m, _world_vel_to_robot_frame,
+                _build_trajectory,
                 RobotState as PlannerRobotState,
             )
             from pathplan.main import Point as Pt, Vector as Vec, Circle, Quadrilateral  # type: ignore
             from pathplan.main import World, PathPlanner  # type: ignore
             from pathplan.rrt import RRT  # type: ignore
-            from pathplan.new_bboptimizer import (  # type: ignore
-                State2D, PhaseState, AccelLimits, Steer2D, BangBangOptimizer,
-            )
         except ImportError as exc:
             print(f"[PlannerThread] import error: {exc} - thread idle.")
             return
 
         # Resolve the LCM ia / robot classes once at thread startup.
-        # lcmgen can place the class either directly in the data namespace
-        # (data/__init__.py re-exports it) or inside a sub-module (data/ia.py).
-        # We try both strategies and log a full traceback so the root cause is
-        # always visible in the console.
         import traceback as _tb
         _ia_cls    = None
         _robot_cls = None
@@ -406,8 +399,15 @@ class PlannerThread(threading.Thread):
                     _tb.print_exc()
 
         # Internal planner state: robot_id → PlannerRobotState
+        # PlannerRobotState now carries a traj_controller field (TrajectoryController).
         planner_states: dict[int, PlannerRobotState] = {}
         field_boundary: Optional[Quadrilateral] = None
+
+        # Track the last known target per robot so we can detect target changes
+        # and reset the trajectory controller only when necessary.
+        last_targets: dict[int, Pt] = {}
+
+        import time as _time
 
         print("[PlannerThread] running.")
 
@@ -423,10 +423,10 @@ class PlannerThread(threading.Thread):
             with self._shared.lock:
                 if self._shared.paused:
                     continue
-                vis_robots  = dict(self._shared.robots)       # key → RobotState(vis)
-                targets_in  = dict(self._shared.targets)      # robot_id → Point(m)
+                vis_robots  = dict(self._shared.robots)   # key → RobotState(vis)
+                targets_in  = dict(self._shared.targets)  # robot_id → Point(m)
                 geom        = self._shared.geometry
-                team_blue = self._shared.team_blue
+                team_blue   = self._shared.team_blue
 
             # ── Rebuild field boundary ───────────────────────────────────
             half_l = geom.field_length / 2000.0 - FIELD_MARGIN   # mm→m
@@ -439,7 +439,6 @@ class PlannerThread(threading.Thread):
             ])
 
             # ── Split robots by team ─────────────────────────────────────
-            # passa a ser:
             own_vis = {k: r for k, r in vis_robots.items()
                        if (r.team == "blue") == team_blue}
             opp_vis = {k: r for k, r in vis_robots.items()
@@ -455,7 +454,7 @@ class PlannerThread(threading.Thread):
 
             # ── Sync planner robot states ────────────────────────────────
             for vis_r in own_vis.values():
-                rid = vis_r.robot_id
+                rid   = vis_r.robot_id
                 pos_m = Pt(vis_r.x / 1000.0, vis_r.y / 1000.0)
                 if rid not in planner_states:
                     planner_states[rid] = PlannerRobotState(
@@ -466,14 +465,25 @@ class PlannerThread(threading.Thread):
                 else:
                     planner_states[rid].current_pos = pos_m
 
-            # Propagate targets from SharedState into planner states.
+            # Propagate targets; reset trajectory controller when target changes.
             for rid, tgt in targets_in.items():
-                if rid in planner_states:
-                    planner_states[rid].target_pos = tgt
+                if rid not in planner_states:
+                    continue
+                pstate = planner_states[rid]
+                prev = last_targets.get(rid)
+                if prev is None or abs(prev.x - tgt.x) > 1e-4 or abs(prev.y - tgt.y) > 1e-4:
+                    # New or changed target — clear path so replan triggers below,
+                    # and reset the PID integrators to avoid transient spikes.
+                    pstate.target_pos   = tgt
+                    pstate.current_path = []
+                    pstate.traj_controller.reset()
+                    last_targets[rid]   = tgt
+                else:
+                    pstate.target_pos = tgt
 
             # ── Plan & control ───────────────────────────────────────────
             new_ia:    dict[int, tuple[float, float]] = {}
-            new_paths: dict[int, list] = {}  # robot_id → list[Point] in mm
+            new_paths: dict[int, list] = {}  # vis_key → list of {"pos", "vel"}
 
             own_vis_list = list(own_vis.values())
 
@@ -483,7 +493,22 @@ class PlannerThread(threading.Thread):
                     continue
                 pstate = planner_states[rid]
                 if pstate.target_pos is None:
-                    continue   # nothing to do for this robot
+                    continue
+
+                pos    = pstate.current_pos
+                target = pstate.target_pos
+
+                # ── Target-reached check ─────────────────────────────────
+                if pos.distance_to(target) < TARGET_REACHED_DIST and pstate.current_vel.x == 0.0 and pstate.current_vel.y == 0.0 and False:
+                    print(f"[PlannerThread] Robot {rid} reached target.")
+                    pstate.target_pos   = None
+                    pstate.current_path = []
+                    pstate.current_vel  = Vec(0.0, 0.0)
+                    pstate.traj_controller.reset()
+                    last_targets.pop(rid, None)
+                    with self._shared.lock:
+                        self._shared.targets.pop(rid, None)
+                    continue
 
                 world = World(
                     obstacles=opp_obstacles + [
@@ -497,34 +522,19 @@ class PlannerThread(threading.Thread):
                     boundaries=field_boundary,
                 )
 
-                # --- Replan logic (mirrors PlannerHandler._plan_and_control) ---
-                import time as _time
-                pos    = pstate.current_pos
-                target = pstate.target_pos
-
-                if pos.distance_to(target) < TARGET_REACHED_DIST and False:
-                    print(f"[PlannerThread] Robot {rid} reached target.")
-                    pstate.target_pos = None
-                    pstate.current_path = []
-                    # Clear target in SharedState
-                    with self._shared.lock:
-                        self._shared.targets.pop(rid, None)
-                    continue
-
+                # ── Replan logic ─────────────────────────────────────────
                 now = _time.time()
                 need_replan = (
                     not pstate.current_path
                     or now - pstate.last_planned_at > REPLAN_TIMEOUT
                 )
+                if need_replan: print("REPLAN TIMEOUT", now - pstate.last_planned_at > REPLAN_TIMEOUT)
                 if not need_replan and pstate.current_path:
                     expected = pstate.current_path[
                         min(pstate.path_index, len(pstate.current_path) - 1)
                     ]
-                    if pos.distance_to(expected) > REPLAN_DEVIATION:
-                        need_replan = True
 
                 if need_replan:
-                    # PathPlanner with RRT fallback
                     path: list = []
                     try:
                         path = PathPlanner(world, PATH_PLANNER_MAX_ITER).plan(pos, target)
@@ -536,77 +546,71 @@ class PlannerThread(threading.Thread):
                         except Exception:
                             pass
                     if path:
-                        pstate.current_path  = path
-                        pstate.path_index    = 0
+                        pstate.current_path    = path
+                        pstate.path_index      = 0
                         pstate.last_planned_at = _time.time()
+                        # Build TrajectoryPoint list with reference velocities from
+                        # BangBangOptimizer (falls back to cruise profile on error).
+                        traj = _build_trajectory(path, pstate.current_vel, world)
+                        pstate.traj_controller.set_trajectory(traj)
+                        print(pstate.traj_controller._trajectory)
 
                 if not pstate.current_path:
                     continue
 
-                # Advance waypoint
-                while pstate.path_index < len(pstate.current_path) - 1:
-                    wp = pstate.current_path[pstate.path_index]
-                    if pos.distance_to(wp) < WAYPOINT_ADVANCE_DIST:
-                        pstate.path_index += 1
-                    else:
-                        break
-
-                next_wp = pstate.current_path[pstate.path_index]
-
-                # Bang-bang velocity command
+                # ── PID trajectory-following control ─────────────────────
+                # TrajectoryController handles:
+                #   • orthogonal projection onto the current segment
+                #   • separate PID for cross-track and along-track errors
+                #   • velocity feedforward from the reference trajectory
+                #   • waypoint advancement (distance + projection-parameter check)
                 try:
-                    vi     = pstate.current_vel
-                    limits = AccelLimits(UMIN, UMAX, vmax=VMAX)
-                    steer  = Steer2D(limits)
+                    cmd: Vec = pstate.traj_controller.update(pos, now=_time.monotonic())
 
-                    x0  = State2D(PhaseState(pos.x, vi.x), PhaseState(pos.y, vi.y))
-                    seq = steer.steer_list([pos, next_wp], vi)
+                    # Sync legacy path_index with the controller's waypoint index
+                    # so the deviation-based replan check above stays meaningful.
+                    pstate.path_index = min(
+                        pstate.traj_controller.waypoint_index,
+                        len(pstate.current_path) - 1,
+                    )
 
-                    def _col_free(pt: Pt) -> bool:
-                        for obs in world.obstacles:
-                            if isinstance(obs, Circle):
-                                if obs.center.distance_to(pt) < obs.radius:
-                                    return False
-                        return True
+                    # Carry the commanded velocity forward as the estimated state
+                    # for the next BangBang trajectory build.
+                    pstate.current_vel = cmd
 
-                    opt    = BangBangOptimizer(steer, _col_free, world)
-                    result = opt.optimize(x0, seq)
-                    states = result.integrate_list(x0)
+                    vt, vn = _world_vel_to_robot_frame(
+                        cmd.x, cmd.y, vis_r.orientation
+                    )
+                    new_ia[rid] = (vt, vn)
 
-                    if states:
-                        statelist = [[states[i].x.v, states[i].x.v] for i in range(len(states))]
-                        print(statelist)
-                        ns: State2D = states[1]
-                        vel_x, vel_y = ns.x.v, ns.y.v
-                        pstate.current_vel = Vec(vel_x, vel_y)
-                        vt, vn = _world_vel_to_robot_frame(
-                            vel_x, vel_y, vis_r.orientation
-                        )
-                        new_ia[rid] = (vt, vn)
                 except Exception as exc:
                     print(f"[PlannerThread] control error robot {rid}: {exc}")
 
-                # Convert path waypoints to mm for the visualizer
-                # key in vis_robots for this robot
+                # ── Path data for the visualizer (mm) ────────────────────
                 vis_key = next(
                     (k for k, r in vis_robots.items() if r.robot_id == rid), None
                 )
                 if vis_key is not None:
+                    # Expose TrajectoryController waypoints with their reference
+                    # velocities so the renderer can draw the planned trajectory.
+                    traj_pts = pstate.traj_controller._trajectory  # list[TrajectoryPoint]
                     new_paths[vis_key] = [
-                        Pt(p.x * 1000.0, p.y * 1000.0)
-                        for p in pstate.current_path
+                        {
+                            "pos": (tp.position.x * 1000.0, tp.position.y * 1000.0),  # mm
+                            "vel": (tp.velocity.x, tp.velocity.y),                     # m/s
+                        }
+                        for tp in traj_pts
                     ]
 
             # ── Write results back to SharedState ────────────────────────
             with self._shared.lock:
                 self._shared.ia_commands.update(new_ia)
-                # Remove entries for robots that no longer have targets
+                # Remove ia_commands for robots that no longer have active targets
                 active_rids = {
                     r.robot_id for r in own_vis.values()
                     if planner_states.get(r.robot_id) and
                        planner_states[r.robot_id].target_pos is not None
                 }
-                # Keep ia_commands only for active robots; zero out finished ones
                 for k in list(self._shared.ia_commands.keys()):
                     if k not in active_rids:
                         del self._shared.ia_commands[k]
@@ -615,29 +619,26 @@ class PlannerThread(threading.Thread):
             # ── Publish IA over LCM if available ─────────────────────────
             if self._lc_pub is not None and _LCM_AVAILABLE and _DATA_AVAILABLE and _ia_cls is not None:
                 try:
-                    msg_ia            = _ia_cls()
-                    msg_ia.timestamp  = 0
-                    msg_ia.estrategia = 0
-                    msg_ia.processo   = 0
+                    msg_ia             = _ia_cls()
+                    msg_ia.timestamp   = 0
+                    msg_ia.estrategia  = 0
+                    msg_ia.processo    = 0
                     msg_ia.robots_size = len(new_ia)
 
                     # ia.robots is a fixed array of exactly 16 slots.
-                    # Fill active robots first; leave the rest as zero-velocity
-                    # default instances so the encoder always sees 16 elements.
                     slots = [_robot_cls() for _ in range(16)]
                     for idx, (rid, (vt, vn)) in enumerate(new_ia.items()):
                         if idx >= 16:
                             break
-                        print(rid, vt, vn)
-                        s               = slots[idx]
-                        s.id            = rid
-                        s.vel_tang      = vt
-                        s.vel_normal    = vn
-                        s.vel_ang       = 0.0
-                        s.kick          = 0
-                        s.spinner       = 0
-                        s.kick_speed_x  = 0.0
-                        s.kick_speed_z  = 0.0
+                        s              = slots[idx]
+                        s.id           = rid
+                        s.vel_tang     = vt
+                        s.vel_normal   = vn
+                        s.vel_ang      = 0.0
+                        s.kick         = 0
+                        s.spinner      = 0
+                        s.kick_speed_x = 0.0
+                        s.kick_speed_z = 0.0
 
                     msg_ia.robots = slots
                     self._lc_pub.publish("IA", msg_ia.encode())
@@ -646,6 +647,7 @@ class PlannerThread(threading.Thread):
                     _tb.print_exc()
 
         print("[PlannerThread] exiting.")
+
 
 
 # ---------------------------------------------------------------------------
@@ -885,13 +887,13 @@ class Renderer:
     # ------------------------------------------------------------------
 
     def _draw_robots(
-        self,
-        tf:           CoordTransform,
-        robots:       dict[int, RobotState],
-        paths:        dict[int, list[Point]],
-        ia_commands:  dict[int, tuple[float, float]],
-        selected_key: Optional[int],
-        active_team:  str,
+            self,
+            tf: CoordTransform,
+            robots: dict[int, RobotState],
+            paths: dict[int, list[Point]],
+            ia_commands: dict[int, tuple[float, float]],
+            selected_key: Optional[int],
+            active_team: str,
     ) -> None:
         """Draw all robots, highlights, paths, and velocity arrows."""
         r_px = tf.robot_radius_px()
@@ -915,7 +917,7 @@ class Renderer:
                     self._screen, C["select"], (cx, cy), r_px + 4, 3
                 )
 
-            # Orientation arrow
+            # Orientation arrow (frente do robô)
             angle = robot.orientation
             arr_len = r_px * 1.4
             ax = cx + int(arr_len * math.cos(angle))
@@ -929,31 +931,65 @@ class Renderer:
             self._screen.blit(label, (lx, ly))
 
             # Waypoint path (selected robot only)
-            if key == selected_key and key in paths and len(paths[key]) > 1:
-                pts = [tf.mm_to_px(p.x, p.y) for p in paths[key]]
-                self._draw_dashed_polyline(pts, C["waypoint"], width=2)
-                # Draw waypoint dots
-                for pt in pts[1:]:
-                    pygame.draw.circle(self._screen, C["waypoint"], pt, 4)
+            # No Renderer._draw_robots, substitua a seção do Waypoint path:
 
-            # Velocity arrow (if IA command available for this robot's real id)
-            if robot.robot_id in ia_commands:
-                vt, vn = ia_commands[robot.robot_id]
+            # Waypoint path (selected robot only)
+            # Waypoint path (selected robot only)
+            # No Renderer._draw_robots, dentro da parte de waypoints:
+
+            if key == selected_key and key in paths and len(paths[key]) > 1:
+                path_data = paths[key]
+
+                # 1. Desenhar a linha base (o "fio" da trajetória)
+                pts_px = [tf.mm_to_px(p["pos"][0], p["pos"][1]) for p in path_data]
+                self._draw_dashed_polyline(pts_px, (100, 100, 100), width=1)
+
+                # 2. Iterar sobre os dados para desenhar PONTOS e VELOCIDADES
+                for data in path_data[::3]:  # [::3] para não sobrepor tudo, ajuste conforme necessário
+                    px, py = tf.mm_to_px(data["pos"][0], data["pos"][1])
+                    vx, vy = data["vel"]
+
+                    # --- DESENHO DO PONTO (Estado) ---
+                    # Mantendo os pontos que marcam a troca de estado/posição
+                    pygame.draw.circle(self._screen, C["waypoint"], (px, py), 3)
+
+                    # --- DESENHO DA VELOCIDADE (Vetor) ---
+                    speed = math.hypot(vx, vy)
+                    if speed > 0.05:
+                        v_scale = 40
+                        ex = px + int(vx * v_scale)
+                        ey = py - int(vy * v_scale)
+
+                        # Seta de velocidade saindo do ponto
+                        pygame.draw.line(self._screen, C["waypoint"], (px, py), (ex, ey), 2)
+                        self._draw_mini_arrowhead(self._screen, C["waypoint"], (px, py), (ex, ey))
+
+            # --- ADIÇÃO: VETOR DE VELOCIDADE ---
+            # O dicionário ia_commands usa o robot_id real (inteiro positivo)
+            actual_id = robot.robot_id
+            if actual_id in ia_commands:
+                vt, vn = ia_commands[actual_id]
                 speed = math.hypot(vt, vn)
-                if speed > 0.01:
-                    scale_px = tf.scale_mm(500)   # 500 mm/s → full arrow
-                    norm = speed / max(speed, 3.0)  # cap at 3 m/s display
-                    # vel direction: vt along orientation, vn perpendicular
-                    va_x = vt * math.cos(angle) - vn * math.sin(angle)
-                    va_y = vt * math.sin(angle) + vn * math.cos(angle)
-                    mag  = math.hypot(va_x, va_y)
-                    if mag > 1e-9:
-                        va_x /= mag
-                        va_y /= mag
-                    ex = cx + int(va_x * norm * scale_px)
-                    ey = cy - int(va_y * norm * scale_px)
-                    pygame.draw.line(self._screen, C["vel_arrow"], (cx, cy), (ex, ey), max(1, r_px // 8))
-                    self._draw_arrowhead(self._screen, C["vel_arrow"], (cx, cy), (ex, ey), size=8)
+
+                if speed > 0.05:  # Filtro de ruído/velocidade mínima
+                    # Converter velocidade local (robot frame) para global (field frame)
+                    # No SSL: x_global = vt*cos(theta) - vn*sin(theta)
+                    #         y_global = vt*sin(theta) + vn*cos(theta)
+                    vx_global = vt * math.cos(angle) - vn * math.sin(angle)
+                    vy_global = vt * math.sin(angle) + vn * math.cos(angle)
+
+                    # Escalonamento para visualização (ex: 1m/s = 100px de vetor)
+                    # Ajuste o fator 'scale_factor' conforme a necessidade de visibilidade
+                    scale_factor = tf.scale_mm(400)  # Referência visual de 400mm
+
+                    # Fim do vetor em pixels
+                    # Note o sinal de menos no Y pois o Pygame inverte o eixo Y da tela
+                    ex = cx + int(vx_global * scale_factor)
+                    ey = cy - int(vy_global * scale_factor)
+
+                    # Desenha a linha do vetor e a ponta da seta
+                    pygame.draw.line(self._screen, C["vel_arrow"], (cx, cy), (ex, ey), 3)
+                    self._draw_arrowhead(self._screen, C["vel_arrow"], (cx, cy), (ex, ey), size=10)
 
     # ------------------------------------------------------------------
     # Ball
@@ -1088,6 +1124,28 @@ class Renderer:
                  int(end[1] - uy * size - py * size * 0.5))
         pygame.draw.polygon(surf, colour, [tip, base1, base2])
 
+
+    @staticmethod
+    def _draw_mini_arrowhead(surf, color, start, end):
+        """Desenha uma ponta de seta pequena para vetores de trajetória."""
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        dist = math.hypot(dx, dy)
+        if dist < 5: return  # Muito pequeno para desenhar ponta
+
+        # Vetor unitário reverso
+        ux, uy = dx / dist, dy / dist
+
+        # Tamanho da ponta
+        size = 5
+
+        # Pontos da base da ponta da seta
+        # Rotaciona 150 graus para as "asas" da seta
+        angle = math.radians(150)
+        for a in [angle, -angle]:
+            rx = ux * math.cos(a) - uy * math.sin(a)
+            ry = ux * math.sin(a) + uy * math.cos(a)
+            p_base = (end[0] + rx * size, end[1] + ry * size)
+            pygame.draw.line(surf, color, end, p_base, 2)
 
 # ---------------------------------------------------------------------------
 # LCM publisher helper

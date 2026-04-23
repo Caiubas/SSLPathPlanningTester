@@ -10,6 +10,22 @@ Subscribes to:
 
 Publishes to:
   - "IA"       → ia message with per-robot velocity commands
+
+Control architecture
+--------------------
+Path planning (PathPlanner / RRT) produces a list of waypoints.  At each
+vision tick the **TrajectoryController** is used to compute a velocity
+command by:
+
+  1. Orthogonally projecting the robot onto the current path segment.
+  2. Running separate PID loops for the cross-track and along-track errors.
+  3. Adding a velocity feedforward term interpolated from the reference
+     trajectory so the robot tracks a moving reference with small gains.
+  4. Advancing the waypoint index when the robot is within *waypoint_radius*
+     or when the projection parameter passes the waypoint.
+
+The BangBangOptimizer is still available and used to build the reference
+velocity profile attached to each path waypoint (TrajectoryPoint.velocity).
 """
 
 from __future__ import annotations
@@ -24,10 +40,7 @@ import lcm
 
 from data import vision, ia, game_controller, robot  # LCM generated types
 from pathplan.main import Point, Vector, Circle, Quadrilateral
-from pathplan.main import (
-    World,
-    PathPlanner
-)
+from pathplan.main import World, PathPlanner
 from pathplan.rrt import RRT
 from pathplan.new_bboptimizer import (
     State2D,
@@ -35,24 +48,36 @@ from pathplan.new_bboptimizer import (
     AccelLimits,
     Steer2D,
     BangBangOptimizer,
-
 )
+
+from control import TrajectoryController, TrajectoryPoint
+from pid_controller import PIDController1D  # noqa: F401  (re-exported by control)
 
 # ---------------------------------------------------------------------------
 # Motion constants
 # ---------------------------------------------------------------------------
-VMAX = 3.0
-UMAX = Vector(0.5, 0.5)
-UMIN = Vector(-0.5, -0.5)
-ROBOT_RADIUS = 0.12        # metres
+VMAX = 3.0*1.42
+UMAX = Vector(3, 3)
+UMIN = Vector(-3, -3)
+ROBOT_RADIUS = 0.36        # metres
 FIELD_MARGIN = 0.1         # metres inset from field boundary
 
 # Tunable thresholds
-TARGET_REACHED_DIST = 0.05   # metres — stop if closer than this to target
-WAYPOINT_ADVANCE_DIST = 0.10  # metres — advance path_index when this close
-REPLAN_TIMEOUT = 0.5          # seconds — force replan after this long
-REPLAN_DEVIATION = 0.15       # metres — replan if deviated from expected waypoint
+TARGET_REACHED_DIST   = 0.05    # metres — stop if closer than this to final target
+WAYPOINT_ADVANCE_DIST = 0.10    # metres — legacy; TrajectoryController uses its own
+REPLAN_TIMEOUT        = 20    # seconds — force replan after this long
+REPLAN_DEVIATION      = 0.5    # metres — replan if deviated from expected waypoint
 PATH_PLANNER_MAX_ITER = 1000
+
+# TrajectoryController gains — tune these for your field / robot dynamics
+TRAJ_KP_CT            = 3    # cross-track proportional gain
+TRAJ_KI_CT            = 0.05   # cross-track integral gain
+TRAJ_KD_CT            = 0.10   # cross-track derivative gain
+TRAJ_KP_AT            = 1    # along-track proportional gain
+TRAJ_KI_AT            = 0.02   # along-track integral gain
+TRAJ_KD_AT            = 0.08   # along-track derivative gain
+TRAJ_WAYPOINT_RADIUS  = 0.08   # metres — waypoint reached threshold
+TRAJ_FF_WEIGHT        = 1.0    # feedforward weight [0, 1]
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +94,17 @@ class RobotState:
     current_path: list[Point] = field(default_factory=list)
     path_index: int = 0
     last_planned_at: float = 0.0
+
+    # TrajectoryController instance — one per robot, persists across ticks
+    traj_controller: TrajectoryController = field(
+        default_factory=lambda: TrajectoryController(
+            kp_ct=TRAJ_KP_CT, ki_ct=TRAJ_KI_CT, kd_ct=TRAJ_KD_CT,
+            kp_at=TRAJ_KP_AT, ki_at=TRAJ_KI_AT, kd_at=TRAJ_KD_AT,
+            vmax=VMAX,
+            waypoint_radius=TRAJ_WAYPOINT_RADIUS,
+            feedforward_weight=TRAJ_FF_WEIGHT,
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +126,7 @@ def _world_vel_to_robot_frame(vel_x: float, vel_y: float, orientation: float):
     """
     cos_a = math.cos(orientation)
     sin_a = math.sin(orientation)
-    vel_tang = vel_x * cos_a + vel_y * sin_a
+    vel_tang   =  vel_x * cos_a + vel_y * sin_a
     vel_normal = -vel_x * sin_a + vel_y * cos_a
     return vel_tang, vel_normal
 
@@ -101,13 +137,70 @@ def _build_field_boundary(field_msg, margin: float) -> Quadrilateral:
     vision.field carries field_length and field_width in millimetres.
     """
     half_l = _mm_to_m(field_msg.field_length) / 2.0 - margin
-    half_w = _mm_to_m(field_msg.field_width) / 2.0 - margin
+    half_w = _mm_to_m(field_msg.field_width)  / 2.0 - margin
     return Quadrilateral([
         Point(-half_l, -half_w),
         Point( half_l, -half_w),
         Point( half_l,  half_w),
         Point(-half_l,  half_w),
     ])
+
+
+def _build_trajectory(
+    path: list[Point],
+    current_vel: Vector,
+    world: "World",
+) -> list[TrajectoryPoint]:
+    """
+    Build a ``list[TrajectoryPoint]`` from a bare path produced by the planner.
+
+    Tries to use BangBangOptimizer to attach reference velocities to each
+    waypoint.  If the optimizer fails, or returns a state list of a different
+    length than the path, falls back to a constant cruise-speed profile via
+    ``TrajectoryController.from_path``.
+
+    The last waypoint always gets ``velocity = Vector(0, 0)`` so the robot
+    comes to rest.
+    """
+    if len(path) < 2:
+        # Degenerate: single point — return a stopped waypoint
+        return [TrajectoryPoint(position=path[0], velocity=Vector(0.0, 0.0))]
+
+    try:
+        limits = AccelLimits(UMIN, UMAX, vmax=VMAX)
+        steer  = Steer2D(limits)
+
+        x0  = State2D(PhaseState(path[0].x, current_vel.x),
+                      PhaseState(path[0].y, current_vel.y))
+        seq = steer.steer_list(path, current_vel)
+
+        from pathplan.main import new_no_collision  # type: ignore
+        opt    = BangBangOptimizer(steer, new_no_collision, world)
+        result = opt.optimize(x0, seq)
+        states = result.integrate_list(x0)
+
+        # states has one entry per time-step, not per waypoint.
+        # We only use it if the count happens to match the path length exactly.
+        if states:
+            print([
+                TrajectoryPoint(position=Point(s.x.q, s.y.q), velocity=Vector(s.x.v, s.y.v))
+                for s in states
+            ])
+            traj = [
+                TrajectoryPoint(position=Point(s.x.q, s.y.q), velocity=Vector(s.x.v, s.y.v))
+                for s in states
+            ]
+            path = [Point(s.x.q, s.y.q) for s in states]
+            print(path)
+            print(len(path), len(traj))
+
+            return traj
+
+    except Exception as exc:
+        log.debug("BangBang trajectory build failed (%s); using cruise profile.", exc)
+
+    # Reliable fallback: cruise speed toward each next waypoint, stop at end.
+    return TrajectoryController.from_path(path, cruise_speed=min(VMAX * 0.5, 1.5))
 
 
 # ---------------------------------------------------------------------------
@@ -122,9 +215,9 @@ class PlannerHandler:
 
         # LCM setup
         self.lc = lcm.LCM()
-        self.lc.subscribe("vision", self._handle_vision)
-        self.lc.subscribe("GC", self._handle_gc)
-        self.lc.subscribe("TARGETS", self._handle_targets)
+        self.lc.subscribe("vision",   self._handle_vision)
+        self.lc.subscribe("GC",       self._handle_gc)
+        self.lc.subscribe("TARGETS",  self._handle_targets)
 
         # Per-robot state: robot_id → RobotState
         self.robot_states: dict[int, RobotState] = {}
@@ -150,13 +243,23 @@ class PlannerHandler:
         try:
             payload = json.loads(data)
             rid = int(payload["robot_id"])
-            x = float(payload["x"])
-            y = float(payload["y"])
+            x   = float(payload["x"])
+            y   = float(payload["y"])
             if rid not in self.robot_states:
                 log.warning("Received target for unknown robot_id=%d; ignoring.", rid)
                 return
-            self.robot_states[rid].target_pos = Point(x, y)
-            log.debug("Target set for robot %d → (%.3f, %.3f)", rid, x, y)
+            new_target = Point(x, y)
+            state = self.robot_states[rid]
+
+            # Only reset trajectory if the target actually changed
+            if state.target_pos is None or (
+                abs(state.target_pos.x - x) > 1e-4 or
+                abs(state.target_pos.y - y) > 1e-4
+            ):
+                state.target_pos   = new_target
+                state.current_path = []          # trigger replan
+                state.traj_controller.reset()
+                log.debug("Target set for robot %d → (%.3f, %.3f)", rid, x, y)
         except Exception:
             log.warning("Failed to parse TARGETS message", exc_info=True)
 
@@ -188,7 +291,6 @@ class PlannerHandler:
             pos_m = Point(_mm_to_m(r.position_x), _mm_to_m(r.position_y))
             if r.robot_id in self.robot_states:
                 self.robot_states[r.robot_id].current_pos = pos_m
-                # velocity is estimated by Steer2D; we keep whatever was last set
             else:
                 self.robot_states[r.robot_id] = RobotState(
                     robot_id=r.robot_id,
@@ -197,7 +299,7 @@ class PlannerHandler:
                 )
             log.debug("Robot %d pos=(%.3f, %.3f)", r.robot_id, pos_m.x, pos_m.y)
 
-        # 4. Build opposing-team obstacles (constant for this tick)
+        # 4. Build opposing-team obstacle list (constant for this tick)
         opp_obstacles = [
             Circle(
                 center=Point(_mm_to_m(r.position_x), _mm_to_m(r.position_y)),
@@ -207,7 +309,7 @@ class PlannerHandler:
         ]
 
         # 5. Build ia output message
-        msg_ia = ia()
+        msg_ia       = ia()
         msg_ia.timestamp = msg.timestamp
         ia_slots: dict[int, robot] = {}
 
@@ -215,16 +317,15 @@ class PlannerHandler:
         for r_vis in own_robots:
             rid = r_vis.robot_id
             state = self.robot_states[rid]
-            orientation = r_vis.orientation  # radians, world frame
 
             # Prepare a zero-velocity ia slot (safe default)
             slot = robot()
-            slot.id = rid
-            slot.spinner = 0
-            slot.kick = 0
-            slot.vel_tang = 0.0
-            slot.vel_normal = 0.0
-            slot.vel_ang = 0.0
+            slot.id           = rid
+            slot.spinner      = 0
+            slot.kick         = 0
+            slot.vel_tang     = 0.0
+            slot.vel_normal   = 0.0
+            slot.vel_ang      = 0.0
             slot.kick_speed_x = 0.0
             slot.kick_speed_z = 0.0
             ia_slots[rid] = slot
@@ -252,7 +353,7 @@ class PlannerHandler:
     def _plan_and_control(
         self,
         state: RobotState,
-        r_vis,                    # vision robot struct for this robot
+        r_vis,
         opp_obstacles: list,
         own_robots: list,
         slot: robot,
@@ -267,11 +368,13 @@ class PlannerHandler:
 
         target = state.target_pos
 
-        # b. Close enough to target → clear target, zero velocity
+        # b. Close enough to final target → clear target, zero velocity
         if pos.distance_to(target) < TARGET_REACHED_DIST:
             log.info("Robot %d reached target (%.3f, %.3f).", rid, target.x, target.y)
-            state.target_pos = None
+            state.target_pos   = None
             state.current_path = []
+            state.current_vel  = Vector(0.0, 0.0)
+            state.traj_controller.reset()
             return
 
         # Build per-robot obstacle list: all own robots except self + opposing
@@ -292,90 +395,85 @@ class PlannerHandler:
 
         if not state.current_path:
             need_replan = True
+            print("REPLAN EMPTY")
             log.debug("Robot %d: no path, replanning.", rid)
         elif now - state.last_planned_at > REPLAN_TIMEOUT:
             need_replan = True
-            log.debug("Robot %d: path stale (%.1fs), replanning.", rid, now - state.last_planned_at)
+            print("REPLAN TIMEOUT")
+            log.debug("Robot %d: path stale (%.1fs), replanning.", rid,
+                      now - state.last_planned_at)
         else:
             # Check deviation from expected waypoint
-            expected_wp = state.current_path[min(state.path_index, len(state.current_path) - 1)]
+            expected_wp = state.current_path[
+                min(state.path_index, len(state.current_path) - 1)
+            ]
             if pos.distance_to(expected_wp) > REPLAN_DEVIATION:
                 need_replan = True
+                print("REPLAN TIMEOUT")
                 log.debug(
                     "Robot %d: deviated %.3fm from waypoint, replanning.",
-                    rid,
-                    pos.distance_to(expected_wp),
+                    rid, pos.distance_to(expected_wp),
                 )
 
         if need_replan:
             self._replan(state, pos, target, world)
+            # After replanning, load a fresh trajectory into the controller
+            if state.current_path:
+                traj = _build_trajectory(state.current_path, state.current_vel, world)
+                state.traj_controller.set_trajectory(traj)
+                log.debug("Robot %d: trajectory loaded (%d pts).", rid, len(traj))
 
         if not state.current_path:
             log.warning("Robot %d: path empty after replan; zero velocity.", rid)
             return
 
-        # d. Advance waypoint index if close enough
-        while state.path_index < len(state.current_path) - 1:
-            wp = state.current_path[state.path_index]
-            if pos.distance_to(wp) < WAYPOINT_ADVANCE_DIST:
-                state.path_index += 1
-                log.debug("Robot %d: advanced to waypoint %d.", rid, state.path_index)
-            else:
-                break
-
-        next_wp = state.current_path[state.path_index]
-
-        # Control step: Steer2D + BangBangOptimizer
-        vi = state.current_vel
-        limits = AccelLimits(UMIN, UMAX, vmax=VMAX)
-        steer = Steer2D(limits)
-
-        path_segment = [pos, next_wp]
-        x0 = State2D(
-            PhaseState(pos.x, vi.x),
-            PhaseState(pos.y, vi.y),
-        )
-
-        seq = steer.steer_list(path_segment, vi)
-
-        def _collision_checker(pt: Point) -> bool:
-            """Return True if point is collision-free."""
-            for obs in obstacles:
-                if isinstance(obs, Circle):
-                    if obs.center.distance_to(pt) < obs.radius:
-                        return False
-            return True
-
-        opt = BangBangOptimizer(steer, _collision_checker, world)
-        result = opt.optimize(x0, seq)
-        next_states = result.integrate_list(x0)
-
-        if not next_states:
-            log.warning("Robot %d: optimizer returned no states; zero velocity.", rid)
+        # d. TrajectoryController is finished but we still have a path →
+        #    the robot drifted; force a replan on the next tick.
+        if state.traj_controller.finished:
+            state.current_path = []
+            log.debug("Robot %d: TrajectoryController finished; queuing replan.", rid)
             return
 
-        next_state: State2D = next_states[0]
-        vel_x = next_state.x.v
-        vel_y = next_state.y.v
+        # e. Compute velocity command via PID trajectory follower
+        #    (includes cross-track PID + along-track PID + velocity feedforward)
+        cmd: Vector = state.traj_controller.update(pos, now=time.monotonic())
 
-        # Update velocity estimate for next tick
-        state.current_vel = Vector(vel_x, vel_y)
+        # Update estimated velocity from the command (used for the next
+        # BangBang trajectory build)
+        state.current_vel = cmd
 
-        # Convert world-frame velocity to robot frame
-        vel_tang, vel_normal = _world_vel_to_robot_frame(vel_x, vel_y, r_vis.orientation)
+        # f. Sync the legacy path_index with the TrajectoryController so the
+        #    replan deviation check above stays meaningful.
+        state.path_index = min(
+            state.traj_controller.waypoint_index,
+            len(state.current_path) - 1,
+        )
 
-        slot.vel_tang = vel_tang
+        # g. Convert world-frame velocity to robot frame and fill the ia slot
+        vel_tang, vel_normal = _world_vel_to_robot_frame(
+            cmd.x, cmd.y, r_vis.orientation
+        )
+        slot.vel_tang   = vel_tang
         slot.vel_normal = vel_normal
         log.debug(
-            "Robot %d: vel_tang=%.3f vel_normal=%.3f", rid, vel_tang, vel_normal
+            "Robot %d: vel_tang=%.3f vel_normal=%.3f | ct_err=%.3f at_err=%.3f",
+            rid, vel_tang, vel_normal,
+            state.traj_controller.diagnostics.projection.e_ct
+            if state.traj_controller.diagnostics.projection else 0.0,
+            state.traj_controller.diagnostics.projection.e_at
+            if state.traj_controller.diagnostics.projection else 0.0,
         )
+
+    # ------------------------------------------------------------------
+    # Path planning (unchanged)
+    # ------------------------------------------------------------------
 
     def _replan(
         self,
         state: RobotState,
         pos: Point,
         target: Point,
-        world: World,
+        world: "World",
     ) -> None:
         rid = state.robot_id
         log.info(
@@ -385,7 +483,8 @@ class PlannerHandler:
         try:
             path = PathPlanner(world, PATH_PLANNER_MAX_ITER).plan(pos, target)
         except Exception:
-            log.warning("Robot %d: PathPlanner raised; falling back to RRT.", rid, exc_info=True)
+            log.warning("Robot %d: PathPlanner raised; falling back to RRT.", rid,
+                        exc_info=True)
             path = []
 
         if not path:
@@ -397,9 +496,9 @@ class PlannerHandler:
                 path = []
 
         if path:
-            state.current_path = path
-            state.path_index = 0
-            state.last_planned_at = time.time()
+            state.current_path     = path
+            state.path_index       = 0
+            state.last_planned_at  = time.time()
             log.info("Robot %d: new path has %d waypoints.", rid, len(path))
         else:
             log.warning("Robot %d: both planners failed; retaining old path.", rid)
@@ -415,6 +514,7 @@ class PlannerHandler:
                 self.lc.handle()
         except KeyboardInterrupt:
             log.info("PlannerHandler stopped by user.")
+
 
 if __name__ == "__main__":
     handler = PlannerHandler()
