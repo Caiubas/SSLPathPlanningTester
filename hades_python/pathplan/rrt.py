@@ -74,7 +74,9 @@ class RRT:
                 self.nodes.append(new_node)
 
                 if new_point.distance_to(goal) < self.step_size:
-                    return self.backtrack(new_node)
+                    if self.world.is_free_path(new_point, goal):
+                        goal_node = Node(goal, new_node)
+                        return self.backtrack(goal_node)
 
             # -----------------------------------
             # CASO 2: colisão → usar inteligência

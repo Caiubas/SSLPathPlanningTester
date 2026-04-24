@@ -410,7 +410,7 @@ class TrajectoryController:
         at_correction_scalar = self.kp_at * (-proj.e_at)
 
         if proj.t > 1.0:
-            at_correction_scalar = 0.0
+            at_correction_scalar = -self.kp_at * (-proj.e_at)
 
         # Corrections live in the path frame; rotate back to world frame
         seg_dir  = proj.segment_dir
@@ -427,6 +427,14 @@ class TrajectoryController:
         # ------------------------------------------------------------------
         # magnitude da velocidade desejada
         speed = math.hypot(proj.ref_velocity.x, proj.ref_velocity.y)
+
+        # If the BangBang profile gives zero speed on an intermediate segment,
+        # fall back to a small fraction of vmax so feedforward never silences the command.
+        # Only suppress at the very last segment approaching the final waypoint.
+        is_last_segment = self._wp_index == len(self._trajectory) - 1
+        MIN_FF_SPEED = 0.3  # m/s — tune to your robot
+        if speed < MIN_FF_SPEED and not is_last_segment:
+            speed = MIN_FF_SPEED
 
         # direção correta = direção da trajetória
         ff = Vector(

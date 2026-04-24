@@ -57,15 +57,15 @@ from pid_controller import PIDController1D  # noqa: F401  (re-exported by contro
 # Motion constants
 # ---------------------------------------------------------------------------
 VMAX = 3.0*1.42
-UMAX = Vector(3, 3)
-UMIN = Vector(-3, -3)
-ROBOT_RADIUS = 0.36        # metres
+UMAX = Vector(2, 2)
+UMIN = Vector(-2, -2)
+ROBOT_RADIUS = 0.18        # metres
 FIELD_MARGIN = 0.1         # metres inset from field boundary
 
 # Tunable thresholds
 TARGET_REACHED_DIST   = 0.05    # metres — stop if closer than this to final target
 WAYPOINT_ADVANCE_DIST = 0.10    # metres — legacy; TrajectoryController uses its own
-REPLAN_TIMEOUT        = 20    # seconds — force replan after this long
+REPLAN_TIMEOUT        = 30    # seconds — force replan after this long
 REPLAN_DEVIATION      = 0.5    # metres — replan if deviated from expected waypoint
 PATH_PLANNER_MAX_ITER = 1000
 
@@ -175,24 +175,19 @@ def _build_trajectory(
         seq = steer.steer_list(path, current_vel)
 
         from pathplan.main import new_no_collision  # type: ignore
-        opt    = BangBangOptimizer(steer, new_no_collision, world)
+        opt    = BangBangOptimizer(steer, new_no_collision, world, max_iter = 4000)
         result = opt.optimize(x0, seq)
         states = result.integrate_list(x0)
 
         # states has one entry per time-step, not per waypoint.
         # We only use it if the count happens to match the path length exactly.
         if states:
-            print([
-                TrajectoryPoint(position=Point(s.x.q, s.y.q), velocity=Vector(s.x.v, s.y.v))
-                for s in states
-            ])
+
             traj = [
                 TrajectoryPoint(position=Point(s.x.q, s.y.q), velocity=Vector(s.x.v, s.y.v))
                 for s in states
             ]
             path = [Point(s.x.q, s.y.q) for s in states]
-            print(path)
-            print(len(path), len(traj))
 
             return traj
 
@@ -200,6 +195,7 @@ def _build_trajectory(
         log.debug("BangBang trajectory build failed (%s); using cruise profile.", exc)
 
     # Reliable fallback: cruise speed toward each next waypoint, stop at end.
+    print("error on optimizer")
     return TrajectoryController.from_path(path, cruise_speed=min(VMAX * 0.5, 1.5))
 
 
@@ -482,6 +478,7 @@ class PlannerHandler:
         )
         try:
             path = PathPlanner(world, PATH_PLANNER_MAX_ITER).plan(pos, target)
+
         except Exception:
             log.warning("Robot %d: PathPlanner raised; falling back to RRT.", rid,
                         exc_info=True)

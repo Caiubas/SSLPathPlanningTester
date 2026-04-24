@@ -538,11 +538,13 @@ class PlannerThread(threading.Thread):
                     path: list = []
                     try:
                         path = PathPlanner(world, PATH_PLANNER_MAX_ITER).plan(pos, target)
+                        if path: print("planner planned")
                     except Exception:
                         pass
                     if not path:
                         try:
                             path = RRT(world).plan(pos, target)
+                            if path: print("RRT planned")
                         except Exception:
                             pass
                     if path:
@@ -553,7 +555,6 @@ class PlannerThread(threading.Thread):
                         # BangBangOptimizer (falls back to cruise profile on error).
                         traj = _build_trajectory(path, pstate.current_vel, world)
                         pstate.traj_controller.set_trajectory(traj)
-                        print(pstate.traj_controller._trajectory)
 
                 if not pstate.current_path:
                     continue
