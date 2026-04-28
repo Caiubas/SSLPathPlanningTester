@@ -2,6 +2,7 @@ from main import *
 from new_bboptimizer import AccelLimits, Steer2D, BangBangOptimizer, State2D, PhaseState, ControlSegment2D
 import plot
 from rrt import RRT
+from c_path import PathPlanner
 
 def new_no_collision(x0: State2D, controls: ControlSegment2D, world):
     x1 = controls.integrate(x0)

@@ -4,15 +4,15 @@ import statistics as stats
 import numpy as np
 
 import plot
-from main import no_collision, World, generate_random_world, Point, Quadrilateral, PathPlanner
-from new_new_planner import PathPlanner as RRT
+from main import no_collision, World, generate_random_world, Point, Quadrilateral
+from c_path import PathPlanner
 
 import matplotlib.pyplot as plt
 
 from new_bboptimizer import *
 from pipeline import new_no_collision
 
-#from rrt import RRT
+from rrt import RRT
 
 def plot_benchmark_results(times):
     """
@@ -346,7 +346,7 @@ def plot_paths_comparison(results, max_plots=None):
         if data["path_c"]:
             xs = [p.x for p in data["path_c"]]
             ys = [p.y for p in data["path_c"]]
-            ax.plot(xs, ys, '--', label="A*")
+            ax.plot(xs, ys, '--', label="C_path")
 
         # RRT
         if data["path_rrt"]:
@@ -358,7 +358,7 @@ def plot_paths_comparison(results, max_plots=None):
         if data["opt_c"]:
             xs = [p.x for p in data["opt_c"]]
             ys = [p.y for p in data["opt_c"]]
-            ax.plot(xs, ys, label="A* opt")
+            ax.plot(xs, ys, label="C_path opt")
 
         if data["opt_rrt"]:
             xs = [p.x for p in data["opt_rrt"]]

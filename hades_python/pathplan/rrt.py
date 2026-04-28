@@ -10,7 +10,7 @@ class Node:
 
 
 class RRT:
-    def __init__(self, world: World, step_size=0.5, max_iter=5000):
+    def __init__(self, world: World, step_size=1, max_iter=5000):
         self.world = world
         self.step_size = step_size
         self.max_iter = max_iter

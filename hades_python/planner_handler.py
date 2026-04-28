@@ -40,7 +40,8 @@ import lcm
 
 from data import vision, ia, game_controller, robot  # LCM generated types
 from pathplan.main import Point, Vector, Circle, Quadrilateral
-from pathplan.main import World, PathPlanner
+from pathplan.main import World
+from pathplan.c_path import PathPlanner
 from pathplan.rrt import RRT
 from pathplan.new_bboptimizer import (
     State2D,

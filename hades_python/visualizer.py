@@ -360,8 +360,9 @@ class PlannerThread(threading.Thread):
                 RobotState as PlannerRobotState,
             )
             from pathplan.main import Point as Pt, Vector as Vec, Circle, Quadrilateral  # type: ignore
-            from pathplan.main import World, PathPlanner  # type: ignore
+            from pathplan.main import World  # type: ignore
             from pathplan.rrt import RRT  # type: ignore
+            from pathplan.c_path import PathPlanner
         except ImportError as exc:
             print(f"[PlannerThread] import error: {exc} - thread idle.")
             return

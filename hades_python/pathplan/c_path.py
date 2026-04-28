@@ -1,7 +1,7 @@
 import math
 from typing import Optional, List, Set
 
-from main import (
+from pathplan.main import (
     Point, Vector, Quadrilateral, Circle, Stadium, generate_random_world, World, Obstacle
 )
 
@@ -34,14 +34,16 @@ class PathPlanner:
         world,
         step_size: float = 1.5,
         min_step: float = 0.0,
-        max_iterations: int = 5000,
+        max_iterations: int = 1000,
         super_position_margin: float = 0.1,
+        smooth: bool = False
     ):
         self.world = world
         self.step_size = step_size
         self.min_step = min_step
         self.max_iterations = max_iterations
         self.super_position_margin = super_position_margin
+        self.smooth = smooth
 
         self.visited: Set[tuple] = set()
 
@@ -210,7 +212,10 @@ class PathPlanner:
             # 1. conexão direta
             # ---------------------------
             if self.world.is_free_path(node.point, goal):
-                return self._smooth_path(node.path() + [goal])
+                if self.smooth:
+                    return self._smooth_path(node.path() + [goal])
+                else:
+                    return node.path() + [goal]
 
             # ---------------------------
             # 2. expansão
