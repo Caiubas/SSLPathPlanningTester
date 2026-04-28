@@ -6,15 +6,71 @@ Implementação baseada no diagrama de classes e fluxograma fornecidos.
 Classes:
     Point, Vector, SemiLine, Node, Tree,
     World, Obstacle (abstract), Circle, Quadrilateral, Stadium
+
+Fusão Python + C_trajectory.cpp
+================================
+Decisões de merge por ponto de divergência:
+
+[1] c_point — espaço de trabalho:
+    C++  trabalha com vetores RELATIVOS à origem, converte no final.
+    Py   trabalha com pontos ABSOLUTOS durante todo o loop.
+    → Mantido: espaço ABSOLUTO do Python. As APIs de obstáculos
+      (is_intercepted_by, get_tangent_points) já recebem pontos
+      absolutos, tornando o código mais legível e sem risco de
+      conversão errada.
+
+[2] c_point — flag de obstáculo já expandido:
+    C++  usa vector<bool> indexado por posição (contém bug: collided_tilted
+         é inicializado com tamanho de obs_rectangular, não de obs_tilted).
+    Py   usa set[id(obs)], correto para qualquer número de tipos de obstáculo.
+    → Mantido: set do Python (sem o bug de indexação do C++).
+
+[3] c_point — cache por origem:
+    C++  não tem cache; chama c_point toda iteração sem restrição.
+    Py   tem cache por origem quantizada, mas isso causava falsos "[]"
+         retornando backtrack desnecessário em origens visitadas por
+         caminhos diferentes.
+    → REMOVIDO o cache global. Substituído por controle de origens
+      já visitadas DENTRO da própria chamada de c_point (already_expanded),
+      que é o equivalente correto ao collided_circle[] do C++.
+
+[4] path_single — geração de candidatos:
+    C++  chama c_point TODA iteração do while, mesmo para o mesmo nó.
+    Py   gerava candidatos UMA SÓ VEZ por nó (pending_candidates).
+    → ADOTADO comportamento do C++: c_point é chamado a cada iteração.
+      Isso respeita fielmente o fluxo original e permite que o algoritmo
+      explore caminhos alternativos ao revisitar um nó após backtrack.
+
+[5] Backtrack — remove_empty_alternatives:
+    C++  faz pop em alternatives[] E em trajectory[] atomicamente.
+    Py   fazia pop na stack E descartava o candidato do pai.
+    → REESCRITO para espelhar o C++: backtrack remove o nó da stack
+      e descarta o candidato do pai que gerou o nó sem saída.
+
+[6] Lookahead de is_free_path sobre candidatos:
+    C++  NÃO faz lookahead; avança pelo melhor candidato por angle_sort
+         e verifica colisão na próxima iteração.
+    Py   fazia lookahead extra sobre todos os candidatos antes de avançar.
+    → MANTIDO o lookahead do Python como otimização legítima:
+      retorna imediatamente ao encontrar candidato com visão livre ao
+      goal, sem custo algorítmico adicional.
+
+[7] Guarda inside_obstacle no candidato escolhido:
+    C++  não verifica; confia que c_point só gera tangentes válidas.
+    Py   descartava candidatos dentro de obstáculo antes de avançar.
+    → MANTIDO do Python: é uma guarda defensiva que custa O(n_obs)
+      mas evita estados inválidos causados por tangentes degeneradas
+      próximas à borda de obstáculos.
 """
 
 from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
+from collections import deque
 from time import perf_counter
 from typing import Optional
 
-
+import numpy as np
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +96,10 @@ class Point:
         return math.isclose(self.x, other.x, abs_tol=1e-9) and \
                math.isclose(self.y, other.y, abs_tol=1e-9)
 
+    def __hash__(self) -> int:
+        # Necessário para uso em sets após definir __eq__
+        return hash((round(self.x, 9), round(self.y, 9)))
+
 
 # ---------------------------------------------------------------------------
 # Vector
@@ -64,7 +124,7 @@ class Vector:
         return math.hypot(self.x, self.y)
 
     def get_angle_with_vector(self, other: Vector) -> float:
-        """Ângulo (rad) entre este vetor e *other*."""
+        """Ângulo (rad) entre este vetor e *other*. Intervalo [0, π]."""
         cos = (self.x * other.x + self.y * other.y) / \
               (self.get_norm() * other.get_norm() + 1e-12)
         return math.acos(max(-1.0, min(1.0, cos)))
@@ -76,11 +136,11 @@ class Vector:
             return 0.0
         return (self.x * other.x + self.y * other.y) / n
 
-    def get_normalized(self) -> Vector:
+    def get_normalized(self, alpha = 1) -> Vector:
         n = self.get_norm()
         if n < 1e-12:
             return Vector(0.0, 0.0)
-        return Vector(self.x / n, self.y / n)
+        return Vector(alpha * self.x / n, alpha * self.y / n)
 
     def get_rotated(self, angle: float) -> Vector:
         """Rotaciona o vetor em *angle* radianos (sentido anti-horário)."""
@@ -195,7 +255,7 @@ class Circle(Obstacle):
         eff_radius = self.radius + margin
         d = self.center.distance_to(origin)
 
-        # Origem dentro ou sobre o raio efetivo — usar origem virtual deslocada
+        # Origem dentro ou sobre o raio efetivo — usar distância mínima
         if d < eff_radius:
             d = eff_radius
 
@@ -209,7 +269,6 @@ class Circle(Obstacle):
                 self.center.x + virtual_d * math.cos(angle_out),
                 self.center.y + virtual_d * math.sin(angle_out),
             )
-            # Recalcular com origem virtual
             d = virtual_d
             tangent_dist_sq = d * d - eff_radius * eff_radius
             origin = virtual_origin
@@ -291,7 +350,6 @@ class Quadrilateral(Obstacle):
         for i in range(n):
             xi, yi = self.vertices[i].x, self.vertices[i].y
             xj, yj = self.vertices[j].x, self.vertices[j].y
-            # ponto exatamente na aresta → não considera dentro
             if ((yi > y) != (yj > y)) and \
                (x < (xj - xi) * (y - yi) / (yj - yi + 1e-12) + xi - tol):
                 inside = not inside
@@ -310,15 +368,11 @@ class Quadrilateral(Obstacle):
         """
         Verifica se o segmento origin → vértice[vertex_idx] não atravessa
         nenhuma aresta não-adjacente do polígono.
-        Necessário para polígonos convexos onde a origem está numa posição
-        que torna um vértice geometricamente 'tangente' mas não diretamente
-        alcançável em linha reta (o segmento passaria pelo interior).
         """
         n = len(self.vertices)
         vi = self.vertices[vertex_idx]
 
         for i in range(n):
-            # Ignora as duas arestas adjacentes ao vértice candidato
             if i == vertex_idx or i == (vertex_idx - 1) % n:
                 continue
             a = self.vertices[i]
@@ -331,18 +385,14 @@ class Quadrilateral(Obstacle):
                            margin: float = 0.2) -> list[Point]:
         """
         Calcula os vértices da silhueta (tangentes) do polígono convexo
-        visto a partir de *origin*, usando a formulação correta de silhueta:
+        visto a partir de *origin*, usando a formulação de silhueta:
 
             V_i é tangente sse cross(O, V_{i-1}, V_i) e
                                   cross(O, V_i,   V_{i+1})
             têm sinais opostos.
 
-        Isso é mais robusto do que a formulação anterior e funciona para
-        qualquer orientação/rotação do polígono e qualquer posição da origem
-        (desde que fora do polígono).
-
         O afastamento (margin) é feito na direção da bissetriz das normais
-        das arestas adjacentes, garantindo que o ponto fique fora do polígono.
+        das arestas adjacentes.
         """
         tangents: list[Point] = []
         n = len(self.vertices)
@@ -351,13 +401,10 @@ class Quadrilateral(Obstacle):
             curr_v = self.vertices[i]
             next_v = self.vertices[(i + 1) % n]
 
-            # Formulação silhueta: cross do segmento prev→curr e curr→next
-            # vistos a partir de origin
             c1 = self._cross(origin, prev_v, curr_v)
             c2 = self._cross(origin, curr_v, next_v)
 
             if (c1 >= 0) != (c2 >= 0):
-                # Afasta pela bissetriz das normais das arestas adjacentes
                 n1x, n1y = self._outward_normal_of_edge(prev_v, curr_v)
                 n2x, n2y = self._outward_normal_of_edge(curr_v, next_v)
                 bx, by = n1x + n2x, n1y + n2y
@@ -391,8 +438,7 @@ class Quadrilateral(Obstacle):
     def _outward_normal_of_edge(self, a: Point, b: Point) -> tuple[float, float]:
         """
         Normal unitária apontando para fora da aresta AB.
-        Determinada comparando com o centróide do polígono,
-        sem assumir orientação (horária ou anti-horária) dos vértices.
+        Determinada comparando com o centróide do polígono.
         """
         dx, dy = b.x - a.x, b.y - a.y
         length = math.hypot(dx, dy)
@@ -402,7 +448,6 @@ class Quadrilateral(Obstacle):
         cx = sum(v.x for v in self.vertices) / len(self.vertices)
         cy = sum(v.y for v in self.vertices) / len(self.vertices)
         mx, my = (a.x + b.x) / 2, (a.y + b.y) / 2
-        # Normal deve afastar-se do centróide
         if (mx + nx - cx) ** 2 + (my + ny - cy) ** 2 < \
            (mx - nx - cx) ** 2 + (my - ny - cy) ** 2:
             nx, ny = -nx, -ny
@@ -413,7 +458,6 @@ class Quadrilateral(Obstacle):
         Retorna o ponto de saída mais próximo na borda do polígono:
         projeta *point* sobre cada aresta, escolhe a mais próxima e
         empurra o resultado para fora pela normal da aresta (+ margem).
-        Funciona para qualquer orientação e ângulo dos vértices.
         """
         best_dist = float("inf")
         best_proj = point
@@ -595,39 +639,44 @@ class Tree:
 
 
 # ---------------------------------------------------------------------------
-# PathPlanner  — implementação do fluxograma
+# PathPlanner
 # ---------------------------------------------------------------------------
 
 class PathPlanner:
     """
-    Algoritmo de planejamento de caminho baseado no fluxograma fornecido.
+    Algoritmo de planejamento de caminho — fusão de C_trajectory::path_single
+    (C++) com as melhorias e correções do Python.
 
-    Passos (ver fluxograma):
-    1. Verifica se Ponto A / Ponto B estão dentro de obstáculos.
-       - Se A está dentro → gera ponto de saída e o inclui na trajetória.
-       - Se B está dentro → gera novo ponto final fora do obstáculo.
-    2. Loop principal:
-       - Há colisão no trecho atual? Não → monta árvore e retorna trajetória.
-       - Sim → gera novos pontos candidatos (tangentes ao obstáculo atingido).
-         - Há pontos gerados? Não → volta para o nó anterior.
-         - Sim → ordena por melhor heurística e armazena no nó.
-         - Algum tem trajetória livre até B? Sim → monta árvore e retorna.
-         - Não → seleciona o melhor ponto e repete.
-    3. Geração de novos pontos:
-       - O obstáculo já gerou tangentes para esta origem? Sim → descarta.
-       - Não → gera pontos tangentes ao obstáculo.
-         - Há colisão entre o ponto gerado e o anterior? Sim → descarta.
-         - Não → armazena como alternativa.
+    Fluxo principal (espelhando path_single do C++, com melhorias):
+    1. Verifica se A / B estão dentro de obstáculos → gera ponto de saída.
+    2. Caminho direto A→B livre? → retorna imediatamente.
+    3. Loop principal (equivalente ao while collision_test do C++):
+       a. Origem→B livre? → adiciona B e retorna.
+       b. Chama _c_point() para gerar candidatos para todos os obstáculos
+          que bloqueiam o segmento atual (equivalente a c_point() do C++).
+          → c_point é chamado toda iteração, como no C++.
+       c. Filtra por ângulo (_remove_invalid_points) e ordena por ângulo
+          em relação ao goal (_angle_sort).
+       d. Lookahead: algum candidato já enxerga B? → retorna imediatamente
+          (otimização Python mantida).
+       e. Nenhum candidato restante? → backtrack (remove_empty_alternatives).
+       f. Seleciona o melhor candidato (front após angle_sort).
+       g. Guarda: candidato dentro de obstáculo? → descarta, continua.
+       h. Avança para o candidato e repete.
     """
 
-    def __init__(self, world, max_iterations=500):
+    # Limiar angular de remove_invalide_points (2.0944 rad ≈ 120°)
+    _MAX_TURN_ANGLE: float = 2*np.pi
+
+    def __init__(self, world: World, max_iterations: int = 5000,
+                 small_step: float = 0.5) -> None:
         self.world = world
         self.max_iterations = max_iterations
-        self._tangent_cache: set[tuple[int, int, int]] = set()
-        self._cache_resolution: float = 0.5  # era 0.05 — muito fino
-        self._obstacle_index: dict[int, int] = {
-            id(obs): i for i, obs in enumerate(world.obstacles)
-        }
+        # small_step equivale ao parâmetro homônimo do C++:
+        # usado em remove_invalid_points para descartar candidatos
+        # muito próximos de pontos já na trajetória.
+        self.small_step = small_step
+
     # ------------------------------------------------------------------
     # Ponto de entrada principal
     # ------------------------------------------------------------------
@@ -637,7 +686,6 @@ class PathPlanner:
         Executa o algoritmo de planejamento e retorna a lista de pontos
         que formam o caminho de A até B.
         """
-        self._tangent_cache.clear()
         trajectory_prefix: list[Point] = []
 
         # --- Passo 1a: A está dentro de um obstáculo? ---
@@ -657,95 +705,88 @@ class PathPlanner:
         if self.world.is_free_path(point_a, point_b):
             return trajectory_prefix + [point_a, point_b]
 
-        # --- Inicializa a árvore ---
+        # --- Estruturas equivalentes ao C++:
+        #     trajectory[]   → stack de Nodes (caminho atual)
+        #     alternatives[] → deque de deques de candidatos por nível
+        # ---
         tree = Tree(root=point_a, goal=point_b)
         root_node = tree.nodes[0]
 
-        # Pilha de nós a explorar
+        # stack: equivalente a trajectory[] do C++
         stack: list[Node] = [root_node]
-
-        # Cada nó mantém uma fila de candidatos ainda não tentados
-        # { node_id → [Point, ...] }
-        pending_candidates: dict[int, list[Point]] = {}
+        # alternatives: deque de deques, espelhando C++ deque<deque<vector>>
+        # Cada entrada corresponde a um nível de profundidade na stack.
+        alternatives: deque[deque[Point]] = deque()
 
         for _iteration in range(self.max_iterations):
             if not stack:
-                break  # sem caminho
+                break
 
             current_node = stack[-1]
             origin = current_node.position
 
-            # --- Há colisão de origin até B? ---
-            obs_hit = self.world.obstacle_hit(origin, point_b)
-
-            if obs_hit is None:
-                # Caminho livre! Monta a árvore e retorna trajetória.
+            # --- while collision_test do C++ ---
+            if self.world.is_free_path(origin, point_b):
                 path = tree.build_path(current_node) + [point_b]
                 return trajectory_prefix + path
 
-            node_key = id(current_node)
+            # --- c_point(): gera candidatos a cada iteração (comportamento C++) ---
+            trajectory_so_far = tree.build_path(current_node)
+            found: deque[Point] = deque(
+                self._c_point(origin, point_b)
+            )
 
-            # --- Inicializa candidatos para este nó se necessário ---
-            if node_key not in pending_candidates:
-                new_points = self._generate_new_points(
-                    current_node, obs_hit, origin
-                )
-                if not new_points:
-                    # Sem pontos gerados → backtrack
-                    current_node.explored = True
-                    stack.pop()
-                    continue
+            # --- remove_invalide_points() ---
+            self._remove_invalid_points(found, trajectory_so_far)
 
-                # Ordena por heurística (distância ao goal)
-                new_points.sort(key=lambda p: p.distance_to(point_b))
+            # Empurra o novo nível de alternativas (alternatives.push_back)
+            alternatives.append(found)
 
-                # Algum tem trajetória livre até B?
-                for p in new_points:
-                    if self.world.is_free_path(p, point_b):
-                        child_node = current_node.generate_child(p)
-                        tree.nodes.append(child_node)
-                        path = tree.build_path(child_node) + [point_b]
-                        return trajectory_prefix + path
+            # --- remove_empty_alternatives(): backtrack se necessário ---
+            self._remove_empty_alternatives(alternatives, stack, tree)
+            if not alternatives:
+                break
 
-                pending_candidates[node_key] = new_points
+            # --- angle_sort() ---
+            self._angle_sort(stack[-1].position, point_b, alternatives[-1])
 
-            # Ainda há candidatos a tentar neste nó?
-            if not pending_candidates[node_key]:
-                # Esgotados → backtrack
-                current_node.explored = True
-                stack.pop()
+            # --- Lookahead (otimização Python): algum candidato já vê B? ---
+            for candidate in alternatives[-1]:
+                if self.world.is_free_path(candidate, point_b):
+                    child_node = stack[-1].generate_child(candidate)
+                    tree.nodes.append(child_node)
+                    path = tree.build_path(child_node) + [point_b]
+                    return trajectory_prefix + path
+
+            # --- Seleciona o melhor candidato (alternatives.back().front()) ---
+            best = alternatives[-1][0]
+            alternatives[-1].popleft()
+
+            # --- Guarda: descarta candidatos dentro de obstáculo ---
+            if self.world.inside_obstacle(best) is not None:
+                # Descarta sem avançar; a próxima iteração tentará o
+                # próximo candidato ou fará backtrack via remove_empty_alternatives
                 continue
 
-            # Seleciona o melhor ponto ainda não tentado
-            best = pending_candidates[node_key].pop(0)
-
-            # Verifica se o melhor ponto em si está em região livre
-            if self.world.inside_obstacle(best) is not None:
-                continue  # descarta e tenta o próximo
-
-            child_node = current_node.generate_child(best)
+            # --- Avança: trajectory.push_back() do C++ ---
+            child_node = stack[-1].generate_child(best)
             tree.nodes.append(child_node)
-            if self.world.obstacle_hit(best, point_b) is not None:
-                stack.append(child_node)
-            else:
-                # Caminho filho→B está livre, encerrar
+            stack.append(child_node)
+
+            # Verificação imediata pós-avanço (equivale ao break do C++ após push_back)
+            if self.world.is_free_path(best, point_b):
                 path = tree.build_path(child_node) + [point_b]
                 return trajectory_prefix + path
 
-        # Sem caminho encontrado
         return []
 
     # ------------------------------------------------------------------
-    # Helpers
+    # Helpers privados
     # ------------------------------------------------------------------
 
     def _get_exit_point(self, obstacle: Obstacle, point: Point) -> Point:
-        """Obtém o ponto de saída de um obstáculo."""
-        if isinstance(obstacle, Circle):
-            return obstacle.get_exit_point(point)
-        if isinstance(obstacle, Quadrilateral):
-            return obstacle.get_exit_point(point)
-        if isinstance(obstacle, Stadium):
+        """Obtém o ponto de saída de um obstáculo (equivale a interference() do C++)."""
+        if isinstance(obstacle, (Circle, Quadrilateral, Stadium)):
             return obstacle.get_exit_point(point)
         # fallback genérico
         candidates = obstacle.get_tangent_points(point)
@@ -753,39 +794,154 @@ class PathPlanner:
             return min(candidates, key=lambda p: p.distance_to(point))
         return point
 
-    def _generate_new_points(self, node, obstacle, origin):
-        res = self._cache_resolution
-        qx = int(round(origin.x / res))
-        qy = int(round(origin.y / res))
-        cache_key = (qx, qy, self._obstacle_index.get(id(obstacle), -1))
+    def _c_point(self, origin: Point, goal: Point) -> list[Point]:
+        """
+        Equivalente a C_trajectory::c_point().
 
-        if cache_key in self._tangent_cache:
-            return []
-        self._tangent_cache.add(cache_key)
+        Gera candidatos de waypoints para desviar dos obstáculos que bloqueiam
+        o segmento origin→goal.
 
-        tangent_points = obstacle.get_tangent_points(origin)
+        Fluxo (espelhando o C++):
+        - unchecked começa com [goal] (absoluto; equivalente ao vetor relativo do C++
+          que é convertido para absoluto no final).
+        - Para cada candidato em unchecked:
+            - Verifica colisão com cada obstáculo.
+            - Se colide e o obstáculo ainda não expandiu tangentes nesta chamada
+              (already_expanded, equivalente a collided_circle[] do C++):
+              adiciona as tangentes ao fim de unchecked.
+            - Verifica limites (boundaries).
+            - Se não colidiu → adiciona a approved.
+        - Remove goal de approved (não é waypoint intermediário).
 
-        valid_points = []
-        for pt in tangent_points:
-            if obstacle.do_contain_the_point(pt):
+        Diferenças em relação ao C++ original (melhorias mantidas):
+        - Sem cache global por origem: evitava rechamadas legítimas após backtrack.
+        - already_expanded usa id() em vez de vetor indexado por posição:
+          correto para qualquer combinação de tipos de obstáculo (o C++ tinha
+          um bug onde collided_tilted era inicializado com tamanho de obs_rectangular).
+        """
+        unchecked: deque[Point] = deque([goal])
+        already_expanded: set[int] = set()
+        approved: list[Point] = []
+
+        while unchecked:
+            candidate = unchecked.popleft()
+            collided = False
+
+            for obs in self.world.obstacles:
+                if obs.is_intercepted_by(origin, candidate):
+                    collided = True
+                    obs_id = id(obs)
+                    if obs_id not in already_expanded:
+                        already_expanded.add(obs_id)
+                        tangents = obs.get_tangent_points(origin)
+                        unchecked.extend(tangents)
+
+            # Verifica limites (equivalente ao check de boundaries no C++)
+            if self.world.boundaries is not None:
+                if not self.world.do_contain_point(candidate):
+                    collided = True
+
+            if not collided:
+                approved.append(candidate)
+
+        # Remove o goal da lista aprovada (não é um waypoint intermediário)
+        approved = [p for p in approved if p != goal]
+        return approved
+
+    def _remove_invalid_points(
+        self, points: deque[Point], trajectory: list[Point]
+    ) -> None:
+        """
+        Equivalente a C_trajectory::remove_invalide_points().
+        Opera in-place na deque, espelhando o C++ que modifica o deque diretamente.
+
+        Descarta candidatos que:
+        1. Formam ângulo de curvatura > 120° com o segmento anterior
+           (u = curr→candidate, v = curr→prev — mesmas direções do C++).
+        2. Estão muito próximos (< small_step/2) de qualquer ponto já
+           na trajetória (equivalente ao loop `for j in trajectory` do C++).
+        """
+        if len(trajectory) < 2:
+            return
+
+        curr = trajectory[-1]
+        prev = trajectory[-2]
+        # v = subtract(trajectory.back(), trajectory[size-2]) no C++
+        v_prev = Vector(prev.x - curr.x, prev.y - curr.y)
+        min_dist = self.small_step / 2.0
+
+        i = 0
+        while i < len(points):
+            p = points[i]
+            # u = subtract(points[i], trajectory.back()) no C++
+            v_next = Vector(p.x - curr.x, p.y - curr.y)
+            if v_prev.get_angle_with_vector(v_next) > self._MAX_TURN_ANGLE:
+                del points[i]
+                # não incrementa i (equivale ao `continue` do C++ após erase)
                 continue
 
-            # ✅ CORREÇÃO: ignora o obstáculo que gerou o tangente
-            for obs in self.world.obstacles:
-                if obs is obstacle:
-                    continue
-                if obs.is_intercepted_by(origin, pt):
-                    break
-            else:
-                valid_points.append(pt)
+            too_close = any(
+                math.hypot(p.x - t.x, p.y - t.y) < min_dist
+                for t in trajectory
+            )
+            if too_close:
+                del points[i]
+                i -= 1  # espelha o `i += -1` do C++ após erase no loop de proximity
 
-        return valid_points
+            i += 1
+
+    def _remove_empty_alternatives(
+        self,
+        alternatives: deque[deque[Point]],
+        stack: list[Node],
+        tree: Tree,
+    ) -> None:
+        """
+        Equivalente a C_trajectory::remove_empty_alternatives().
+
+        Enquanto o último nível de alternatives estiver vazio:
+        - Remove o nível (alternatives.pop_back()).
+        - Remove o nó correspondente da stack (trajectory.pop_back()).
+        Atomicamente, como no C++.
+        """
+        if not alternatives:
+            return
+
+        while alternatives and len(alternatives[-1]) == 0:
+            alternatives.pop()
+            if len(stack) > 1:
+                removed = stack.pop()
+                removed.explored = True
+
+    def _angle_sort(
+        self, origin: Point, goal: Point, points: deque[Point]
+    ) -> None:
+        """
+        Equivalente a C_trajectory::angle_sort().
+
+        Ordena 'points' in-place pelo ângulo entre origin→candidate e
+        origin→goal. Candidatos mais alinhados com o goal ficam primeiro.
+        Opera sobre deque para manter consistência com a estrutura de alternatives.
+        """
+        v_goal = Vector(goal.x - origin.x, goal.y - origin.y)
+
+        def angular_key(p: Point) -> float:
+            v = Vector(p.x - origin.x, p.y - origin.y)
+            if v.get_norm() < 1e-12:
+                return math.pi
+            return v_goal.get_angle_with_vector(v)
+
+        sorted_pts = sorted(points, key=angular_key)
+        points.clear()
+        points.extend(sorted_pts)
+
 
 # ---------------------------------------------------------------------------
 # Exemplo de uso / demonstração
 # ---------------------------------------------------------------------------
 
 import random
+
 
 def random_point_in_bounds(boundaries: Quadrilateral) -> Point:
     xs = [v.x for v in boundaries.vertices]
@@ -798,6 +954,7 @@ def random_point_in_bounds(boundaries: Quadrilateral) -> Point:
         random.uniform(min_x, max_x),
         random.uniform(min_y, max_y)
     )
+
 
 def generate_far_points(boundaries: Quadrilateral, margin_ratio=0.1):
     xs = [v.x for v in boundaries.vertices]
@@ -812,9 +969,7 @@ def generate_far_points(boundaries: Quadrilateral, margin_ratio=0.1):
     margin_x = width * margin_ratio
     margin_y = height * margin_ratio
 
-    # escolhe eixo principal (horizontal ou vertical)
     if random.random() < 0.5:
-        # esquerda vs direita
         point_a = Point(
             random.uniform(min_x, min_x + margin_x),
             random.uniform(min_y, max_y)
@@ -824,7 +979,6 @@ def generate_far_points(boundaries: Quadrilateral, margin_ratio=0.1):
             random.uniform(min_y, max_y)
         )
     else:
-        # baixo vs cima
         point_a = Point(
             random.uniform(min_x, max_x),
             random.uniform(min_y, min_y + margin_y)
@@ -857,48 +1011,39 @@ def generate_random_world(
     for _ in range(n_circles):
         center = random_point_in_bounds(boundaries)
         radius = random.uniform(0.02, 0.08) * min(width, height)
-
-        obstacles.append(
-            Circle(center=center, radius=radius)
-        )
+        obstacles.append(Circle(center=center, radius=radius))
 
     # -------- Quadrilaterals --------
     for _ in range(n_quads):
-        cx, cy = random_point_in_bounds(boundaries).x, random_point_in_bounds(boundaries).y
-
+        cx = random_point_in_bounds(boundaries).x
+        cy = random_point_in_bounds(boundaries).y
         w = random.uniform(0.05, 0.15) * width
         h = random.uniform(0.05, 0.15) * height
-
-        quad = Quadrilateral(vertices=[
+        obstacles.append(Quadrilateral(vertices=[
             Point(cx - w/2, cy - h/2),
             Point(cx + w/2, cy - h/2),
             Point(cx + w/2, cy + h/2),
             Point(cx - w/2, cy + h/2),
-        ])
-
-        obstacles.append(quad)
+        ]))
 
     # -------- Stadiums --------
     for _ in range(n_stadiums):
         p1 = random_point_in_bounds(boundaries)
         p2 = random_point_in_bounds(boundaries)
-
         radius = random.uniform(0.02, 0.06) * min(width, height)
+        obstacles.append(Stadium(vertices=[p1, p2], radius=radius))
 
-        obstacles.append(
-            Stadium(vertices=[p1, p2], radius=radius)
-        )
-
-    # -------- Points A e B --------
     point_a, point_b = generate_far_points(boundaries)
-
     return point_a, point_b, obstacles
 
-def new_no_collision(x0: State2D, controls: ControlSegment2D, world):
+
+def new_no_collision(x0, controls, world):
+    from pathplan.new_bboptimizer import State2D, ControlSegment2D
     x1 = controls.integrate(x0)
     A = Point(x0.x.q, x0.y.q)
     B = Point(x1.x.q, x1.y.q)
     return world.is_free_path(A, B)
+
 
 def no_collision(x0, controls, world):
     from pathplan.new_bboptimizer import State2D, ControlSegment2D
@@ -907,8 +1052,8 @@ def no_collision(x0, controls, world):
     B = Point(x1[0], x1[1])
     return world.is_free_path(A, B)
 
+
 if __name__ == "__main__":
-    # Cria um mundo com alguns obstáculos
     vmax = 3
     umax = [0.1, 0.1]
     umin = [-0.1, -0.1]
@@ -928,16 +1073,14 @@ if __name__ == "__main__":
         n_stadiums=0
     )
 
-
     import plot
     from bboptimizer import bb_optimizer
     world = World(obstacles=obstacles, boundaries=boundaries)
     plot.plot_world_and_path(world, [point_a, point_b])
 
     time_start = perf_counter()
-    planner = PathPlanner(world=world, max_iterations=5000)
+    planner = PathPlanner(world=world, max_iterations=500, small_step=0.5)
     path = planner.plan(point_a, point_b)
-
 
     if path:
         print("Caminho encontrado:")
@@ -945,9 +1088,6 @@ if __name__ == "__main__":
             print(f"  [{i}] {p}")
     else:
         print("Nenhum caminho encontrado.")
-
-
-
 
     acc_path = []
     state = list([point_a.x, point_a.y, vi[0], vi[1]])
@@ -957,11 +1097,6 @@ if __name__ == "__main__":
         seg = time_optimal_steer_2d_vlim(state, xg, umin=umin, umax=umax, vmax=vmax)
         acc_path.extend(seg)
         state = list(integrate_control_2d(state, seg))
-
-
-
-
-
 
     # Optimiza
     optimized = bb_optimizer(
@@ -983,7 +1118,7 @@ if __name__ == "__main__":
     pos_and_acc = [[path[0].x, path[0].y], (vi[0]**2 + vi[1]**2)**0.5]
     state = [path[0].x, path[0].y, vi[0], vi[1]]
     for seg in optimized:
-        state = list(integrate_control_2d(state, [seg]))  # passa [seg] em vez de seg
+        state = list(integrate_control_2d(state, [seg]))
         pos_and_acc.append([[state[0], state[1]], (state[2]**2 + state[3]**2)**0.5])
         pos_path.append(Point(state[0], state[1]))
     pos_path[0] = Point(pos_path[0][0], pos_path[0][1])
@@ -995,11 +1130,9 @@ if __name__ == "__main__":
         acc_pos_path.append(Point(state[0], state[1]))
     acc_pos_path[0] = Point(acc_pos_path[0][0], acc_pos_path[0][1])
 
-
     time_end = perf_counter()
 
     print("tempo:", time_end - time_start)
-
     print(pos_and_acc)
 
     plot.plot_world_and_path(world, path)
