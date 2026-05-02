@@ -616,11 +616,12 @@ class BangBangOptimizer:
 
             candidate = seg_before.merge(new_mid.merge(seg_after))
 
-            if not new_mid.collision_free(x_t1, self.collision_fn, world=self.world): #colisao ponto a ponto
+            if not candidate.collision_free(x0, self.collision_fn, world=self.world): #colisao ponto a ponto
                 continue
 
             improvement = old_mid_time - new_mid_time
             best = candidate
+
             if improvement > self.min_improvement:
                 no_improve = 0
             else:

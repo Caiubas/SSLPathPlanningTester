@@ -563,7 +563,7 @@ class World:
     def is_free_path(self, a: Point, b: Point) -> bool:
         """Retorna True se o segmento AB não interceptar nenhum obstáculo."""
         for obs in self.obstacles:
-            if obs.is_intercepted_by(a, b):
+            if obs.is_intercepted_by(a, b) or obs.do_contain_the_point(a) or obs.do_contain_the_point(b):
                 return False
         return True
 
@@ -711,7 +711,7 @@ def generate_random_world(
     # -------- Circles --------
     for _ in range(n_circles):
         center = random_point_in_bounds(boundaries)
-        radius = random.uniform(0.02, 0.08) * min(width, height)
+        radius = 2*0.18#random.uniform(0.02, 0.08) * min(width, height)
         obstacles.append(Circle(center=center, radius=radius))
 
     # -------- Quadrilaterals --------

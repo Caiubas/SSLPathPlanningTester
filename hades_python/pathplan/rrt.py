@@ -10,7 +10,7 @@ class Node:
 
 
 class RRT:
-    def __init__(self, world: World, step_size=1, max_iter=5000):
+    def __init__(self, world: World, step_size=0.5, max_iter=5000):
         self.world = world
         self.step_size = step_size
         self.max_iter = max_iter
@@ -38,12 +38,16 @@ class RRT:
         return min(self.nodes, key=lambda n: n.point.distance_to(point))
 
     def steer(self, from_p: Point, to_p: Point) -> Point:
-        v = Vector.from_points(from_p, to_p)
-        d = v.get_norm()
-        if d < self.step_size:
+        """Avança do from_p em direção ao to_p limitando a distância ao step_size"""
+        dist = from_p.distance_to(to_p)
+        if dist < self.step_size:
             return to_p
-        v = v.get_normalized()
-        return v.to_point(from_p)
+
+        # Cálculo convencional de steering (direção e magnitude)
+        theta = math.atan2(to_p.y - from_p.y, to_p.x - from_p.x)
+        new_x = from_p.x + self.step_size * math.cos(theta)
+        new_y = from_p.y + self.step_size * math.sin(theta)
+        return Point(new_x, new_y)
 
     def backtrack(self, node: Node):
         path = []
@@ -67,45 +71,18 @@ class RRT:
             new_point = self.steer(nearest.point, rand)
 
             # -----------------------------------
-            # CASO 1: caminho livre
+            # RRT Convencional: Apenas caminho livre
             # -----------------------------------
+            # Se houver colisão, o bloco 'if' falha e o ponto é ignorado (loop continua).
             if self.world.is_free_path(nearest.point, new_point):
                 new_node = Node(new_point, nearest)
                 self.nodes.append(new_node)
 
-                if new_point.distance_to(goal) < self.step_size:
+                # Verifica se está próximo o suficiente do objetivo para conectar
+                if new_point.distance_to(goal) <= self.step_size:
                     if self.world.is_free_path(new_point, goal):
                         goal_node = Node(goal, new_node)
+                        self.nodes.append(goal_node)
                         return self.backtrack(goal_node)
-
-            # -----------------------------------
-            # CASO 2: colisão → usar inteligência
-            # -----------------------------------
-            else:
-                obs = self.world.obstacle_hit(nearest.point, new_point)
-                if obs is None:
-                    continue
-
-                # -----------------------------------
-                # 2.1 Se entrou dentro → sair
-                # -----------------------------------
-                inside = self.world.inside_obstacle(nearest.point)
-                if inside:
-                    exit_point = inside.get_exit_point(nearest.point)
-                    if self.world.is_free_path(nearest.point, exit_point):
-                        self.nodes.append(Node(exit_point, nearest))
-                    continue
-
-                # -----------------------------------
-                # 2.2 Contornar usando tangentes
-                # -----------------------------------
-                tangents = obs.get_tangent_points(nearest.point)
-
-                for t in tangents:
-                    if not self.world.do_contain_point(t):
-                        continue
-
-                    if self.world.is_free_path(nearest.point, t):
-                        self.nodes.append(Node(t, nearest))
 
         return None

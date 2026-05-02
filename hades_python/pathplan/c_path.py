@@ -61,8 +61,35 @@ class PathPlanner:
         self.visited.add(key)
         return True
 
-    def _heuristic(self, p, goal):
+    def _heuristic_distance(self, p, goal, node):
         return p.distance_to(goal)
+
+    def _heuristic(self, p, goal, node_parent=None): ##TODO ideia: implementar distancia a obstaculos na heuristica para priorizar caminhos longe de obstaculos
+        dist = p.distance_to(goal)
+
+        turn_penalty = 0.0
+
+        if node_parent and node_parent.parent:
+            # Direção do passo anterior: parent → node
+            prev = Vector.from_points(node_parent.parent.point, node_parent.point)
+            # Direção do passo atual: node → candidato p
+            curr = Vector.from_points(node_parent.point, p)
+
+            norm_prev = prev.get_norm()
+            norm_curr = curr.get_norm()
+
+            if norm_prev > 1e-9 and norm_curr > 1e-9:
+                prev_n = prev.get_normalized()
+                curr_n = curr.get_normalized()
+
+                # dot product: 1 = mesma direção, -1 = oposto
+                dot = prev_n.x * curr_n.x + prev_n.y * curr_n.y
+                dot = max(-1.0, min(1.0, dot))  # clamp numérico
+
+                angle = math.acos(dot)  # 0 a π radianos
+                turn_penalty = angle * 2.0  # peso da penalidade, ajusta à vontade
+
+        return dist * 3 + turn_penalty
 
     def _step_towards(self, origin, target):
         v = Vector.from_points(origin, target)
@@ -230,7 +257,7 @@ class PathPlanner:
                     node.dead = True
                 else:
                     node.children.sort(
-                        key=lambda c: self._heuristic(c.point, goal)
+                        key=lambda c: self._heuristic(c.point, goal, node)
                     )
 
             # ---------------------------
@@ -248,8 +275,6 @@ class PathPlanner:
             if not self._backtrack(tree):
                 return None
 
-
-        print("max iter")
         return None
 
     def _get_exit_point(self, obstacle: Obstacle, point: Point) -> Point:
@@ -316,7 +341,7 @@ class PathPlanner:
                     dead_nodes.append(node)
                 else:
                     node.children.sort(
-                        key=lambda c: self._heuristic(c.point, goal)
+                        key=lambda c: self._heuristic(c.point, goal, node)
                     )
 
             # ---------------------------

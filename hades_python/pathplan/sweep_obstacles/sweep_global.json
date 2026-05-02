@@ -1,0 +1,214 @@
+{
+  "sweep_metadata": {
+    "timestamp_utc": "2026-05-02T14:33:12.699776+00:00",
+    "sweep_param": "config_index",
+    "sweep_param_label": "config_index",
+    "n_configs": 4,
+    "n_scenarios_each": 1000,
+    "only_shared_success": false,
+    "planners": [
+      "C",
+      "RRT",
+      "AStar"
+    ],
+    "random_seed": 42
+  },
+  "runs": [
+    {
+      "run_index": 0,
+      "label": "~7 obs",
+      "param_value": 0,
+      "config": {
+        "n_circles": 5,
+        "n_quads": 2,
+        "n_stadiums": 0
+      },
+      "json_path": "/home/caiu/Desktop/cerberus/SSLPathPlanningTester/hades_python/pathplan/sweep_obstacles/run_00_~7_obs.json",
+      "summary": {
+        "C": {
+          "success_rate": 97.6,
+          "generation_total": 0.01626260811372985,
+          "generation_planner": 4.881556557326568e-05,
+          "generation_steer": 6.212682274644952e-05,
+          "generation_optimizer": 0.01612862783196805,
+          "generation_integration": 2.1918770492525524e-05,
+          "traj_pre": 10.446184073450844,
+          "traj_post": 10.095020894462051,
+          "traj_reduction": 0.35116317898879734,
+          "path_length": 21.858988465720376
+        },
+        "RRT": {
+          "success_rate": 97.1,
+          "generation_total": 0.03138312835633371,
+          "generation_planner": 0.0038106294860965266,
+          "generation_steer": 0.0007421704716789313,
+          "generation_optimizer": 0.026798610858908837,
+          "generation_integration": 2.776638105009623e-05,
+          "traj_pre": 41.271624351257785,
+          "traj_post": 10.03748183837917,
+          "traj_reduction": 31.23414251287855,
+          "path_length": 26.631779671995712
+        },
+        "AStar": {
+          "success_rate": 97.2,
+          "generation_total": 0.035781226301440185,
+          "generation_planner": 0.01289334091049532,
+          "generation_steer": 0.00036189604526757924,
+          "generation_optimizer": 0.0224971892541152,
+          "generation_integration": 2.6594363168388177e-05,
+          "traj_pre": 32.699335492412885,
+          "traj_post": 10.12496488177945,
+          "traj_reduction": 22.57437061063343,
+          "path_length": 23.01207687750064
+        }
+      }
+    },
+    {
+      "run_index": 1,
+      "label": "~20 obs",
+      "param_value": 1,
+      "config": {
+        "n_circles": 15,
+        "n_quads": 5,
+        "n_stadiums": 0
+      },
+      "json_path": "/home/caiu/Desktop/cerberus/SSLPathPlanningTester/hades_python/pathplan/sweep_obstacles/run_01_~20_obs.json",
+      "summary": {
+        "C": {
+          "success_rate": 89.7,
+          "generation_total": 0.03058716868115998,
+          "generation_planner": 0.00016645387291022002,
+          "generation_steer": 8.258419286329e-05,
+          "generation_optimizer": 0.030310750344481593,
+          "generation_integration": 2.606092196072459e-05,
+          "traj_pre": 10.863951826676574,
+          "traj_post": 10.092021003140967,
+          "traj_reduction": 0.7719308235356187,
+          "path_length": 22.050354304562138
+        },
+        "RRT": {
+          "success_rate": 87.8,
+          "generation_total": 0.07119971278360016,
+          "generation_planner": 0.009478043931661833,
+          "generation_steer": 0.000784915543280047,
+          "generation_optimizer": 0.060901578906606434,
+          "generation_integration": 3.1036364464663946e-05,
+          "traj_pre": 41.944142879058845,
+          "traj_post": 10.000518854081948,
+          "traj_reduction": 31.94362402497691,
+          "path_length": 27.073075721025038
+        },
+        "AStar": {
+          "success_rate": 88.8,
+          "generation_total": 0.07278347460698326,
+          "generation_planner": 0.029305591307432762,
+          "generation_steer": 0.00037541715765710863,
+          "generation_optimizer": 0.04307013496846858,
+          "generation_integration": 3.0012484235307688e-05,
+          "traj_pre": 32.73688401330462,
+          "traj_post": 10.382368116177895,
+          "traj_reduction": 22.354515897126753,
+          "path_length": 23.148657990649017
+        }
+      }
+    },
+    {
+      "run_index": 2,
+      "label": "~28 obs",
+      "param_value": 2,
+      "config": {
+        "n_circles": 21,
+        "n_quads": 7,
+        "n_stadiums": 0
+      },
+      "json_path": "/home/caiu/Desktop/cerberus/SSLPathPlanningTester/hades_python/pathplan/sweep_obstacles/run_02_~28_obs.json",
+      "summary": {
+        "C": {
+          "success_rate": 87.9,
+          "generation_total": 0.04638548744483124,
+          "generation_planner": 0.00030845276677350235,
+          "generation_steer": 8.954665416766084e-05,
+          "generation_optimizer": 0.04596041054836249,
+          "generation_integration": 2.570000570741742e-05,
+          "traj_pre": 11.165478205834852,
+          "traj_post": 10.10598015955185,
+          "traj_reduction": 1.0594980462830048,
+          "path_length": 22.006172280179104
+        },
+        "RRT": {
+          "success_rate": 85.7,
+          "generation_total": 0.110313329191373,
+          "generation_planner": 0.012560221982502178,
+          "generation_steer": 0.0007768884819122147,
+          "generation_optimizer": 0.09694161992181724,
+          "generation_integration": 3.0194805120016083e-05,
+          "traj_pre": 42.20948537996472,
+          "traj_post": 9.920265166027342,
+          "traj_reduction": 32.289220213937384,
+          "path_length": 27.21825818651739
+        },
+        "AStar": {
+          "success_rate": 86.8,
+          "generation_total": 0.1054220260633766,
+          "generation_planner": 0.037586922027660286,
+          "generation_steer": 0.0003649430253435765,
+          "generation_optimizer": 0.06743893690092846,
+          "generation_integration": 2.8919612898995006e-05,
+          "traj_pre": 32.64726846459625,
+          "traj_post": 10.377748553228601,
+          "traj_reduction": 22.269519911367617,
+          "path_length": 22.96447627475477
+        }
+      }
+    },
+    {
+      "run_index": 3,
+      "label": "~40 obs",
+      "param_value": 3,
+      "config": {
+        "n_circles": 30,
+        "n_quads": 10,
+        "n_stadiums": 0
+      },
+      "json_path": "/home/caiu/Desktop/cerberus/SSLPathPlanningTester/hades_python/pathplan/sweep_obstacles/run_03_~40_obs.json",
+      "summary": {
+        "C": {
+          "success_rate": 85.5,
+          "generation_total": 0.09086001314967769,
+          "generation_planner": 0.0006933330304060579,
+          "generation_steer": 0.0001086910187248641,
+          "generation_optimizer": 0.09002540918712551,
+          "generation_integration": 3.1011145021257534e-05,
+          "traj_pre": 11.76889116882145,
+          "traj_post": 10.199446640614502,
+          "traj_reduction": 1.5694445282069545,
+          "path_length": 22.46058625752527
+        },
+        "RRT": {
+          "success_rate": 81.5,
+          "generation_total": 0.21113042876687957,
+          "generation_planner": 0.01728965453622533,
+          "generation_steer": 0.0008328985570533739,
+          "generation_optimizer": 0.19296716126868915,
+          "generation_integration": 3.633995827706495e-05,
+          "traj_pre": 43.20724968318091,
+          "traj_post": 10.131775436418105,
+          "traj_reduction": 33.0754742467628,
+          "path_length": 27.85559476153122
+        },
+        "AStar": {
+          "success_rate": 82.5,
+          "generation_total": 0.18113763964725713,
+          "generation_planner": 0.05326917085819525,
+          "generation_steer": 0.00038704452243550666,
+          "generation_optimizer": 0.12744499896484657,
+          "generation_integration": 3.39465272797194e-05,
+          "traj_pre": 33.00419997322405,
+          "traj_post": 10.444011045809246,
+          "traj_reduction": 22.56018892741476,
+          "path_length": 23.196962035859976
+        }
+      }
+    }
+  ]
+}
